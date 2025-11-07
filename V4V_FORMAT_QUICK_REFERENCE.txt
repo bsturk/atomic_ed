@@ -1,0 +1,189 @@
+================================================================================
+V4V SCENARIO FILE FORMAT - QUICK REFERENCE GUIDE
+================================================================================
+
+MAGIC NUMBER:           0x0C 0x0C (at offset 0x00)
+CONSTANT MARKER:        0x40066666 (IEEE float 2.05, at offset 0x08)
+BYTE ORDER:             Little-endian (Intel x86)
+TEXT ENCODING:          ASCII, null-terminated
+RECORD SIZE:            32 bytes (fixed, for both locations and units)
+
+================================================================================
+HEADER STRUCTURE (0x00 - 0x80)
+================================================================================
+
+CRITICAL OFFSETS:
+  0x00-0x01: Magic (0x0C 0x0C) - MUST NOT CHANGE
+  0x05:      Version (0-3)
+  0x06:      Difficulty (0-6)
+  0x08-0x0B: Constant (0x40066666) - MUST NOT CHANGE
+  0x1C:      Marker (0x01 00) - MUST NOT CHANGE
+  0x20:      Marker (0x01 00) - MUST NOT CHANGE
+  0x26:      Marker (0x01 01) - MUST NOT CHANGE
+  0x2A:      Unit Count (0-1000) - MUST MATCH actual units
+
+IMPORTANT FIELDS:
+  0x10:      Map Width (44-90)
+  0x12:      Map Height (18-69)
+  0x1A:      Offset 1 (data section pointer)
+  0x1E:      Offset 2 (data section pointer)
+
+EXAMPLE HEADERS:
+  Small scenario (MGFIRST.SCN):
+    0C 0C 00 00 00 02 00 00 66 66 06 40 3B 00 00 00
+    4A 00 12 00 08 00 07 00 00 00 BE 7E 01 00 C6 7E
+
+  Large scenario (UBCAMP.SCN):
+    0C 0C 00 00 00 00 05 00 66 66 06 40 08 00 07 00
+    5A 00 45 00 36 00 37 00 03 03 59 7C 01 00 F3 7C
+
+================================================================================
+FILE LAYOUT
+================================================================================
+
+SECTION              OFFSET       SIZE          DESCRIPTION
+--------             ------       ----          -----------
+Header               0x00         128 bytes     Game parameters
+Text Block 1         0x80         ~128 bytes    Briefing text (null-padded)
+Text Block 2         0x100        ~128 bytes    Briefing text (null-padded)
+Text Block 3         0x180        ~128 bytes    Briefing text (null-padded)
+Location Records     0x880        variable      32-byte records per location
+[Padding]            ...          variable      Null padding
+Unit Records         0x20000+     variable      32-byte records per unit
+[Terrain Data]       ...          variable      Ends with 0xA0 00 pattern
+
+================================================================================
+LOCATION RECORD FORMAT (32 bytes each)
+================================================================================
+
+Offset  Bytes   Field                Example
+------  -----   -----                -------
++0x00   2       Padding              00 00
++0x02   2       X Coordinate         0E 00  (14 decimal)
++0x04   2       Y Coordinate         1E 00  (30 decimal)
++0x06   2       Unknown Value        18 00
++0x08   1       Type/Length Marker   12     (18 decimal)
++0x09   23      Location Name        "Cherbourg\0" + padding
+
+CONSTRAINTS:
+  - Name must be null-terminated
+  - Total record MUST be exactly 32 bytes
+  - X coordinate: 0-90 valid range
+  - Y coordinate: 0-69 valid range
+  - Name max: ~23 characters (before null terminator)
+
+================================================================================
+UNIT RECORD FORMAT (32 bytes each)
+================================================================================
+
+Offset  Bytes   Field                Example
+------  -----   -----                -------
++0x00   2       Padding              00 00 or XX 00
++0x02   2       X Coordinate         4C 02  (588 decimal)
++0x04   2       Y Coordinate         1E 00  (30 decimal)
++0x06   2       Unit Type ID         15 00
++0x08   2       Parameter 1          06 00
++0x0A   2       Parameter 2          21 00
++0x0C   4       Constant Marker      01 01 01 01 (MUST NOT CHANGE)
++0x10   16      Unit Name            "Cherbourg\0" + padding
+
+CONSTRAINTS:
+  - Name must be null-terminated
+  - Constant marker at +0x0C MUST be 01010101
+  - Total record MUST be exactly 32 bytes
+  - Name max: ~15 characters (before null terminator)
+  - Unit count in header (0x2A) MUST match actual records
+
+================================================================================
+VALIDATION CHECKLIST
+================================================================================
+
+When creating/modifying a scenario file, verify:
+
+[ ] Magic number at 0x00 is 0x0C 0x0C
+[ ] Constant float at 0x08 is 0x40 0x06 0x66 0x66
+[ ] Data marker at 0x1C is 0x01 0x00
+[ ] Constant at 0x20 is 0x01 0x00
+[ ] Constant at 0x26 is 0x01 0x01
+[ ] Unit count at 0x2A matches actual unit records
+[ ] All location records are exactly 32 bytes
+[ ] All unit records are exactly 32 bytes
+[ ] All text strings are null-terminated
+[ ] All text blocks are null-padded to section boundaries
+[ ] No briefs exceed ~128 bytes per block
+[ ] All strings use ASCII characters only
+[ ] Unit/location coordinates fit in 16-bit range
+
+================================================================================
+COMMON MODIFICATIONS
+================================================================================
+
+CHANGING BRIEFING TEXT:
+  1. Edit text at 0x80, 0x100, 0x180
+  2. Keep text under 128 bytes
+  3. Ensure null termination
+  4. Pad remainder with 0x00
+
+ADDING/REMOVING LOCATIONS:
+  1. Insert/delete 32-byte records after existing locations
+  2. Update location record count (if tracked elsewhere)
+  3. Maintain exact 32-byte record size
+  4. Ensure all strings are null-terminated
+
+ADDING/REMOVING UNITS:
+  1. Update UNIT_COUNT field (0x2A) first
+  2. Insert/delete 32-byte unit records
+  3. Maintain exact 32-byte record size
+  4. Ensure 0x0C-0x0F = 01 01 01 01 in each record
+
+CHANGING SCENARIO DIFFICULTY:
+  1. Modify byte at 0x06 (DIFFICULTY field)
+  2. Valid values: 0-6
+
+================================================================================
+HEXDUMP VERIFICATION
+================================================================================
+
+To verify a file, dump the first 32 bytes:
+
+  od -Ax -tx1 -N 32 scenario.scn
+
+Should show pattern:
+  0c 0c 00 00 00 [version] [diff] 00 66 66 06 40 ...
+
+================================================================================
+FILE SIZE EXPECTATIONS
+================================================================================
+
+Scenario Complexity vs. File Size:
+
+Unit Count    Expected Size    Description
+----------    --------------   -----------
+0-5           35-37 KB         Small scenarios (1-3 locations)
+27            134 KB           Medium scenarios (5-8 locations)
+88            92 KB            Large scenarios (8-12 locations)
+544           118 KB           Campaign scenarios (10-15 locations)
+1000          133 KB           Very large scenarios (12-15 locations)
+
+Formula (approximate):
+  Size ≈ 36 KB + (UnitCount × 32 bytes) + MapTerrain
+
+================================================================================
+DISASSEMBLY REFERENCES
+================================================================================
+
+From v4v.txt analysis:
+  - Error: "Can't find scenario file" indicates missing SCN file
+  - DOS interrupt 21h used for file I/O operations
+  - File loading at ovr065 (overlay 065)
+  - Scenario enumeration from "Scenarios" directory
+
+The format supports:
+  - Quick file validation via magic number check
+  - Fast record access via fixed 32-byte records
+  - Multiple scenario types via VERSION field
+  - Difficulty selection via DIFFICULTY field
+
+================================================================================
+END OF QUICK REFERENCE
+================================================================================

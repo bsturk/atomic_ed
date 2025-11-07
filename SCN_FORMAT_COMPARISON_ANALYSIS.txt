@@ -1,0 +1,264 @@
+================================================================================
+SCENARIO FILE (.SCN) FORMAT COMPARISON ANALYSIS
+V is for Victory vs D-Day
+================================================================================
+
+EXECUTIVE SUMMARY
+=================
+The .SCN (scenario) file formats are COMPLETELY DIFFERENT between the two games.
+They use distinct magic numbers, header structures, and data layouts. The formats
+are NOT compatible and appear to be from entirely different game engines.
+
+================================================================================
+PART 1: FILE INVENTORY
+================================================================================
+
+V IS FOR VICTORY
+  Directory: /game/v_is_for_victory/game/
+  Total Files: 27 .SCN files
+  Total Size: 2,198,268 bytes (2.2 MB)
+  Average File: 81.4 KB
+  
+  Files listed by campaign:
+    GJS (Generals Jody Spitz): 7 files (GJSBEACH, GJSBULL, GJSCAMP, GJSORNE, 
+                                         GJSRUN, GJSSEA, GJSYOUTH)
+    MG (Market Garden): 8 files (MGBREAK, MGCAMP, MGDEST, MGEAGLES, MGFIRST,
+                                  MGHEIGHT, MGHELL)
+    UB (Unknown campaign): 6 files (UBATTACK, UBCAMP, UBCARENT, UBCARTER,
+                                     UBFINAL, UBMOP)
+    VL (Vladimir/Eastern Front?): 7 files (VLCAMP, VLCITY, VLEIGHT, VLFORT,
+                                           VLLAST, VLRESCUE, VLSTORM)
+
+D-DAY GAME
+  Directory: /game/dday/game/SCENARIO/
+  Total Files: 7 .SCN files
+  Total Size: 852,674 bytes (852 KB)
+  Average File: 121.8 KB
+  
+  Files:
+    BRADLEY.SCN         31,696 bytes
+    CAMPAIGN.SCN       276,396 bytes (largest)
+    COBRA.SCN          155,702 bytes
+    COUNTER.SCN         31,382 bytes
+    OMAHA.SCN          137,440 bytes
+    STLO.SCN            48,012 bytes
+    UTAH.SCN           172,046 bytes
+
+================================================================================
+PART 2: MAGIC NUMBERS AND FILE HEADERS
+================================================================================
+
+V IS FOR VICTORY FORMAT
+  Magic Number: 0x0C0C (3084 in decimal)
+  Header: Consistent across ALL 27 files
+  First 4 bytes: 0c 0c 00 00
+  
+  Format: Little-endian, starting at offset 0x00
+  - Bytes 0-3:   0x0C0C (magic number)
+  - Bytes 4-7:   Version/Type identifier (varies: 00 03 02, 00 02 06, 00 01 06)
+  - Bytes 8-11:  0x66660640 (constant marker?)
+  - Bytes 12+:   Mixed binary data with embedded text strings
+
+D-DAY FORMAT
+  Magic Number: 0x1230 (4656 in decimal)
+  Header: Consistent across ALL 7 files
+  First 4 bytes: 30 12 00 00
+  
+  Format: Little-endian 32-bit integers starting at offset 0x04
+  - Bytes 0-3:   0x1230 (magic number)
+  - Bytes 4-7:   0x11 00 00 00 (17 decimal - possibly count of something)
+  - Bytes 8-11:  0x05 00 00 00 (5 decimal)
+  - Bytes 12-15: 0x0A 00 00 00 (10 decimal)
+  - ... continues with more 32-bit integers (appears to be counts or array sizes)
+
+CONCLUSION: Completely different file formats with different magic numbers.
+
+================================================================================
+PART 3: DETAILED HEADER ANALYSIS (First 64 bytes)
+================================================================================
+
+V IS FOR VICTORY (GJSBEACH.SCN as example):
+Offset  Hex                                    ASCII
+0x00    0c 0c 00 00 00 03 02 00 66 66 06 40  ........ff.@....
+0x10    00 00 2c 00 32 00 00 00 00 00 01 01  ..,.2...........
+0x20    59 7c 01 00 6f 7c 01 00 08 06 02 00  Y|..o|..........
+0x30    01 01 00 00 58 00 0c 00 16 00 00 00  ....X...........
+
+Observations:
+  - Bytes 0x18-0x1F appear to contain little-endian offsets (0x017c59, 0x017c6f)
+  - Bytes are mostly non-zero with structured pattern
+  - Text data embedded starting around offset 0x80
+
+D-DAY (BRADLEY.SCN as example):
+Offset  Hex                                    ASCII
+0x00    30 12 00 00 11 00 00 00 05 00 00 00  0...............
+0x10    0a 00 00 00 08 00 00 00 05 00 00 00  ................
+0x20    08 00 00 00 00 00 00 00 0a 00 00 00  ................
+0x30    14 00 00 00 05 00 00 00 7d 00 00 00  ............}...
+
+Observations:
+  - Bytes 0x04-0x34 contain series of little-endian 32-bit integers
+  - Values appear to be counts: 17, 5, 10, 8, 5, 8, 10, 20, 5, 125, 100
+  - Large sparse block of zeros follows (data starts much later)
+  - Offsets at 0x40-0x50: 0x017c77, 0x017c81, 0x0748, 0x10a4
+
+CONCLUSION: Fundamentally different header structures and data organization.
+
+================================================================================
+PART 4: BINARY STRUCTURE PATTERNS
+================================================================================
+
+V IS FOR VICTORY STRUCTURE
+  - Compact, mixed binary and text data
+  - Text strings appear early (around offset 0x80+)
+  - Binary records interspersed throughout
+  - Contains mission briefing text early in file
+  - Pointer/offset values embedded at offset 0x18+
+  - File padding: mostly zeros at end
+  - Example text found:
+    "You have managed to make it ashore with minimal losses..."
+    "The Commonwealth has landed several divisions in your area..."
+    Location names: Bayeux, Tilly-sur-Seulles, Villers-Bocage, Caen
+    Unit designations: I Corps, XXX Corps, etc.
+
+D-DAY STRUCTURE
+  - Header of 32-bit integers (probably table of contents)
+  - Large sparse region with many zeros (0x00-0x200+)
+  - Data appears to start at offset 0x220+
+  - Contains structured numerical data records
+  - Text appears later in file (around 0x220+)
+  - Repeating patterns of structured binary records
+  - Example text found:
+    "Your mission is to advance on the town of Caumont..."
+    Location names: Caumont, Balleroy, the Drome
+    Unit designations: 102-V, 745-V, 1st Infantry
+
+CONCLUSION: Different internal organization - V4V is more compact and integrated,
+           D-Day has a header with counts followed by structured data.
+
+================================================================================
+PART 5: FILE CONTENT COMPARISON
+================================================================================
+
+SIMILAR CONTENT ELEMENTS (mission briefing, locations, units):
+  - Both contain mission briefing text
+  - Both list location/town names
+  - Both list military unit designations
+  - Both store game scenario data (map, units, objectives)
+
+DIFFERENT ENCODING:
+  - V4V: Appears to mix binary records with text more closely
+  - D-Day: Clear separation of header counts from data section
+  - Different pointer/offset systems
+  - Different record formats for units and map data
+
+EXAMPLE CONTENT:
+  V4V briefing: "You have managed to make it ashore..."
+  D-Day briefing: "Your mission is to advance on the town..."
+  
+  Both contain military unit information and location data, but in
+  completely different binary formats.
+
+================================================================================
+PART 6: SIZE ANALYSIS AND PATTERNS
+================================================================================
+
+V IS FOR VICTORY
+  Smallest: MGHELL.SCN (35,108 bytes)
+  Largest: VLCAMP.SCN (134,440 bytes)
+  Range: 35KB - 134KB
+  Average: 81.4KB
+  
+  Note: Files of similar complexity vary significantly in size,
+        suggesting variable-length data structures or different
+        compression/optimization strategies
+
+D-DAY
+  Smallest: COUNTER.SCN (31,382 bytes)
+  Largest: CAMPAIGN.SCN (276,396 bytes)
+  Range: 31KB - 276KB
+  Average: 121.8KB
+  
+  Note: Campaign file is much larger (2x average), possibly due to
+        larger map or more units
+
+================================================================================
+PART 7: POINTER AND OFFSET ANALYSIS
+================================================================================
+
+V IS FOR VICTORY (GJSBEACH.SCN)
+  At offset 0x18-0x20:
+    0x017C59 (decimal 97369)
+    0x017C6F (decimal 97391)
+  These appear to point to data structures within the file.
+
+D-DAY (BRADLEY.SCN)
+  At offset 0x40-0x50:
+    0x017C77 (decimal 97399)
+    0x017C81 (decimal 97409)
+    0x000748 (decimal 1864)
+    0x0010A4 (decimal 4260)
+  These also appear to be internal offsets.
+
+NOTE: While both use 32-bit little-endian offsets, they point to
+      different file structures and are positioned differently in
+      the header.
+
+================================================================================
+PART 8: CONCLUSION
+================================================================================
+
+ANSWER: Are the .SCN file formats similar or identical?
+        COMPLETELY DIFFERENT - NOT COMPATIBLE
+
+KEY FINDINGS:
+
+1. DIFFERENT MAGIC NUMBERS
+   - V4V: 0x0C0C
+   - D-Day: 0x1230
+   These are unmistakable markers that the formats are incompatible.
+
+2. DIFFERENT HEADER STRUCTURES
+   - V4V: Version/type info + mixed binary-text layout
+   - D-Day: Series of 32-bit count/size integers
+
+3. DIFFERENT DATA ORGANIZATION
+   - V4V: Compact with early text integration
+   - D-Day: Header counts followed by sparse data section
+
+4. DIFFERENT POINTER SYSTEMS
+   - Both use 32-bit offsets but at different positions
+   - Different offset values for same-sized files
+
+5. DIFFERENT FILE SIZES
+   - V4V average: 81.4 KB
+   - D-Day average: 121.8 KB
+   - Not proportional, suggesting different data compression or structures
+
+6. SAME CONTENT TYPE
+   - Both store military scenario information
+   - Both have mission briefing, locations, units
+   - But encoding is completely different
+
+IMPLICATIONS:
+
+- These games use different game engines or versions of an engine
+- Scenario files are NOT interchangeable between games
+- Would require separate parsers/converters to translate between formats
+- The games likely have different map representations, unit systems, etc.
+- Reverse engineering would require analyzing each format independently
+
+RECOMMENDATION:
+
+If converting scenarios between games is desired:
+1. Parse V4V files according to V4V format specification
+2. Extract mission data, map info, units, objectives
+3. Translate to D-Day format specification
+4. Re-encode in D-Day binary format
+5. Extensive testing required due to potential game engine differences
+
+The formats are definitely incompatible at the binary level.
+
+================================================================================
+END OF REPORT
+================================================================================

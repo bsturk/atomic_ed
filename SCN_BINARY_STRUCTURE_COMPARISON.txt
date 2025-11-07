@@ -1,0 +1,169 @@
+================================================================================
+BINARY STRUCTURE VISUALIZATION - First 256 bytes
+V IS FOR VICTORY vs D-DAY
+================================================================================
+
+V IS FOR VICTORY (GJSBEACH.SCN)
+Offset  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+------  ------------------------------------------------
+0x000   0c 0c 00 00 00 03 02 00 66 66 06 40 00 00 00 00
+0x010   2c 00 32 00 00 00 00 00 01 01 59 7c 01 00 6f 7c
+0x020   01 00 08 06 02 00 01 01 00 00 58 00 0c 00 16 00
+0x030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x040   00 00 16 00 01 00 08 00 00 00 00 00 00 00 00 00
+0x050   0c 00 0c 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x060   01 00 00 00 00 01 00 01 01 01 01 00 01 00 00 00
+0x070   00 00 00 00 00 00 00 00 00 00 00 00 01 01 01 01
+0x080   00 00 59 6f 75 20 68 61 76 65 20 6d 61 6e 61 67
+0x090   65 64 20 74 6f 20 6d 61 6b 65 20 69 74 20 61 73
+
+OBSERVATIONS:
+  - Magic: 0c 0c 00 00 (immediately identifiable)
+  - Quick transition to data at 0x18 (offsets: 59 7c 01 00)
+  - Text appears at 0x82 (ASCII: "You managed to make it as...")
+  - Mixed binary and text data
+
+D-DAY (BRADLEY.SCN)
+Offset  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+------  ------------------------------------------------
+0x000   30 12 00 00 11 00 00 00 05 00 00 00 0a 00 00 00
+0x010   08 00 00 00 05 00 00 00 08 00 00 00 00 00 00 00
+0x020   0a 00 00 00 14 00 00 00 05 00 00 00 7d 00 00 00
+0x030   64 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x040   00 00 00 00 00 00 00 00 77 7c 01 00 81 7c 01 00
+0x050   48 07 00 00 a4 10 00 00 00 00 00 00 00 00 00 00
+0x060   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x070   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x080   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x090   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+OBSERVATIONS:
+  - Magic: 30 12 00 00 (immediately identifiable)
+  - Header contains series of 32-bit integers (0x04-0x38): counts?
+  - Offsets appear at 0x40 (77 7c 01 00)
+  - Sparse data with large zero blocks
+  - Text appears much later (around 0x220+)
+
+================================================================================
+STRUCTURE PATTERN COMPARISON
+================================================================================
+
+V IS FOR VICTORY LAYOUT:
+┌─────────────────────────────────────────────────────┐
+│ HEADER (Small, ~0x40 bytes)                         │
+│ Magic: 0x0C0C                                       │
+│ Version/Type: varies                                │
+│ Marker: 0x66660640                                  │
+│ Offsets to data structures                          │
+├─────────────────────────────────────────────────────┤
+│ MISSION TEXT (Starting ~0x80)                       │
+│ "You have managed to make it ashore..."             │
+│ "The Commonwealth has landed..."                    │
+│ "you are behind schedule..."                        │
+├─────────────────────────────────────────────────────┤
+│ BINARY DATA RECORDS (Mixed throughout)              │
+│ Unit definitions, map data, objectives              │
+├─────────────────────────────────────────────────────┤
+│ PADDING (Mostly zeros at end)                       │
+└─────────────────────────────────────────────────────┘
+
+D-DAY LAYOUT:
+┌─────────────────────────────────────────────────────┐
+│ HEADER WITH TABLE OF CONTENTS (0x00-0x40+)         │
+│ Magic: 0x1230                                       │
+│ Series of 32-bit integers (counts/sizes):          │
+│   17, 5, 10, 8, 5, 8, 10, 20, 5, 125, 100...      │
+│ File offsets to data sections                       │
+├─────────────────────────────────────────────────────┤
+│ SPARSE REGION (Many zeros, 0x40-0x220)             │
+│ Reserved space or padding                           │
+├─────────────────────────────────────────────────────┤
+│ BINARY DATA RECORDS (Starting ~0x220)               │
+│ Structured records with numerical data              │
+├─────────────────────────────────────────────────────┤
+│ TEXT DATA (Embedded in record section)              │
+│ "Your mission is to advance on the town..."         │
+│ Location names and unit designations                │
+├─────────────────────────────────────────────────────┤
+│ MORE DATA / PADDING                                 │
+└─────────────────────────────────────────────────────┘
+
+================================================================================
+KEY STRUCTURAL DIFFERENCES
+================================================================================
+
+ASPECT                          | V4V                    | D-DAY
+--------------------------------|------------------------|------------------------
+Initial Organization            | Direct data            | Table of contents first
+Header Size                      | Small (~0x40 bytes)    | Larger (multiple counts)
+Text Placement                   | Early (0x80+)          | Later (0x220+)
+Interleaving                     | Binary & text mixed    | Separated
+Sparse Regions                   | At end (padding)       | In middle (reserved)
+Offset System                    | Starts @ 0x18          | Starts @ 0x40
+Data Density                     | High (compact)         | Lower (sparse header)
+Expected Parser Approach         | Sequential reading     | Header parsing first
+
+================================================================================
+OFFSET ANALYSIS EXAMPLE
+================================================================================
+
+V4V (GJSBEACH.SCN) - At offset 0x18-0x20:
+  Hex:     59 7c 01 00  6f 7c 01 00
+  Decimal: 97369        97391
+  Meaning: Pointers to data structures in file
+
+D-Day (BRADLEY.SCN) - At offset 0x40-0x50:
+  Hex:     77 7c 01 00  81 7c 01 00  48 07 00 00  a4 10 00 00
+  Decimal: 97399        97409        1864         4260
+  Meaning: Multiple offset/pointer references
+
+Note: Similar offset ranges but positioned differently in file structure
+
+================================================================================
+CONTENT EXTRACTION COMPLEXITY
+================================================================================
+
+V IS FOR VICTORY SCENARIO DATA:
+  1. Read magic number (verify 0x0C0C)
+  2. Read version/type identifier
+  3. Process header offsets
+  4. Extract mission briefing from early text location
+  5. Parse binary records for units, map, objectives
+  6. Extract location names and unit designations
+
+D-DAY SCENARIO DATA:
+  1. Read magic number (verify 0x1230)
+  2. Read table of contents (series of counts)
+  3. Parse file offset pointers
+  4. Use offsets to locate data sections
+  5. Extract binary records according to counts
+  6. Extract embedded text with unit/location info
+  7. Correlate counts with actual data blocks
+
+ASSESSMENT: D-Day format requires more structured parsing (table-driven),
+            while V4V can use offset pointers directly.
+
+================================================================================
+CONCLUSION
+================================================================================
+
+The two formats are fundamentally different at every level:
+
+1. MAGIC NUMBERS are unique to each game (0x0C0C vs 0x1230)
+2. HEADER ORGANIZATION differs significantly
+3. DATA PLACEMENT strategies are opposite (early vs late)
+4. OFFSET SYSTEMS positioned differently
+5. FILE STRUCTURE completely different approach
+
+These are NOT variations of the same format. They represent different
+design philosophies for storing game scenario data.
+
+FILES ANALYZED:
+  V4V: GJSBEACH.SCN (92,306 bytes) + 26 others
+  D-Day: BRADLEY.SCN (31,696 bytes) + 6 others
+
+RECOMMENDATION FOR CONVERSION:
+  Would need completely separate parsers for each format,
+  with data extraction and re-encoding to target format.
+
+================================================================================

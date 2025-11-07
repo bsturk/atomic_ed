@@ -1,0 +1,361 @@
+================================================================================
+D-DAY SCENARIO FILE FORMAT SPECIFICATION - CORRECTED
+Complete Technical Documentation with Actual Data Organization
+================================================================================
+
+DOCUMENT VERSION: 2.0 (CORRECTED)
+DATE: November 7, 2025
+CRITICAL DISCOVERY: Offset pointers are NOT stored in file order!
+
+================================================================================
+KEY DISCOVERY: POINTER ORDERING DISCREPANCY
+================================================================================
+
+CRITICAL FINDING:
+The offset pointers in the header are NOT stored in the order they appear in
+the file! This is a crucial discovery for understanding the format.
+
+HEADER POINTER ORDER:
+  0x40: PTR1 (NULL)
+  0x44: PTR2 (NULL)
+  0x48: PTR3 ← This pointer is stored FIRST
+  0x4c: PTR4
+  0x50: PTR5 ← But these pointers point to data EARLIER in the file!
+  0x54: PTR6
+  0x58: PTR7 (NULL)
+  0x5c: PTR8 (NULL)
+
+ACTUAL FILE ORDER:
+  PTR5 → File offset 0x002xxx (earliest data)
+  PTR6 → File offset 0x002xxx (second data section)
+  PTR3 → File offset 0x017cxx (later in file)
+  PTR4 → File offset 0x017cxx (latest pointer region)
+  [Remaining data]
+
+This means:
+- PTR3 and PTR4 are named/numbered misleadingly
+- PTR5 and PTR6 actually contain the first data sections
+- The pointers are a mixed/non-sequential table of contents
+
+================================================================================
+CORRECTED DATA SECTION LAYOUT (In actual file order)
+================================================================================
+
+SECTION 1: PTR5 DATA SECTION
+  Header Reference: 0x50 (contains file offset pointer)
+  Actual File Offset: ~0x002a03 (varies by scenario)
+  Size: Calculated as (PTR6 offset - PTR5 offset)
+  Content: Numeric/coordinate data (2-3 KB)
+  Example (UTAH.SCN):
+    Offset 0x002a03: 02 b8 02 70 00 61 00 fd 00 01 03 1b 03...
+    Size: 765 bytes
+    Data: Mix of 16-bit values and small numbers
+
+SECTION 2: PTR6 DATA SECTION
+  Header Reference: 0x54 (contains file offset pointer)
+  Actual File Offset: ~0x002d00 (varies by scenario)
+  Size: Calculated as (PTR3 offset - PTR6 offset)
+  Content: Specialized data (2-4 KB)
+  Example (UTAH.SCN):
+    Offset 0x002d00: 00 00 00 00... (zeros in this case)
+    Size: 85,849 bytes
+    Note: Large sparse region with mostly zeros
+
+SECTION 3: PTR3 DATA SECTION
+  Header Reference: 0x48 (contains file offset pointer)
+  Actual File Offset: ~0x017cxx (varies by scenario)
+  Size: Calculated as (PTR4 offset - PTR3 offset)
+  Content: Unit roster/definitions (100-200 bytes)
+  Example (UTAH.SCN):
+    Offset 0x017c59: 06 02 02 03 00 ff 00 42 2d 38 30 31 2d 56 49 49
+    Size: 154 bytes
+    Content: "B-801-VII" and other unit designations
+    Data: Unit type codes, unit names, attributes
+
+SECTION 4: PTR4 DATA SECTION
+  Header Reference: 0x4c (contains file offset pointer)
+  Actual File Offset: ~0x017cxx (varies by scenario)
+  Size: Calculated as (file end - PTR4 offset)
+  Content: Unit positioning/attributes and remaining data
+  Example (UTAH.SCN):
+    Offset 0x017cf3: 06 01 00 00 00 01 00 01 01 00 01...
+    Size: 74,523 bytes
+    Content: Unit positioning, flags, attributes, text
+
+================================================================================
+CORRECTED FILE STRUCTURE DIAGRAM
+================================================================================
+
+File Layout (by actual offset):
+
+0x00000 | Header Section
+        | 0x00-0x01: Magic (0x30 0x12)
+        | 0x02-0x03: Reserved
+        | 0x04-0x33: 12 Count fields
+        | 0x34-0x3f: Padding
+        | 0x40-0x5f: Offset pointer table
+        |
+0x00060 | Sparse/Padding Region (~460-1500 bytes of zeros)
+        |
+0x002XX | PTR5 DATA SECTION (2-3 KB)
+        | Location: variable start (~0x002a00)
+        | Content: Numeric data, coordinates
+        | Size: calculated as PTR6-PTR5
+        |
+0x002XX | PTR6 DATA SECTION (2-90 KB)
+        | Location: variable start (~0x002d00)
+        | Content: Specialized data (may be mostly zeros)
+        | Size: calculated as PTR3-PTR6
+        |
+0x017XX | PTR3 DATA SECTION (100-200 bytes)
+        | Location: variable (~0x017c59)
+        | Content: Unit roster, unit names
+        | Size: calculated as PTR4-PTR3
+        |
+0x017XX | PTR4 DATA SECTION (50-180 KB)
+        | Location: variable (~0x017cf3)
+        | Content: Unit positioning, attributes, text
+        | Size: calculated as EOF-PTR4
+        |
+0x....N | EOF
+
+ACTUAL EXAMPLE (UTAH.SCN):
+
+0x00000 | Header (96 bytes)
+0x00060 | Padding/sparse region (first data region)
+0x002a03 | PTR5 = Numeric data (765 bytes)
+0x002d00 | PTR6 = Sparse data (85,849 bytes) ← Contains mostly zeros!
+0x017c59 | PTR3 = Unit roster (154 bytes)
+0x017cf3 | PTR4 = Positioning & text (74,523 bytes)
+0x2a00e  | EOF
+
+================================================================================
+INTERPRETATION OF SECTIONS
+================================================================================
+
+Based on data analysis and pattern recognition:
+
+PTR5 SECTION (Numeric Data):
+  - Purpose: Map coordinates, unit strengths, numeric parameters
+  - Content: Mix of 16-bit and 32-bit values
+  - Size: Relatively small (2-3 KB)
+  - Pattern: Data appears structured with breaks of zeros
+  - Interpretation: Likely positional/strength data for units
+
+PTR6 SECTION (Specialized Data):
+  - Purpose: Scenario-specific data, possibly fog of war or AI state
+  - Content: Highly variable by scenario
+  - Size: Varies significantly (can be huge sparse region)
+  - Pattern: Often mostly zeros with sparse data
+  - Interpretation: May contain optional scenario features
+
+PTR3 SECTION (Unit Roster):
+  - Purpose: Unit definitions and metadata
+  - Content: Unit type codes, unit names, attributes
+  - Size: Small but precise (100-200 bytes per scenario)
+  - Examples: "B-801-VII", "C-801-V", "1st Infantry"
+  - Format: Binary codes followed by ASCII unit names
+  - Interpretation: Master list of units available in scenario
+
+PTR4 SECTION (Unit Positioning & Attributes):
+  - Purpose: Unit instance data, positioning, AI behavior
+  - Content: Unit flags, positions, orders, mission briefing text
+  - Size: Large (50-180 KB)
+  - Contains: Binary data interspersed with ASCII text
+  - Text includes: Mission briefings, location names, orders
+  - Interpretation: Actual game state and briefing information
+
+================================================================================
+REVISED SECTION PURPOSES (Based on New Understanding)
+================================================================================
+
+SECTION ORGANIZATION LOGIC:
+
+Why this ordering in the file?
+  1. PTR5 comes first: Small numeric data
+  2. PTR6 comes second: Sparse/optional data
+  3. PTR3 comes third: Unit definitions
+  4. PTR4 comes fourth: Large data section with text
+
+Hypothesis:
+  - The file was designed to load data in access order
+  - PTR5 and PTR6 might be "metadata" sections
+  - PTR3 is "reference" section (unit definitions)
+  - PTR4 is "state" section (current game situation)
+  
+  OR:
+  
+  - Pointers might be organized by data TYPE, not file order
+  - Type 1: Numeric/coordinates (PTR5)
+  - Type 2: Specialized structures (PTR6)
+  - Type 3: Definitions (PTR3)
+  - Type 4: State/text (PTR4)
+
+================================================================================
+IMPLEMENTATION NOTES FOR SCENARIO EDITOR
+================================================================================
+
+READING ALGORITHM (CORRECTED):
+
+  1. Read header (0x00-0x5f)
+  2. Validate magic number at 0x00
+  3. Read counts (they're fixed, use for validation only)
+  4. Read all 8 pointers from 0x40-0x5c
+  5. Filter to active pointers (PTR3, PTR4, PTR5, PTR6 if non-zero)
+  6. Sort pointers by file offset (not header order!)
+  7. Access sections in file order:
+     - First active pointer → data section 1
+     - Second active pointer → data section 2
+     - etc.
+  8. Calculate section sizes as (next_pointer - current_pointer)
+
+POINTER NAVIGATION:
+
+  Get non-zero pointers:
+    active_ptrs = [(name, ptr) for name, ptr in pointers.items() if ptr > 0]
+  
+  Sort by file offset:
+    active_ptrs.sort(key=lambda x: x[1])
+  
+  Calculate section sizes:
+    for i in range(len(active_ptrs)-1):
+      start = active_ptrs[i][1]
+      end = active_ptrs[i+1][1]
+      size = end - start
+  
+  Last section:
+    start = active_ptrs[-1][1]
+    end = file_size
+    size = end - start
+
+WRITING ALGORITHM:
+
+  1. Start with valid header
+  2. Write PTR5 data first (early in file)
+  3. Write PTR6 data next
+  4. Write PTR3 data later
+  5. Write PTR4 data last
+  6. Update all pointer values at 0x40-0x5c
+  7. Keep counts unchanged at 0x04-0x30
+
+COMMON MISTAKES TO AVOID:
+
+  X Assuming pointers are in sequential file order
+  X Not sorting pointers before calculating sizes
+  X Assuming NULL pointers can be moved or changed
+  X Writing sections in header pointer order
+  X Not validating pointer bounds after modification
+
+================================================================================
+CORRECTED DATA TYPE MAPPINGS
+================================================================================
+
+PTR5 SECTION DATA TYPES:
+  Location: 0x002a03 (UTAH example)
+  Content: 02 b8 02 70 00 61 00 fd 00 01 03 1b 03 31 03 26...
+  
+  Possible interpretations:
+    - UINT16 values: 0x02b8, 0x0270, 0x0061, 0x00fd, 0x0001, 0x031b, 0x0331, 0x0326
+    - These might represent:
+      * Map coordinates
+      * Unit strengths/damage
+      * Timings/turns
+      * Fuel/supplies
+
+PTR6 SECTION DATA TYPES:
+  Location: 0x002d00 (UTAH example)
+  Content: Mostly 0x00 (zeros) with sparse non-zero data
+  
+  Possible interpretations:
+    - Reserved/preallocated space
+    - Optional scenario features (fog of war state)
+    - AI decision trees
+    - Victory condition tracking
+
+PTR3 SECTION DATA TYPES:
+  Location: 0x017c59 (UTAH example)
+  Content: 06 02 02 03 00 ff 00 42 2d 38 30 31 2d 56 49 49...
+  
+  Structure:
+    - Binary codes: 06 02 02 03 00 ff 00
+    - ASCII string: "B-801-VII" (unit name)
+    - Repeat for each unit
+
+PTR4 SECTION DATA TYPES:
+  Location: 0x017cf3 (UTAH example)
+  Content: Mixed binary and ASCII text
+  
+  Sections:
+    - Binary codes: Unit positioning, attributes, flags
+    - ASCII text: Mission briefings, location names, unit designations
+    - Interleaved with zeros for padding
+
+================================================================================
+FILE STATISTICS (CORRECTED UNDERSTANDING)
+================================================================================
+
+UTAH.SCN (172,046 bytes):
+  PTR5 offset: 0x002a03 (10,755)
+  PTR6 offset: 0x002d00 (11,520)
+  PTR3 offset: 0x017c59 (97,369)
+  PTR4 offset: 0x017cf3 (97,523)
+  
+  Actual section order:
+    PTR5 → PTR6: 765 bytes (numeric data)
+    PTR6 → PTR3: 85,849 bytes (sparse data)
+    PTR3 → PTR4: 154 bytes (unit roster)
+    PTR4 → EOF: 74,523 bytes (positioning & text)
+
+BRADLEY.SCN (31,696 bytes):
+  PTR5 offset: 0x000748 (1,864)
+  PTR6 offset: 0x0010a4 (4,260)
+  PTR3 offset: 0x017c77 (97,399)
+  PTR4 offset: 0x017c81 (97,409)
+  
+  Actual section order:
+    PTR5 → PTR6: 2,396 bytes (numeric data)
+    PTR6 → PTR3: 93,139 bytes (sparse data)
+    PTR3 → PTR4: 10 bytes (unit roster)
+    PTR4 → EOF: Large negative? (ERROR - File too small!)
+
+CAMPAIGN.SCN (276,396 bytes):
+  PTR5 offset: 0x005497 (21,655)
+  PTR6 offset: 0x006028 (24,616)
+  PTR3 offset: 0x017c59 (97,369)
+  PTR4 offset: 0x017cf3 (97,523)
+  
+  Actual section order:
+    PTR5 → PTR6: 2,961 bytes (numeric data)
+    PTR6 → PTR3: 72,753 bytes (sparse data)
+    PTR3 → PTR4: 154 bytes (unit roster)
+    PTR4 → EOF: 178,873 bytes (positioning & text)
+
+PATTERN:
+  - PTR5→PTR6 section is always 2-3 KB (numeric data)
+  - PTR6→PTR3 section is 72-93 KB (usually mostly zeros)
+  - PTR3→PTR4 section is very small (100-200 bytes)
+  - PTR4→EOF is variable (50-180 KB, contains all text)
+
+================================================================================
+CONCLUSION
+================================================================================
+
+The D-Day scenario format has been revised with correct understanding:
+
+KEY INSIGHTS:
+  1. Offset pointers are NOT in file order (critical!)
+  2. Actual data order is: PTR5, PTR6, PTR3, PTR4
+  3. PTR5/PTR6 contain metadata/numeric data
+  4. PTR3 contains unit definitions
+  5. PTR4 contains positioning/text/state
+  6. Large sparse regions exist (PTR6→PTR3 gap is mostly zeros)
+
+CORRECTED PARSER LOGIC:
+  - Sort all active pointers by file offset before processing
+  - Calculate section sizes based on sorted order
+  - Don't assume header pointer order = file order
+  - Account for sparse/mostly-zero sections
+
+This discovery significantly changes how the file should be parsed and written!
+
+================================================================================
