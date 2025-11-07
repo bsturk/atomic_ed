@@ -30,49 +30,93 @@ class EnhancedUnitParser:
     """Enhanced parser for unit data with better structure understanding"""
 
     @staticmethod
-    def parse_units_from_ptr3(data):
-        """Parse units from PTR3 section with improved structure detection"""
+    def parse_units_from_scenario(scenario):
+        """Parse units from scenario - searches PTR4 and PTR6 sections"""
         units = []
 
-        if not data or len(data) < 16:
+        if not scenario:
             return units
 
-        # PTR3 appears to contain binary metadata and possibly unit definitions
-        # Parse as structured data
-        offset = 0
+        # Unit names are actually in PTR4 and PTR6, not PTR3!
+        # PTR4 contains unit positioning and names
+        # PTR6 contains unit definitions
+
         unit_index = 0
 
-        while offset < len(data) - 8:
-            # Try to find patterns that might indicate unit data
-            chunk = data[offset:offset+64]
+        # Parse from PTR6 (unit definitions)
+        ptr6_data = scenario.sections.get('PTR6', b'')
+        if ptr6_data:
+            units.extend(EnhancedUnitParser._extract_units_from_data(
+                ptr6_data, 'PTR6', unit_index))
+            unit_index = len(units)
 
-            # Look for ASCII strings (unit names/identifiers)
-            ascii_match = re.search(b'[\x20-\x7e]{3,20}', chunk)
-            if ascii_match:
-                unit_name = ascii_match.group().decode('ascii', errors='ignore')
+        # Parse from PTR4 (unit instances/positioning)
+        ptr4_data = scenario.sections.get('PTR4', b'')
+        if ptr4_data:
+            # Skip mission text at the beginning (first ~10KB typically)
+            # Look for unit names in the latter part
+            search_start = min(10000, len(ptr4_data) // 2)
+            units.extend(EnhancedUnitParser._extract_units_from_data(
+                ptr4_data[search_start:], 'PTR4', unit_index, search_start))
 
-                # Extract surrounding binary data
-                binary_before = chunk[:ascii_match.start()]
+        return units
 
-                # Try to interpret numeric values
-                unit_type = 0
-                unit_strength = 0
+    @staticmethod
+    def _extract_units_from_data(data, section_name, start_index, offset_base=0):
+        """Extract unit names from binary data"""
+        units = []
 
-                if len(binary_before) >= 4:
-                    unit_type = struct.unpack('<I', binary_before[:4])[0] if len(binary_before) >= 4 else 0
+        if not data:
+            return units
+
+        # Find all ASCII strings that look like unit names
+        # Pattern: 3+ chars, may contain letters, numbers, spaces, dashes
+        import re
+
+        # Find all ASCII strings
+        pattern = b'[\x20-\x7e]{3,30}'
+        matches = re.finditer(pattern, data)
+
+        unit_index = start_index
+
+        for match in matches:
+            unit_name = match.group().decode('ascii', errors='ignore').strip()
+
+            # Filter for likely unit names
+            # Skip pure numbers, common words, etc.
+            if not unit_name or len(unit_name) < 3:
+                continue
+
+            # Skip common non-unit strings
+            skip_words = ['Your', 'The', 'You', 'and', 'are', 'for', 'with',
+                         'http', 'www', 'Allied', 'Axis', 'beachhead']
+            if any(word in unit_name for word in skip_words):
+                continue
+
+            # Look for unit-like patterns:
+            # - Contains numbers: "101st", "3-501-101", "I-8-3FJ"
+            # - Contains Roman numerals: "VII Corps", "III-5-3FJ"
+            # - Military designations: "Infantry", "Airborne", "Corps"
+            has_number = any(c.isdigit() for c in unit_name)
+            has_roman = any(word in unit_name for word in ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'])
+            has_military = any(word in unit_name for word in ['Corps', 'Infantry', 'Airborne', 'Division', 'FJ', 'Schnelle'])
+
+            if has_number or has_roman or has_military:
+                # Get surrounding binary context
+                context_start = max(0, match.start() - 16)
+                context_end = min(len(data), match.end() + 16)
+                context = data[context_start:context_end]
 
                 units.append({
                     'index': unit_index,
                     'name': unit_name,
-                    'type': unit_type,
-                    'offset': offset,
-                    'raw_data': chunk[:32].hex()
+                    'type': 0,  # Would need more analysis to determine
+                    'section': section_name,
+                    'offset': offset_base + match.start(),
+                    'raw_data': context[:32].hex() if len(context) >= 32 else context.hex()
                 })
 
                 unit_index += 1
-                offset += ascii_match.end()
-            else:
-                offset += 1
 
         return units
 
@@ -645,19 +689,19 @@ class ImprovedScenarioEditor:
         left_frame = ttk.LabelFrame(paned, text="Unit List", padding="5")
         paned.add(left_frame, weight=1)
 
-        columns = ("Index", "Name", "Type", "Side")
+        columns = ("Index", "Name", "Section", "Offset")
         self.unit_tree = ttk.Treeview(left_frame, columns=columns,
                                       show='headings', height=20)
 
         self.unit_tree.heading("Index", text="#")
         self.unit_tree.heading("Name", text="Unit Name")
-        self.unit_tree.heading("Type", text="Type")
-        self.unit_tree.heading("Side", text="Side")
+        self.unit_tree.heading("Section", text="Section")
+        self.unit_tree.heading("Offset", text="Offset")
 
         self.unit_tree.column("Index", width=40)
-        self.unit_tree.column("Name", width=150)
-        self.unit_tree.column("Type", width=80)
-        self.unit_tree.column("Side", width=60)
+        self.unit_tree.column("Name", width=200)
+        self.unit_tree.column("Section", width=60)
+        self.unit_tree.column("Offset", width=80)
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL,
                                  command=self.unit_tree.yview)
@@ -753,9 +797,8 @@ class ImprovedScenarioEditor:
         if not self.scenario:
             return
 
-        # Parse units from PTR3
-        ptr3_data = self.scenario.sections.get('PTR3', b'')
-        self.units = EnhancedUnitParser.parse_units_from_ptr3(ptr3_data)
+        # Parse units from scenario (searches PTR4 and PTR6)
+        self.units = EnhancedUnitParser.parse_units_from_scenario(self.scenario)
 
         # Parse coordinates from PTR5
         ptr5_data = self.scenario.sections.get('PTR5', b'')
@@ -829,12 +872,11 @@ class ImprovedScenarioEditor:
 
         # Add units
         for unit in self.units:
-            side = "Allied" if unit.get('index', 0) % 2 == 0 else "Axis"
             self.unit_tree.insert("", tk.END, values=(
                 unit.get('index', '?'),
                 unit.get('name', 'Unknown'),
-                unit.get('type', '0'),
-                side
+                unit.get('section', 'Unknown'),
+                f"0x{unit.get('offset', 0):06x}"
             ))
 
     def _load_data_overview(self):
