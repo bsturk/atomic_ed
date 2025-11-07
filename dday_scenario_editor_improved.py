@@ -29,28 +29,61 @@ from dday_scenario_parser import DdayScenario
 class EnhancedUnitParser:
     """Enhanced parser for unit data with better structure understanding"""
 
-    # Unit type code mappings (reverse-engineered from binary data)
+    # Unit type code mappings (reverse-engineered from binary data and military context)
     UNIT_TYPE_NAMES = {
-        0x00: 'Battalion',      # Generic battalion
-        0x01: 'Battalion',      # Infantry battalion
-        0x02: 'Battalion',      # Special battalion
+        # Infantry Types
+        0x00: 'Infantry-Bn',    # Generic infantry battalion
+        0x01: 'Airborne-Bn',    # Airborne/paratrooper battalion (101st Airborne units)
+        0x02: 'Infantry-Bn',    # Special infantry battalion
+        0x04: 'SS-Bn',          # Waffen-SS battalion (German elite)
+        0x08: 'Glider-Bn',      # Glider infantry battalion (airborne assault)
+        0x0b: 'SS-Regiment',    # Waffen-SS regiment
+        0x0f: 'FJ-Co',          # Fallschirmjäger company
+        0x1d: 'Static-Bn',      # Static/coastal defense battalion
+        0x27: 'Panzer-Co',      # Panzer company (German armor company)
+        0x32: 'Heavy-Co',       # Heavy weapons company (SS/Panzergrenadier)
+        0x35: 'Panzer-Bn',      # Panzer battalion - German armor
+        0x38: 'FJ-Heavy',       # Fallschirmjäger heavy battalion
+        0x41: 'PzGren-Bn',      # Panzergrenadier battalion (armored infantry)
+        0x62: 'FJ-Heavy',       # Fallschirmjäger heavy battalion
+
+        # Armor Types
+        0x0d: 'Panzer-Heavy',   # Panzer heavy company/detachment
+        0x28: 'Tank-Bn',        # Tank battalion (Allied)
+        0x29: 'Tank-Bn',        # Tank battalion variant
+        0x2a: 'Tank-Co',        # Tank company (detachment)
+        0x60: 'Combat-Cmd-A',   # Combat Command A (US armored division)
+        0x61: 'Combat-Cmd-B',   # Combat Command B (US armored division)
+
+        # Artillery Types
+        0x18: 'Artillery',      # Field artillery battalion
+        0x24: 'Arty-Group',     # Artillery group (off-map fire support)
+        0x25: 'Arty-Group',     # Artillery group variant
+        0x43: 'Artillery',      # Artillery battalion
+
+        # Support Types
+        0x1b: 'Engineer',       # Engineer battalion
+        0x16: 'Eng-Co',         # Engineer company
+        0x34: 'Assault-Gun',    # Assault gun battalion (StuG)
+        0x10: 'Flak-Regt',      # Flak regiment (anti-aircraft)
+        0x36: 'AAA/Heavy',      # Anti-aircraft or heavy battalion
+        0x40: 'Cavalry',        # Cavalry reconnaissance squadron
+        0x5f: 'Recon',          # Reconnaissance battalion/company
+
+        # Air Units
+        0x26: 'Luftwaffe',      # Luftwaffe fighter wing (JG = Jagdgeschwader)
+
+        # Command Levels
         0x07: 'Division-HQ',    # Division headquarters
-        0x08: 'Battalion',      # Glider battalion
-        0x11: 'Corps',          # Corps level
+        0x11: 'Corps',          # Corps level (Allied)
+        0x12: 'Korps',          # Korps level (German)
         0x13: 'Division',       # Division level
+        0x14: 'Static-Div',     # Static infantry division
         0x15: 'Regiment',       # Regiment level
         0x17: 'Company',        # Company level
-        0x18: 'Artillery',      # Artillery battalion
-        0x1b: 'Engineer',       # Engineer battalion
-        0x28: 'Tank-Bn',        # Tank battalion
-        0x29: 'Tank-Bn',        # Tank battalion (variant)
-        0x2a: 'Tank-Co',        # Tank company (detachment)
-        0x36: 'AAA',            # Anti-aircraft artillery
-        0x40: 'Cavalry',        # Cavalry squadron
-        0x41: 'Battalion',      # Airborne battalion
-        0x43: 'Artillery',      # Artillery battalion
-        0x60: 'Combat-Cmd-A',   # Combat Command A (armor)
-        0x61: 'Combat-Cmd-B',   # Combat Command B (armor)
+        0x1c: 'Static-HQ',      # Static division HQ
+        0x2b: 'Army-HQ',        # Army headquarters
+        0x5e: 'Static-Regt',    # Static regiment (coastal defense)
     }
 
     @staticmethod
