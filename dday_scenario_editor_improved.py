@@ -69,51 +69,104 @@ class EnhancedUnitParser:
         if not data:
             return units
 
-        # Find all ASCII strings that look like unit names
-        # Pattern: 3+ chars, may contain letters, numbers, spaces, dashes
         import re
+        import struct
 
-        # Find all ASCII strings
-        pattern = b'[\x20-\x7e]{3,30}'
+        # Find null-terminated ASCII strings (more accurate for unit names)
+        # Look for sequences of printable chars followed by null byte
+        pattern = b'[\x20-\x7e]{4,30}\x00'
         matches = re.finditer(pattern, data)
 
         unit_index = start_index
 
         for match in matches:
-            unit_name = match.group().decode('ascii', errors='ignore').strip()
+            # Remove the null terminator
+            unit_name = match.group()[:-1].decode('ascii', errors='ignore').strip()
 
-            # Filter for likely unit names
-            # Skip pure numbers, common words, etc.
-            if not unit_name or len(unit_name) < 3:
+            # More strict validation
+            if not unit_name or len(unit_name) < 4:
+                continue
+
+            # Reject strings with too many special characters
+            special_count = sum(1 for c in unit_name if c in '!@#$%^&*()+=[]{}|\\<>?/~`')
+            if special_count > 2:  # Allow some dashes/spaces but not garbage
+                continue
+
+            # Must start with alphanumeric
+            if not unit_name[0].isalnum():
                 continue
 
             # Skip common non-unit strings
-            skip_words = ['Your', 'The', 'You', 'and', 'are', 'for', 'with',
-                         'http', 'www', 'Allied', 'Axis', 'beachhead']
-            if any(word in unit_name for word in skip_words):
+            skip_words = ['Your', 'The', 'You', 'and', 'are', 'for', 'with', 'that',
+                         'http', 'www', 'Allied', 'Axis', 'beachhead', 'capture',
+                         'attack', 'defend', 'objective', 'must', 'will', 'have']
+            if any(word.lower() in unit_name.lower() for word in skip_words):
                 continue
 
             # Look for unit-like patterns:
             # - Contains numbers: "101st", "3-501-101", "I-8-3FJ"
             # - Contains Roman numerals: "VII Corps", "III-5-3FJ"
             # - Military designations: "Infantry", "Airborne", "Corps"
+            # - Common formats: "D-70-VII", "1-501-101"
             has_number = any(c.isdigit() for c in unit_name)
-            has_roman = any(word in unit_name for word in ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'])
-            has_military = any(word in unit_name for word in ['Corps', 'Infantry', 'Airborne', 'Division', 'FJ', 'Schnelle'])
 
-            if has_number or has_roman or has_military:
-                # Get surrounding binary context
-                context_start = max(0, match.start() - 16)
-                context_end = min(len(data), match.end() + 16)
+            # Check for Roman numerals (whole words only to avoid matching random I's)
+            roman_pattern = r'\b(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\b'
+            has_roman = bool(re.search(roman_pattern, unit_name))
+
+            military_terms = ['Corps', 'Infantry', 'Airborne', 'Division', 'FJ',
+                             'Schnelle', 'Panzer', 'Armor', 'Regiment', 'Battalion',
+                             'Brigade', 'Artillery', 'Cavalry', 'Recon', 'Engineer']
+            has_military = any(term in unit_name for term in military_terms)
+
+            # Common unit naming patterns
+            # e.g. "1-501-101", "D-70-VII", "III-5-3FJ"
+            dash_pattern = r'^\d+[A-Z]?-\d+[A-Z]?-\d+[A-Z]*$|^[A-Z]-\d+-[IVX]+$|^[IVX]+-\d+-[A-Z0-9]+$'
+            matches_pattern = bool(re.match(dash_pattern, unit_name))
+
+            # "101st", "82nd", "3rd" style
+            ordinal_pattern = r'\d+(st|nd|rd|th)\b'
+            has_ordinal = bool(re.search(ordinal_pattern, unit_name))
+
+            if has_number or has_roman or has_military or matches_pattern or has_ordinal:
+                # Get surrounding binary context for stats
+                context_start = max(0, match.start() - 32)
+                context_end = min(len(data), match.end() + 32)
                 context = data[context_start:context_end]
+
+                # Try to extract stats from binary data before the name
+                # Common pattern: bytes at offset -16 to -1 before name
+                strength = 0
+                unit_type = 0
+
+                if match.start() >= 16:
+                    # Look at bytes before the unit name
+                    pre_data = data[match.start()-16:match.start()]
+
+                    # Try to find strength value (often a byte 0-100)
+                    for i in range(len(pre_data)):
+                        val = pre_data[i]
+                        if 1 <= val <= 100:  # Possible strength value
+                            strength = val
+
+                    # Unit type might be in the first few bytes
+                    if len(pre_data) >= 4:
+                        try:
+                            unit_type = struct.unpack('<I', pre_data[:4])[0]
+                            # Sanity check - type should be reasonable
+                            if unit_type > 10000:
+                                unit_type = pre_data[0]  # Just use first byte
+                        except:
+                            unit_type = pre_data[0]
 
                 units.append({
                     'index': unit_index,
                     'name': unit_name,
-                    'type': 0,  # Would need more analysis to determine
+                    'type': unit_type,
+                    'strength': strength,
                     'section': section_name,
                     'offset': offset_base + match.start(),
-                    'raw_data': context[:32].hex() if len(context) >= 32 else context.hex()
+                    'raw_data': context[:64].hex() if len(context) >= 64 else context.hex()
                 })
 
                 unit_index += 1
@@ -398,11 +451,24 @@ class UnitPropertiesEditor(ttk.Frame):
         self.pos_x_spin.set(0)
         self.pos_y_spin.set(0)
 
+        # Set strength from unit data
+        strength = self.current_unit.get('strength', 0)
+        if strength > 0:
+            self.strength_spin.set(strength)
+        else:
+            self.strength_spin.set(100)  # Default
+
         # Display raw data
         self.raw_text.delete('1.0', tk.END)
-        self.raw_text.insert('1.0', f"Offset: 0x{self.current_unit.get('offset', 0):04x}\n")
-        self.raw_text.insert(tk.END, f"Raw data: {self.current_unit.get('raw_data', '')}\n")
+        self.raw_text.insert('1.0', f"Section: {self.current_unit.get('section', 'Unknown')}\n")
+        self.raw_text.insert('1.0', f"Offset: 0x{self.current_unit.get('offset', 0):06x}\n")
         self.raw_text.insert(tk.END, f"Type: {self.current_unit.get('type', 0)}\n")
+        self.raw_text.insert(tk.END, f"Strength (parsed): {strength}\n")
+        self.raw_text.insert(tk.END, f"\nRaw hex data (64 bytes):\n")
+        raw_data = self.current_unit.get('raw_data', '')
+        # Format hex nicely
+        for i in range(0, min(len(raw_data), 128), 32):
+            self.raw_text.insert(tk.END, f"{raw_data[i:i+32]}\n")
 
     def apply_changes(self):
         """Apply changes to the current unit"""
@@ -689,19 +755,21 @@ class ImprovedScenarioEditor:
         left_frame = ttk.LabelFrame(paned, text="Unit List", padding="5")
         paned.add(left_frame, weight=1)
 
-        columns = ("Index", "Name", "Section", "Offset")
+        columns = ("Index", "Name", "Strength", "Type", "Section")
         self.unit_tree = ttk.Treeview(left_frame, columns=columns,
                                       show='headings', height=20)
 
         self.unit_tree.heading("Index", text="#")
         self.unit_tree.heading("Name", text="Unit Name")
+        self.unit_tree.heading("Strength", text="Str")
+        self.unit_tree.heading("Type", text="Type")
         self.unit_tree.heading("Section", text="Section")
-        self.unit_tree.heading("Offset", text="Offset")
 
         self.unit_tree.column("Index", width=40)
         self.unit_tree.column("Name", width=200)
+        self.unit_tree.column("Strength", width=50)
+        self.unit_tree.column("Type", width=60)
         self.unit_tree.column("Section", width=60)
-        self.unit_tree.column("Offset", width=80)
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL,
                                  command=self.unit_tree.yview)
@@ -872,11 +940,15 @@ class ImprovedScenarioEditor:
 
         # Add units
         for unit in self.units:
+            strength = unit.get('strength', 0)
+            strength_str = str(strength) if strength > 0 else '-'
+
             self.unit_tree.insert("", tk.END, values=(
                 unit.get('index', '?'),
                 unit.get('name', 'Unknown'),
-                unit.get('section', 'Unknown'),
-                f"0x{unit.get('offset', 0):06x}"
+                strength_str,
+                unit.get('type', 0),
+                unit.get('section', '?')
             ))
 
     def _load_data_overview(self):
