@@ -29,6 +29,35 @@ from dday_scenario_parser import DdayScenario
 class EnhancedUnitParser:
     """Enhanced parser for unit data with better structure understanding"""
 
+    # Unit type code mappings (reverse-engineered from binary data)
+    UNIT_TYPE_NAMES = {
+        0x00: 'Battalion',      # Generic battalion
+        0x01: 'Battalion',      # Infantry battalion
+        0x02: 'Battalion',      # Special battalion
+        0x07: 'Division-HQ',    # Division headquarters
+        0x08: 'Battalion',      # Glider battalion
+        0x11: 'Corps',          # Corps level
+        0x13: 'Division',       # Division level
+        0x15: 'Regiment',       # Regiment level
+        0x17: 'Company',        # Company level
+        0x18: 'Artillery',      # Artillery battalion
+        0x1b: 'Engineer',       # Engineer battalion
+        0x28: 'Tank-Bn',        # Tank battalion
+        0x29: 'Tank-Bn',        # Tank battalion (variant)
+        0x2a: 'Tank-Co',        # Tank company (detachment)
+        0x36: 'AAA',            # Anti-aircraft artillery
+        0x40: 'Cavalry',        # Cavalry squadron
+        0x41: 'Battalion',      # Airborne battalion
+        0x43: 'Artillery',      # Artillery battalion
+        0x60: 'Combat-Cmd-A',   # Combat Command A (armor)
+        0x61: 'Combat-Cmd-B',   # Combat Command B (armor)
+    }
+
+    @staticmethod
+    def get_unit_type_name(type_code):
+        """Convert unit type code to human-readable name"""
+        return EnhancedUnitParser.UNIT_TYPE_NAMES.get(type_code, f'Type-{type_code:02x}')
+
     @staticmethod
     def parse_units_from_scenario(scenario):
         """Parse units from scenario - searches PTR4 and PTR6 sections"""
@@ -139,25 +168,23 @@ class EnhancedUnitParser:
                 strength = 0
                 unit_type = 0
 
-                if match.start() >= 16:
+                if match.start() >= 32:
                     # Look at bytes before the unit name
-                    pre_data = data[match.start()-16:match.start()]
+                    # Unit type is at offset -27 (27 bytes before name)
+                    # Strength appears to be at offset -4
+                    pre_data = data[match.start()-32:match.start()]
 
-                    # Try to find strength value (often a byte 0-100)
-                    for i in range(len(pre_data)):
-                        val = pre_data[i]
-                        if 1 <= val <= 100:  # Possible strength value
-                            strength = val
+                    # Extract unit type from byte at position -27
+                    if len(pre_data) >= 27:
+                        unit_type = pre_data[-27]
 
-                    # Unit type might be in the first few bytes
+                    # Extract strength from byte at position -4
                     if len(pre_data) >= 4:
-                        try:
-                            unit_type = struct.unpack('<I', pre_data[:4])[0]
-                            # Sanity check - type should be reasonable
-                            if unit_type > 10000:
-                                unit_type = pre_data[0]  # Just use first byte
-                        except:
-                            unit_type = pre_data[0]
+                        strength_byte = pre_data[-4]
+                        # Strength seems to be in range 1-10, might be a category
+                        # or base strength value
+                        if 1 <= strength_byte <= 100:
+                            strength = strength_byte
 
                 units.append({
                     'index': unit_index,
@@ -443,8 +470,11 @@ class UnitPropertiesEditor(ttk.Frame):
         self.name_entry.delete(0, tk.END)
         self.name_entry.insert(0, self.current_unit.get('name', ''))
 
+        # Show type with human-readable name
+        type_code = self.current_unit.get('type', 0)
+        type_name = EnhancedUnitParser.get_unit_type_name(type_code)
         self.type_entry.delete(0, tk.END)
-        self.type_entry.insert(0, str(self.current_unit.get('type', 0)))
+        self.type_entry.insert(0, f"{type_name} (0x{type_code:02x})")
 
         # For now, use placeholder positions
         # In real implementation, parse from PTR4/PTR5
@@ -768,7 +798,7 @@ class ImprovedScenarioEditor:
         self.unit_tree.column("Index", width=40)
         self.unit_tree.column("Name", width=200)
         self.unit_tree.column("Strength", width=50)
-        self.unit_tree.column("Type", width=60)
+        self.unit_tree.column("Type", width=100)
         self.unit_tree.column("Section", width=60)
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL,
@@ -943,11 +973,15 @@ class ImprovedScenarioEditor:
             strength = unit.get('strength', 0)
             strength_str = str(strength) if strength > 0 else '-'
 
+            # Get human-readable type name
+            type_code = unit.get('type', 0)
+            type_name = EnhancedUnitParser.get_unit_type_name(type_code)
+
             self.unit_tree.insert("", tk.END, values=(
                 unit.get('index', '?'),
                 unit.get('name', 'Unknown'),
                 strength_str,
-                unit.get('type', 0),
+                type_name,
                 unit.get('section', '?')
             ))
 

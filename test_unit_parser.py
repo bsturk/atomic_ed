@@ -8,6 +8,35 @@ import re
 class EnhancedUnitParser:
     """Enhanced parser for unit data with better structure understanding"""
 
+    # Unit type code mappings (reverse-engineered from binary data)
+    UNIT_TYPE_NAMES = {
+        0x00: 'Battalion',      # Generic battalion
+        0x01: 'Battalion',      # Infantry battalion
+        0x02: 'Battalion',      # Special battalion
+        0x07: 'Division-HQ',    # Division headquarters
+        0x08: 'Battalion',      # Glider battalion
+        0x11: 'Corps',          # Corps level
+        0x13: 'Division',       # Division level
+        0x15: 'Regiment',       # Regiment level
+        0x17: 'Company',        # Company level
+        0x18: 'Artillery',      # Artillery battalion
+        0x1b: 'Engineer',       # Engineer battalion
+        0x28: 'Tank-Bn',        # Tank battalion
+        0x29: 'Tank-Bn',        # Tank battalion (variant)
+        0x2a: 'Tank-Co',        # Tank company (detachment)
+        0x36: 'AAA',            # Anti-aircraft artillery
+        0x40: 'Cavalry',        # Cavalry squadron
+        0x41: 'Battalion',      # Airborne battalion
+        0x43: 'Artillery',      # Artillery battalion
+        0x60: 'Combat-Cmd-A',   # Combat Command A (armor)
+        0x61: 'Combat-Cmd-B',   # Combat Command B (armor)
+    }
+
+    @staticmethod
+    def get_unit_type_name(type_code):
+        """Convert unit type code to human-readable name"""
+        return EnhancedUnitParser.UNIT_TYPE_NAMES.get(type_code, f'Type-{type_code:02x}')
+
     @staticmethod
     def parse_units_from_scenario(scenario):
         """Parse units from scenario - searches PTR4 and PTR6 sections"""
@@ -108,24 +137,23 @@ class EnhancedUnitParser:
                 strength = 0
                 unit_type = 0
 
-                if match.start() >= 16:
+                if match.start() >= 32:
                     # Look at bytes before the unit name
-                    pre_data = data[match.start()-16:match.start()]
+                    # Unit type is at offset -27 (27 bytes before name)
+                    # Strength appears to be at offset -4
+                    pre_data = data[match.start()-32:match.start()]
 
-                    # Try to find strength value (often a byte 0-100)
-                    for i in range(len(pre_data)):
-                        val = pre_data[i]
-                        if 1 <= val <= 100:
-                            strength = val
+                    # Extract unit type from byte at position -27
+                    if len(pre_data) >= 27:
+                        unit_type = pre_data[-27]
 
-                    # Unit type might be in the first few bytes
+                    # Extract strength from byte at position -4
                     if len(pre_data) >= 4:
-                        try:
-                            unit_type = struct.unpack('<I', pre_data[:4])[0]
-                            if unit_type > 10000:
-                                unit_type = pre_data[0]
-                        except:
-                            unit_type = pre_data[0]
+                        strength_byte = pre_data[-4]
+                        # Strength seems to be in range 1-10, might be a category
+                        # or base strength value
+                        if 1 <= strength_byte <= 100:
+                            strength = strength_byte
 
                 units.append({
                     'index': unit_index,
@@ -150,14 +178,16 @@ if __name__ == '__main__':
 
     print(f'Found {len(units)} units in OMAHA.SCN:')
     print()
-    print(f'{"#":>3s} {"Unit Name":30s} {"Str":>4s} {"Type":>6s} {"Section":7s} {"Offset":8s}')
-    print('-' * 70)
+    print(f'{"#":>3s} {"Unit Name":30s} {"Str":>4s} {"Type":15s} {"Section":7s} {"Offset":8s}')
+    print('-' * 80)
 
     # Show first 40
     for unit in units[:40]:
         strength = unit.get('strength', 0)
         strength_str = str(strength) if strength > 0 else '-'
-        print(f'{unit["index"]:3d}. {unit["name"]:30s} {strength_str:>4s} {unit["type"]:6d} {unit["section"]:7s} 0x{unit["offset"]:06x}')
+        type_code = unit.get('type', 0)
+        type_name = EnhancedUnitParser.get_unit_type_name(type_code)
+        print(f'{unit["index"]:3d}. {unit["name"]:30s} {strength_str:>4s} {type_name:15s} {unit["section"]:7s} 0x{unit["offset"]:06x}')
 
     if len(units) > 40:
         print(f'\n... and {len(units) - 40} more units')
