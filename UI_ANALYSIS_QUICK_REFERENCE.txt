@@ -1,0 +1,194 @@
+================================================================================
+  CRITICAL FINDING: V4V vs INVADE UI CODE ANALYSIS - QUICK REFERENCE
+================================================================================
+
+FUNDAMENTAL DIFFERENCE: NOT THE SAME CODEBASE
+
+V4V: 16-bit Real Mode (Borland C++ 3.1)
+INVADE: 32-bit Protected Mode (DOS/4G Extender by Rational Systems)
+
+These run in completely different CPU modes - they cannot share compiled code!
+
+================================================================================
+KEY EVIDENCE BY LINE NUMBER
+================================================================================
+
+V4V - COMPILATION INFO:
+Line 53895: aCopyright1991B db '- Copyright 1991 Borland Intl.',0
+
+INVADE - EXECUTION ENVIRONMENT:
+Line 58 (seg000:005C): db 44h,4Fh,53h,2Fh,34h,47h = "DOS/4G"
+Line 68 (seg000:0085): aNc_19871993 db 'nc. 1987 - 1993',0
+Full: "DOS/4G  Copyright (C) Rational Systems, Inc. 1987 - 1993"
+
+================================================================================
+V4V UI FRAMEWORK (OBJECT-ORIENTED)
+================================================================================
+
+Manager Classes (Lines 70495-70502 in v4v.txt):
+  Line 70495: aMemoryManager   db 'memory manager',0
+  Line 70497: aMenuManager     db 'menu manager',0
+  Line 70498: aDialogManager   db 'dialog manager',0
+  Line 70499: aEventManager    db 'event manager',0
+  Line 70500: aFontManager     db 'font manager',0
+  Line 70501: aPaletteManager  db 'palette manager',0
+  Line 70502: aResourceManage  db 'resource manager',0
+
+Graphics System:
+  Line 70496: aFastdraw db 'fastdraw',0
+  Line 70484: "Video board does not support VESA 640x480x256 color video mode"
+
+Menu File System:
+  Line 62443: aMenu_dat db 'menu.dat',0
+  Line 17227: "Error opening menu file.\n"
+
+Resource API:
+  Lines 70490-70494: OpenResFile, CloseResFile, GetResource error strings
+
+================================================================================
+MENU HANDLING CODE CHAIN (V4V)
+================================================================================
+
+Function: sub_764E (Line 17208) - Main Menu Handler
+  -> Line 17221: call sub_2AED (load menu.dat)
+  -> Line 17227: Error handling for missing file
+  -> Line 17236: call sub_343B (menu renderer)
+  -> Line 17243: call sub_760C (menu interaction)
+
+Function: sub_2AED (Line 7479) - File Loader
+  -> Opens menu.dat file
+  -> Calls sub_257B for file operations
+  -> Processes file data with flag checks
+  -> Calls sub_25C0 for rendering
+
+Function: sub_336A (Line 8744) - Menu Renderer
+  -> Line 8773: test word ptr [bx+6CDEh], 200h (state check)
+  -> Line 8789: call sub_1699 (rendering primitive)
+  -> Line 8806-8820: Loop processing menu data
+
+================================================================================
+INVADE UI SYSTEM
+================================================================================
+
+No menu framework found:
+  - NO sub_764E equivalent
+  - NO sub_2AED equivalent
+  - NO sub_343B equivalent
+  - NO "Error opening menu file" messages
+  - NO menu.dat file references
+  - NO manager class identifiers
+  - NO fastdraw library
+  - NO explicit VESA mode checking
+  - NO OpenResFile/CloseResFile API
+
+Result: Uses either simpler UI system or direct VGA programming
+
+================================================================================
+ARCHITECTURE COMPARISON
+================================================================================
+
+V4V (16-bit Real Mode):
+  - 5 main segments (seg000-seg004)
+  - 112 overlay segments (ovr045-ovr156)
+  - Far pointers (segment:offset model)
+  - 64KB segment limit
+  - File size: 250,921 disassembly lines
+
+INVADE (32-bit Protected Mode with DOS/4G):
+  - 4 main segments (seg000-seg003, seg004 is zero-length)
+  - NO overlays
+  - Near pointers (32-bit linear addresses)
+  - 4GB linear address space
+  - File size: 27,915 disassembly lines
+  - 9x smaller code footprint
+
+================================================================================
+GRAPHICS I/O OPERATIONS
+================================================================================
+
+V4V I/O Port Operations (Lines 11494-12076):
+  - Timer programming (8253-5 Timer AT: 8254.2)
+  - 81 total interrupt calls
+  - Extensive port access
+
+INVADE I/O Port Operations (Lines 1339-2052):
+  - More generic video handling
+  - 47 total interrupt calls
+  - Less frequent port access
+
+================================================================================
+COMPILER/TOOLS EVIDENCE
+================================================================================
+
+V4V:
+  Compiler: Borland C++ 3.1 (Released 1992)
+  Generates: 16-bit real mode code
+  Features: Segment-based calling conventions
+
+INVADE:
+  Extender: Rational Systems DOS/4G (1987-1993)
+  Runtime: 32-bit protected mode DOS environment
+  Compiler: Unknown (likely Borland C++ 4.0+ or other 32-bit compiler)
+
+================================================================================
+WHY IDENTICAL VISUAL UIs WITH DIFFERENT CODE?
+================================================================================
+
+1. DESIGN SIMILARITY - Both designed to show same visual appearance
+2. DISPLAY MODE SYNC - Both use VGA 640x480x256 color mode
+3. PALETTE MATCH - Same 256-color palette definition
+4. LAYOUT AGREEMENT - Menu positions and sizes coordinated
+5. INDEPENDENT CODE - Different code paths achieving same result
+
+They likely shared UI/UX DESIGN documents but NOT source code or compiled code!
+
+================================================================================
+WHERE SHARED CODE MIGHT EXIST
+================================================================================
+
+Possibly Shared (Low-level DOS calls):
+  - VGA palette initialization
+  - INT 10h BIOS video calls
+  - INT 33h mouse handler
+  - INT 16h keyboard handler
+  - Basic INT 21h file operations
+
+Definitely NOT Shared (CPU/Extender specific):
+  - Menu loading and rendering
+  - Graphics library code (fastdraw vs native)
+  - Memory allocation patterns
+  - Segment management (V4V only)
+  - Protected mode transitions (INVADE only)
+
+================================================================================
+CONCLUSION
+================================================================================
+
+The identical UIs do NOT prove shared UI code frameworks.
+
+They prove:
+1. Conscious design to show same visual appearance
+2. Independent implementations for different platforms
+3. Same display specifications (VGA 640x480x256)
+4. Different underlying architectures prevented code reuse
+
+V4V likely came first (Borland C++ 3.1, 1992 era)
+INVADE appears to be a separate implementation for DOS/4G environment
+(Rational Systems DOS/4G was released 1987-1993)
+
+================================================================================
+FILE LOCATIONS FOR REFERENCE
+================================================================================
+
+Main Disassembly Files:
+  /home/user/atomic_ed/v4v.txt (250,921 lines)
+  /home/user/atomic_ed/invade.txt (27,915 lines)
+
+Resource Files:
+  V4V: /home/user/atomic_ed/game/v_is_for_victory/game/V4V.RES (1.9M)
+  INVADE: /home/user/atomic_ed/game/dday/game/DATA/PCWATW.REZ (5.3M)
+
+Generated Analysis:
+  /home/user/atomic_ed/UI_FRAMEWORK_ANALYSIS_V4V_vs_INVADE.md (11K)
+
+================================================================================
