@@ -840,6 +840,9 @@ class ImprovedScenarioEditor:
         self.unit_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Bind selection event to show unit stats
+        self.unit_tree.bind('<<TreeviewSelect>>', self.on_unit_tree_select)
+
         # Right: Properties editor
         right_frame = ttk.Frame(paned)
         paned.add(right_frame, weight=1)
@@ -1052,6 +1055,32 @@ class ImprovedScenarioEditor:
         self.modified = True
         self.modified_label.config(text="Modified *", foreground="red")
         self.status_label.config(text="Unit updated - remember to save!")
+
+    def on_unit_tree_select(self, event):
+        """Handle unit tree selection - show selected unit in properties editor"""
+        selection = self.unit_tree.selection()
+        if not selection:
+            return
+
+        # Get the selected item
+        item = selection[0]
+        values = self.unit_tree.item(item, 'values')
+
+        if not values:
+            return
+
+        # Extract unit index from the first column
+        try:
+            unit_index = int(values[0])  # Index is in the first column
+
+            # Update the unit properties editor to show this unit
+            if 0 <= unit_index < len(self.units):
+                # Update the combo box selection
+                self.unit_props_editor.unit_combo.current(unit_index)
+                # Trigger the display
+                self.unit_props_editor.on_unit_selected(None)
+        except (ValueError, IndexError):
+            pass
 
     def add_unit(self):
         """Add a new unit"""
