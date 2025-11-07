@@ -61,7 +61,9 @@ class DdayScenario:
         self.is_valid = False
         self.counts: List[int] = []
         self.pointers: Dict[str, int] = {}
-        
+        self.sections: Dict[str, bytes] = {}  # Store parsed sections
+        self.section_order: List[Tuple[str, int, int]] = []  # (name, start, end) sorted by start
+
         self._load_file()
     
     def _load_file(self):
@@ -88,7 +90,10 @@ class DdayScenario:
         
         # Parse offsets
         self._parse_pointers()
-        
+
+        # Parse data sections
+        self._parse_sections()
+
         self.is_valid = True
     
     def _parse_counts(self):
@@ -102,35 +107,54 @@ class DdayScenario:
         for name, offset in self.POINTER_OFFSETS.items():
             value = struct.unpack('<I', self.data[offset:offset+4])[0]
             self.pointers[name] = value
+
+    def _parse_sections(self):
+        """Parse data sections based on pointer offsets"""
+        # Collect non-null pointers
+        active_ptrs = []
+        for name in ['PTR3', 'PTR4', 'PTR5', 'PTR6']:
+            ptr = self.pointers.get(name, 0)
+            if ptr > 0:
+                active_ptrs.append((name, ptr))
+
+        # Sort by file offset (CRITICAL! File order != header order)
+        active_ptrs.sort(key=lambda x: x[1])
+
+        # Calculate section boundaries and extract data
+        file_size = len(self.data)
+        for i, (name, start) in enumerate(active_ptrs):
+            # End is either next section start or EOF
+            end = active_ptrs[i + 1][1] if i < len(active_ptrs) - 1 else file_size
+
+            # Extract section data
+            self.sections[name] = self.data[start:end]
+            self.section_order.append((name, start, end))
     
     def validate(self) -> bool:
         """Validate scenario file integrity"""
         if not self.is_valid:
             return False
-        
+
         # Check counts match expected
         if self.counts != self.FIXED_COUNTS:
             print("Warning: Counts don't match expected values")
             return False
-        
-        # Check pointer ordering
-        ptr3 = self.pointers.get('PTR3', 0)
-        ptr4 = self.pointers.get('PTR4', 0)
-        ptr5 = self.pointers.get('PTR5', 0)
-        ptr6 = self.pointers.get('PTR6', 0)
-        
-        if ptr3 > 0 and ptr4 > 0 and ptr5 > 0 and ptr6 > 0:
-            if not (ptr3 < ptr4 < ptr5 < ptr6):
-                print("Warning: Pointer ordering violated")
-                return False
-        
+
+        # Check pointer ordering (file order, not header order!)
+        # Expected file order: PTR5 -> PTR6 -> PTR3 -> PTR4
+        if len(self.section_order) >= 2:
+            for i in range(len(self.section_order) - 1):
+                if self.section_order[i][1] >= self.section_order[i + 1][1]:
+                    print(f"Warning: Section ordering violated between {self.section_order[i][0]} and {self.section_order[i+1][0]}")
+                    return False
+
         # Check pointers within bounds
         file_size = len(self.data)
         for name, ptr in self.pointers.items():
             if ptr > 0 and ptr >= file_size:
                 print(f"Warning: {name} = 0x{ptr:06x} exceeds file size {file_size}")
                 return False
-        
+
         return True
     
     def display_header(self):
@@ -192,35 +216,32 @@ class DdayScenario:
         if not self.is_valid:
             print("Invalid scenario file")
             return
-        
-        print("Data Sections:")
+
+        print("Data Sections (in file order):")
         print("-" * 60)
-        
-        ptr3 = self.pointers.get('PTR3', 0)
-        ptr4 = self.pointers.get('PTR4', 0)
-        ptr5 = self.pointers.get('PTR5', 0)
-        ptr6 = self.pointers.get('PTR6', 0)
-        file_size = len(self.data)
-        
-        sections = [
-            ('PTR3 (Unit Roster)', ptr3, ptr4),
-            ('PTR4 (Unit Positioning)', ptr4, ptr5),
-            ('PTR5 (Numeric Data)', ptr5, ptr6),
-            ('PTR6 (Specialized Data)', ptr6, file_size),
-        ]
-        
-        for name, start, end in sections:
-            if start > 0:
-                size = end - start
-                print(f"  {name:30s}: 0x{start:06x} - 0x{end:06x} ({size:,} bytes)")
-                
-                # Show first 32 bytes
-                if start < len(self.data):
-                    sample = self.data[start:start+32]
-                    hex_str = ' '.join(f'{b:02x}' for b in sample)
-                    ascii_str = ''.join(chr(b) if 32 <= b < 127 else '.' for b in sample)
-                    print(f"      Hex:   {hex_str}")
-                    print(f"      ASCII: {ascii_str}")
+
+        # Display sections in file order
+        for name, start, end in self.section_order:
+            size = end - start
+
+            # Add descriptive labels
+            labels = {
+                'PTR3': 'Unit Roster',
+                'PTR4': 'Unit Positioning + Text',
+                'PTR5': 'Numeric/Coordinate Data',
+                'PTR6': 'Specialized/AI Data'
+            }
+            label = labels.get(name, 'Unknown')
+
+            print(f"  {name} ({label:25s}): 0x{start:06x} - 0x{end:06x} ({size:,} bytes)")
+
+            # Show first 32 bytes
+            if start < len(self.data):
+                sample = self.data[start:min(start+32, end)]
+                hex_str = ' '.join(f'{b:02x}' for b in sample)
+                ascii_str = ''.join(chr(b) if 32 <= b < 127 else '.' for b in sample)
+                print(f"      Hex:   {hex_str}")
+                print(f"      ASCII: {ascii_str}")
         print()
     
     def find_strings(self, min_length: int = 4) -> List[Tuple[int, str]]:
@@ -285,7 +306,7 @@ class DdayScenario:
         if not self.is_valid:
             print("Invalid scenario file")
             return
-        
+
         stats = self.get_statistics()
         print("File Statistics:")
         print("-" * 60)
@@ -294,6 +315,27 @@ class DdayScenario:
         print(f"  Data Bytes:       {stats['data_bytes']:,} bytes ({100-stats['zero_percentage']:.1f}%)")
         print(f"  ASCII Strings:    {stats['string_count']}")
         print()
+
+    def write(self, filename: str):
+        """Write scenario to file
+
+        CRITICAL: The file structure includes data before the first pointer!
+        Also critical: Section order varies by file! Use actual parsed order.
+        """
+        if not self.is_valid:
+            raise ValueError("Cannot write invalid scenario")
+
+        with open(filename, 'wb') as f:
+            # Find the offset of the first section
+            first_section_offset = min(start for _, start, _ in self.section_order)
+
+            # Write everything from start of file up to first section
+            # This includes header (96 bytes) + any additional data structures
+            f.write(self.data[0:first_section_offset])
+
+            # Write data sections in ACTUAL file order (not assumed order!)
+            for name, _, _ in self.section_order:
+                f.write(self.sections[name])
 
 
 def main():
