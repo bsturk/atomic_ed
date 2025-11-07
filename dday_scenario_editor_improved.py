@@ -168,23 +168,22 @@ class EnhancedUnitParser:
                 strength = 0
                 unit_type = 0
 
-                if match.start() >= 32:
+                if match.start() >= 64:
                     # Look at bytes before the unit name
                     # Unit type is at offset -27 (27 bytes before name)
-                    # Strength appears to be at offset -4
-                    pre_data = data[match.start()-32:match.start()]
+                    # Strength is a 16-bit value at offset -64 (64 bytes before name)
+                    pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
                     if len(pre_data) >= 27:
                         unit_type = pre_data[-27]
 
-                    # Extract strength from byte at position -4
-                    if len(pre_data) >= 4:
-                        strength_byte = pre_data[-4]
-                        # Strength seems to be in range 1-10, might be a category
-                        # or base strength value
-                        if 1 <= strength_byte <= 100:
-                            strength = strength_byte
+                    # Extract strength as 16-bit little-endian value at position -64
+                    if len(pre_data) >= 64:
+                        strength = struct.unpack('<H', pre_data[-64:-62])[0]
+                        # Sanity check - reasonable strength values are 1-500
+                        if strength > 500:
+                            strength = 0
 
                 units.append({
                     'index': unit_index,
