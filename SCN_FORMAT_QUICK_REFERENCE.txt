@@ -1,0 +1,62 @@
+================================================================================
+SCN FORMAT QUICK REFERENCE - V IS FOR VICTORY vs D-DAY
+================================================================================
+
+ASPECT                  | V IS FOR VICTORY          | D-DAY GAME
+------------------------|---------------------------|---------------------------
+TOTAL FILES             | 27 .SCN files             | 7 .SCN files
+DIRECTORY               | game/v_is_for_victory/... | game/dday/game/SCENARIO/
+                        |                           |
+TOTAL SIZE              | 2,198,268 bytes (2.2 MB)  | 852,674 bytes (852 KB)
+AVERAGE FILE SIZE       | 81.4 KB                   | 121.8 KB
+SIZE RANGE              | 35 KB - 134 KB            | 31 KB - 276 KB
+                        |                           |
+MAGIC NUMBER            | 0x0C0C                    | 0x1230
+MAGIC (DECIMAL)         | 3084                      | 4656
+FIRST 4 BYTES           | 0c 0c 00 00               | 30 12 00 00
+                        |                           |
+HEADER STRUCTURE        | Version/type identifier   | Series of 32-bit counts
+BYTES 4-7               | 00 03 02 / 00 02 06 / ... | 11 00 00 00 (17 decimal)
+BYTES 8-11              | 00 01 06                  | 05 00 00 00 (5 decimal)
+CONSTANT MARKER         | 0x66660640 @ offset 0x08  | N/A
+                        |                           |
+DATA ORGANIZATION       | Compact, integrated       | Sparse header + data
+TEXT LOCATION           | Around offset 0x80+       | Around offset 0x220+
+OFFSET POSITIONS        | Starting @ 0x18           | Starting @ 0x40
+OFFSET FORMAT           | 32-bit little-endian      | 32-bit little-endian
+                        |                           |
+FILE PADDING            | Zeros at end              | Zeros in middle
+STRUCTURE PATTERN       | Mixed binary & text       | Table of contents + data
+DATA DENSITY            | High                      | Lower (more zeros)
+                        |                           |
+EXAMPLE OFFSETS         | 0x017C59, 0x017C6F        | 0x017C77, 0x017C81,
+                        |                           | 0x0748, 0x10A4
+                        |                           |
+MISSION TEXT EXAMPLE    | "You have managed to      | "Your mission is to
+                        | make it ashore..."        | advance on the town..."
+                        |                           |
+LOCATION NAMES          | Bayeux, Tilly-sur-Seulles| Caumont, Balleroy,
+                        | Villers-Bocage, Caen     | the Drome
+                        |                           |
+UNIT DESIGNATION FORMAT | I Corps, XXX Corps        | 102-V, 745-V,
+                        | I C-I, 102-I             | 1st Infantry
+                        |                           |
+ARE THEY COMPATIBLE?    | NO - COMPLETELY DIFFERENT FORMATS
+DO THEY USE SAME ENGINE?| NO - Different magic numbers and structures
+CAN FILES BE CONVERTED? | POSSIBLE - Would require format translation tool
+================================================================================
+
+KEY FINDING: The two games use COMPLETELY INCOMPATIBLE scenario file formats.
+They have different magic numbers, header structures, and data layouts.
+These are almost certainly different game engines or very different versions.
+
+SIMILARITY: Both games store similar content (missions, units, locations) but
+in completely different binary formats.
+
+FILE LOCATIONS:
+  - All V is for Victory .SCN files: /home/user/atomic_ed/game/v_is_for_victory/game/
+  - All D-Day .SCN files: /home/user/atomic_ed/game/dday/game/SCENARIO/
+
+DETAILED ANALYSIS: See SCN_FORMAT_COMPARISON_ANALYSIS.txt for full report
+
+================================================================================

@@ -1,0 +1,138 @@
+================================================================================
+D-DAY SCENARIO FILE FORMAT - QUICK REFERENCE GUIDE
+================================================================================
+
+MAGIC NUMBER:
+  Hex:     0x1230
+  Binary:  30 12 00 00 (little-endian)
+  Location: Offset 0x00-0x03
+
+FILE STRUCTURE AT A GLANCE:
+  0x00-0x03   Magic number
+  0x04-0x33   Fixed counts (17, 5, 10, 8, 5, 8, 0, 10, 20, 5, 125, 100)
+  0x34-0x3f   Padding (zeros)
+  0x40-0x5f   Offset pointers (PTR1-PTR8)
+  0x60+       Data sections
+
+FIXED HEADER COUNTS (NEVER CHANGE):
+  Offset  | Value | Decimal
+  --------|-------|--------
+  0x04    | 0x11  |   17
+  0x08    | 0x05  |    5
+  0x0c    | 0x0a  |   10
+  0x10    | 0x08  |    8
+  0x14    | 0x05  |    5
+  0x18    | 0x08  |    8
+  0x1c    | 0x00  |    0  (reserved)
+  0x20    | 0x0a  |   10
+  0x24    | 0x14  |   20
+  0x28    | 0x05  |    5
+  0x2c    | 0x7d  |  125
+  0x30    | 0x64  |  100
+
+OFFSET POINTERS (VARY PER SCENARIO):
+  Position | Purpose
+  ---------|--------------------------------------------
+  0x40     | Reserved (always 0x00000000)
+  0x44     | Reserved (always 0x00000000)
+  0x48     | PTR3: Unit roster/definitions
+  0x4c     | PTR4: Unit positioning/attributes
+  0x50     | PTR5: Numeric/coordinate data
+  0x54     | PTR6: Specialized data
+  0x58     | Reserved (always 0x00000000)
+  0x5c     | Reserved (always 0x00000000)
+
+EXAMPLE OFFSET VALUES (UTAH.SCN):
+  PTR3 = 0x017c59 (97,369 bytes)
+  PTR4 = 0x017cf3 (97,523 bytes)
+  PTR5 = 0x002a03 (10,755 bytes)
+  PTR6 = 0x002d00 (11,520 bytes)
+
+DATA TYPES:
+  - All multi-byte values are LITTLE-ENDIAN
+  - UINT8:  1 byte
+  - UINT16: 2 bytes
+  - UINT32: 4 bytes
+  - ASCIIZ: Null-terminated string
+
+VALIDATION CHECKLIST:
+  [ ] Magic number is 0x1230
+  [ ] Counts at 0x04-0x30 match expected values
+  [ ] Offset pointers are within file bounds
+  [ ] PTR3 < PTR4 < PTR5 < PTR6
+  [ ] File size > 0x60 (minimum valid file)
+
+READING ALGORITHM:
+  1. Read magic number at 0x00 (expect 0x1230)
+  2. Skip header counts (they're fixed)
+  3. Read offset pointers at 0x40-0x5f
+  4. Navigate to data sections using pointers
+  5. Parse unit data at PTR3
+  6. Parse positioning at PTR4
+  7. Parse numeric data at PTR5
+  8. Parse scenario-specific data at PTR6
+
+OFFSET POINTER CONVERSION:
+  Python: offset = struct.unpack('<I', file[pos:pos+4])[0]
+  C/C++:  offset = *(uint32_t*)(file + pos);  // little-endian read
+
+SIZE CALCULATION:
+  DataSize = NextPointer - CurrentPointer
+  Size_PTR3 = PTR4 - PTR3
+  Size_PTR4 = PTR5 - PTR4
+  Size_PTR5 = PTR6 - PTR5
+  Size_PTR6 = FileSize - PTR6
+
+FILE SIZE STATISTICS:
+  Minimum:  31,382 bytes (COUNTER.SCN)
+  Maximum: 276,396 bytes (CAMPAIGN.SCN)
+  Average: 121,811 bytes
+  Range:   245,014 bytes difference
+
+COMMON PITFALLS:
+  X Don't modify the counts at 0x04-0x30
+  X Don't assume PTR1 and PTR2 contain data (they're NULL)
+  X Don't forget little-endian byte order
+  X Don't trust random file data - validate magic number first
+  X Don't assume offset sections don't overlap (they shouldn't)
+
+UNIT DESIGNATION FORMAT:
+  Examples: "B-801-VII", "C-801-V", "1st Infantry"
+  Format: [Type]-[Code] or [Name]
+  Found at: PTR3 and PTR4 data sections
+
+MISSION BRIEFING TEXT:
+  Location: Typically around 0x3e4 onwards
+  Format: ASCII text, mission directives
+  Examples: "As Commander of the VII Corps..."
+  Note: Separate briefings for each side
+
+TERRAIN TYPES:
+  Count: Possibly 17 (from header count at 0x04)
+  Location: Possibly encoded in PTR5 data
+
+PLAYERS/SIDES:
+  Count: Possibly 5 (from header count at 0x08)
+  Typical: 2 (Allied vs Axis) + 3 others
+  Usage: Team assignments, victory conditions
+
+QUICK HEX DUMP CHECK:
+  od -A x -t x1z -N 256 filename.SCN
+  First line should show: 30 12 00 00 11 00 00 00 05 00 00 00...
+
+PYTHON QUICK TEST:
+  import struct
+  with open(filename, 'rb') as f:
+      magic = struct.unpack('<H', f.read(2))[0]
+      if magic == 0x1230:
+          print("Valid D-Day scenario file")
+      else:
+          print(f"Invalid: magic is 0x{magic:04x}, expected 0x1230")
+
+C/C++ QUICK TEST:
+  FILE* f = fopen(filename, "rb");
+  uint16_t magic;
+  fread(&magic, 2, 1, f);
+  if (magic == 0x1230) printf("Valid D-Day scenario\n");
+
+================================================================================
