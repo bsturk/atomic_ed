@@ -26,7 +26,10 @@ import struct
 import shutil
 import re
 import math
+import json
+import os
 from datetime import datetime
+from PIL import Image, ImageTk
 from scenario_parser import DdayScenario
 from terrain_reader import extract_terrain_from_scenario
 
@@ -338,7 +341,7 @@ class MapViewer(ttk.Frame):
         self.units = []  # List of unit dicts from EnhancedUnitParser
         self.terrain = {}  # Dict of (x,y): terrain_type
 
-        # Colors
+        # Colors (fallback if images not available)
         self.terrain_colors = {
             0: '#90EE90',  # Grass/Field - light green
             1: '#4169E1',  # Water/Ocean - blue
@@ -358,6 +361,10 @@ class MapViewer(ttk.Frame):
             15: '#5F9EA0', # Canal - cadet blue
             16: '#C0C0C0', # Unknown - silver
         }
+
+        # Load hex tile images
+        self.hex_tile_images = {}  # Cache of PhotoImage objects by terrain type and size
+        self.use_images = self._load_hex_tiles()
 
         self._create_ui()
         self._bind_events()
@@ -441,6 +448,91 @@ class MapViewer(ttk.Frame):
         self.drag_start_x = 0
         self.drag_start_y = 0
         self._configure_pending = False
+
+    def _load_hex_tiles(self):
+        """Load hex tile images from extracted assets"""
+        try:
+            # Load configuration
+            config_path = 'hex_tile_config.json'
+            if not os.path.exists(config_path):
+                print(f"Hex tile config not found: {config_path}")
+                return False
+
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+
+            tiles_dir = config['tiles_directory']
+            tile_mapping = config['tile_mapping']
+
+            # Load base images for each terrain type
+            self.hex_tile_base_images = {}
+            for terrain_id, tile_id in tile_mapping.items():
+                terrain_id = int(terrain_id)
+                tile_filename = f"hex_tile_{tile_id:03d}.png"
+                tile_path = os.path.join(tiles_dir, tile_filename)
+
+                if os.path.exists(tile_path):
+                    try:
+                        img = Image.open(tile_path)
+                        # Convert to RGBA if needed
+                        if img.mode != 'RGBA':
+                            img = img.convert('RGBA')
+                        self.hex_tile_base_images[terrain_id] = img
+                    except Exception as e:
+                        print(f"Error loading tile {tile_path}: {e}")
+                        return False
+                else:
+                    print(f"Tile image not found: {tile_path}")
+                    return False
+
+            print(f"Successfully loaded {len(self.hex_tile_base_images)} hex tile images")
+            return True
+
+        except Exception as e:
+            print(f"Error loading hex tiles: {e}")
+            return False
+
+    def _get_hex_tile_image(self, terrain_type, size):
+        """Get a scaled hex tile image for the given terrain type and size"""
+        if not self.use_images:
+            return None
+
+        # Create a cache key
+        cache_key = (terrain_type, size)
+
+        # Check cache
+        if cache_key in self.hex_tile_images:
+            return self.hex_tile_images[cache_key]
+
+        # Get base image
+        base_img = self.hex_tile_base_images.get(terrain_type)
+        if base_img is None:
+            return None
+
+        # Calculate scaled size (hex tiles are roughly 34×38 pixels)
+        # We want to scale proportionally to the hex size
+        # Original tiles are 34×38, and original HEX_SIZE is 12
+        # So scale factor is approximately size / 12 * (34/34)
+        scale_factor = size / 12.0
+        new_width = int(34 * scale_factor)
+        new_height = int(38 * scale_factor)
+
+        # Ensure minimum size
+        new_width = max(4, new_width)
+        new_height = max(4, new_height)
+
+        # Scale the image
+        try:
+            scaled_img = base_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            photo_img = ImageTk.PhotoImage(scaled_img)
+
+            # Cache it (keep a reference to prevent garbage collection)
+            self.hex_tile_images[cache_key] = photo_img
+
+            return photo_img
+        except Exception as e:
+            print(f"Error scaling hex tile image: {e}")
+            return None
 
     def _on_pan_start(self, event):
         """Start panning"""
@@ -708,11 +800,30 @@ class MapViewer(ttk.Frame):
         """Draw a single hex tile"""
         px, py = self.hex_to_pixel(hex_x, hex_y)
 
-        # Get terrain color
+        # Get terrain type
         terrain_type = self.terrain.get((hex_x, hex_y), 0)
-        color = self.terrain_colors.get(terrain_type, '#FFFFFF')
 
-        # Draw hexagon
+        # Try to use image first, fallback to color
+        if self.use_images:
+            tile_img = self._get_hex_tile_image(terrain_type, self.hex_size)
+            if tile_img:
+                # Draw the image
+                self.canvas.create_image(px, py, image=tile_img, anchor=tk.CENTER)
+
+                # Draw grid outline if enabled
+                if self.show_grid:
+                    self.draw_hexagon(px, py, self.hex_size, fill='', outline='#888888')
+
+                # Draw coordinates if enabled
+                if self.show_coords and self.hex_size >= 10:
+                    self.canvas.create_text(px, py,
+                                           text=f"{hex_x},{hex_y}",
+                                           font=("Arial", max(6, int(self.hex_size / 3))),
+                                           fill='black')
+                return
+
+        # Fallback to colored hexagon
+        color = self.terrain_colors.get(terrain_type, '#FFFFFF')
         outline_color = '#666666' if self.show_grid else color
         self.draw_hexagon(px, py, self.hex_size, fill=color, outline=outline_color)
 
@@ -1279,11 +1390,16 @@ class ImprovedScenarioEditor:
         title.pack(pady=10)
 
         # Description
-        desc = ttk.Label(frame,
-                        text="D-Day map uses 17 terrain types. Colors shown below match the map viewer.\n"
-                             "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
-                             "Format: 4-bit packed nibbles at offset 0 in PTR4 section (6,250 bytes).",
-                        justify=tk.CENTER)
+        use_real_images = hasattr(self.map_viewer, 'use_images') and self.map_viewer.use_images
+        if use_real_images:
+            desc_text = ("D-Day map uses 17 terrain types. Actual hex tile images from game assets shown below.\n"
+                        "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
+                        "✓ Hex tile images extracted from PCWATW.REZ resource file!")
+        else:
+            desc_text = ("D-Day map uses 17 terrain types. Colors shown below match the map viewer.\n"
+                        "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
+                        "Format: 4-bit packed nibbles at offset 0 in PTR4 section (6,250 bytes).")
+        desc = ttk.Label(frame, text=desc_text, justify=tk.CENTER)
         desc.pack(pady=5)
 
         # Scrollable frame for terrain types
@@ -1349,15 +1465,39 @@ class ImprovedScenarioEditor:
             entry_frame = ttk.Frame(terrain_frame, relief=tk.RIDGE, borderwidth=1)
             entry_frame.grid(row=idx, column=0, sticky=tk.EW, padx=5, pady=3)
 
-            # Color swatch
+            # Try to use actual hex tile image, fallback to color swatch
             color = terrain_colors.get(terrain_id, '#FFFFFF')
-            swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
-                                      bg=color, highlightthickness=1,
-                                      highlightbackground='black')
-            swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
 
-            # Create hex pattern in swatch
-            self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
+            if use_real_images and hasattr(self.map_viewer, 'hex_tile_base_images'):
+                # Load and display actual hex tile image
+                base_img = self.map_viewer.hex_tile_base_images.get(terrain_id)
+                if base_img:
+                    # Scale to a reasonable preview size (60x68 to match roughly 2x original size)
+                    preview_img = base_img.resize((60, 68), Image.Resampling.LANCZOS)
+                    photo_img = ImageTk.PhotoImage(preview_img)
+
+                    # Store reference to prevent garbage collection
+                    if not hasattr(self, '_terrain_preview_images'):
+                        self._terrain_preview_images = []
+                    self._terrain_preview_images.append(photo_img)
+
+                    # Create label to display image
+                    img_label = ttk.Label(entry_frame, image=photo_img, relief=tk.SOLID, borderwidth=1)
+                    img_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+                else:
+                    # Fallback to color swatch
+                    swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
+                                              bg=color, highlightthickness=1,
+                                              highlightbackground='black')
+                    swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+                    self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
+            else:
+                # Color swatch fallback
+                swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
+                                          bg=color, highlightthickness=1,
+                                          highlightbackground='black')
+                swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+                self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
 
             # Type ID and name
             type_label = ttk.Label(entry_frame,

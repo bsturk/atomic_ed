@@ -1,0 +1,3582 @@
+{
+  "tiles_directory": "extracted_images/hex_tiles",
+  "total_tiles": 195,
+  "terrain_types": {
+    "0": "Grass/Field",
+    "1": "Water/Ocean",
+    "2": "Beach/Sand",
+    "3": "Forest",
+    "4": "Town",
+    "5": "Road",
+    "6": "River",
+    "7": "Mountains",
+    "8": "Swamp",
+    "9": "Bridge",
+    "10": "Fortification",
+    "11": "Bocage",
+    "12": "Cliff",
+    "13": "Village",
+    "14": "Farm",
+    "15": "Canal",
+    "16": "Unknown"
+  },
+  "simple_mapping": {
+    "0": 0,
+    "1": 13,
+    "2": 26,
+    "3": 39,
+    "4": 52,
+    "5": 65,
+    "6": 78,
+    "7": 91,
+    "8": 104,
+    "9": 117,
+    "10": 130,
+    "11": 143,
+    "12": 156,
+    "13": 169,
+    "14": 182,
+    "15": 78,
+    "16": 0
+  },
+  "full_mapping": {
+    "0": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "1": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "3": [
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "4": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+    ],
+    "6": [
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77
+    ],
+    "7": [
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90
+    ],
+    "11": [
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103
+    ],
+    "9": [
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116
+    ],
+    "10": [
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129
+    ],
+    "12": [
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142
+    ],
+    "13": [
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155
+    ],
+    "14": [
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168
+    ],
+    "16": [
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194
+    ]
+  },
+  "tile_analysis": [
+    {
+      "id": 0,
+      "filename": "hex_tile_000.png",
+      "avg_color": [
+        17,
+        42,
+        4
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 99.47368421052633,
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": 1,
+      "filename": "hex_tile_001.png",
+      "avg_color": [
+        24,
+        52,
+        7
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 97.33333333333333,
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": 2,
+      "filename": "hex_tile_002.png",
+      "avg_color": [
+        28,
+        60,
+        4
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 94.28571428571428,
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": 3,
+      "filename": "hex_tile_003.png",
+      "avg_color": [
+        47,
+        83,
+        6
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 88.05194805194803,
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": 4,
+      "filename": "hex_tile_004.png",
+      "avg_color": [
+        53,
+        96,
+        11
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 90.35294117647058,
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": 5,
+      "filename": "hex_tile_005.png",
+      "avg_color": [
+        51,
+        94,
+        8
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 90.0,
+      "row": 0,
+      "col": 5
+    },
+    {
+      "id": 6,
+      "filename": "hex_tile_006.png",
+      "avg_color": [
+        49,
+        93,
+        7
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 90.69767441860465,
+      "row": 0,
+      "col": 6
+    },
+    {
+      "id": 7,
+      "filename": "hex_tile_007.png",
+      "avg_color": [
+        38,
+        79,
+        5
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 93.24324324324323,
+      "row": 0,
+      "col": 7
+    },
+    {
+      "id": 8,
+      "filename": "hex_tile_008.png",
+      "avg_color": [
+        33,
+        71,
+        5
+      ],
+      "dom_color": [
+        0,
+        85,
+        0
+      ],
+      "hue": 94.54545454545453,
+      "row": 0,
+      "col": 8
+    },
+    {
+      "id": 9,
+      "filename": "hex_tile_009.png",
+      "avg_color": [
+        26,
+        56,
+        3
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 93.9622641509434,
+      "row": 0,
+      "col": 9
+    },
+    {
+      "id": 10,
+      "filename": "hex_tile_010.png",
+      "avg_color": [
+        22,
+        51,
+        3
+      ],
+      "dom_color": [
+        0,
+        85,
+        0
+      ],
+      "hue": 96.25000000000001,
+      "row": 0,
+      "col": 10
+    },
+    {
+      "id": 11,
+      "filename": "hex_tile_011.png",
+      "avg_color": [
+        22,
+        50,
+        3
+      ],
+      "dom_color": [
+        0,
+        85,
+        0
+      ],
+      "hue": 95.74468085106383,
+      "row": 0,
+      "col": 11
+    },
+    {
+      "id": 12,
+      "filename": "hex_tile_012.png",
+      "avg_color": [
+        20,
+        49,
+        2
+      ],
+      "dom_color": [
+        0,
+        85,
+        0
+      ],
+      "hue": 97.02127659574468,
+      "row": 0,
+      "col": 12
+    },
+    {
+      "id": 13,
+      "filename": "hex_tile_013.png",
+      "avg_color": [
+        86,
+        117,
+        22
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 79.57894736842103,
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": 14,
+      "filename": "hex_tile_014.png",
+      "avg_color": [
+        73,
+        104,
+        17
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 81.37931034482759,
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": 15,
+      "filename": "hex_tile_015.png",
+      "avg_color": [
+        71,
+        103,
+        17
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 82.32558139534882,
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": 16,
+      "filename": "hex_tile_016.png",
+      "avg_color": [
+        70,
+        103,
+        16
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 82.75862068965517,
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": 17,
+      "filename": "hex_tile_017.png",
+      "avg_color": [
+        66,
+        99,
+        14
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 83.29411764705881,
+      "row": 1,
+      "col": 4
+    },
+    {
+      "id": 18,
+      "filename": "hex_tile_018.png",
+      "avg_color": [
+        62,
+        95,
+        14
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 84.44444444444444,
+      "row": 1,
+      "col": 5
+    },
+    {
+      "id": 19,
+      "filename": "hex_tile_019.png",
+      "avg_color": [
+        74,
+        106,
+        18
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 81.81818181818183,
+      "row": 1,
+      "col": 6
+    },
+    {
+      "id": 20,
+      "filename": "hex_tile_020.png",
+      "avg_color": [
+        96,
+        127,
+        29
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 78.9795918367347,
+      "row": 1,
+      "col": 7
+    },
+    {
+      "id": 21,
+      "filename": "hex_tile_021.png",
+      "avg_color": [
+        116,
+        148,
+        36
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 77.14285714285714,
+      "row": 1,
+      "col": 8
+    },
+    {
+      "id": 22,
+      "filename": "hex_tile_022.png",
+      "avg_color": [
+        116,
+        148,
+        34
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 76.84210526315789,
+      "row": 1,
+      "col": 9
+    },
+    {
+      "id": 23,
+      "filename": "hex_tile_023.png",
+      "avg_color": [
+        114,
+        147,
+        32
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 77.2173913043478,
+      "row": 1,
+      "col": 10
+    },
+    {
+      "id": 24,
+      "filename": "hex_tile_024.png",
+      "avg_color": [
+        109,
+        142,
+        29
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 77.52212389380533,
+      "row": 1,
+      "col": 11
+    },
+    {
+      "id": 25,
+      "filename": "hex_tile_025.png",
+      "avg_color": [
+        98,
+        130,
+        25
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 78.28571428571428,
+      "row": 1,
+      "col": 12
+    },
+    {
+      "id": 26,
+      "filename": "hex_tile_026.png",
+      "avg_color": [
+        71,
+        126,
+        31
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 94.73684210526315,
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": 27,
+      "filename": "hex_tile_027.png",
+      "avg_color": [
+        71,
+        127,
+        31
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 95.0,
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": 28,
+      "filename": "hex_tile_028.png",
+      "avg_color": [
+        71,
+        126,
+        30
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 94.37500000000003,
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": 29,
+      "filename": "hex_tile_029.png",
+      "avg_color": [
+        64,
+        116,
+        24
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 93.91304347826086,
+      "row": 2,
+      "col": 3
+    },
+    {
+      "id": 30,
+      "filename": "hex_tile_030.png",
+      "avg_color": [
+        50,
+        102,
+        14
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 95.45454545454545,
+      "row": 2,
+      "col": 4
+    },
+    {
+      "id": 31,
+      "filename": "hex_tile_031.png",
+      "avg_color": [
+        41,
+        89,
+        4
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 93.88235294117646,
+      "row": 2,
+      "col": 5
+    },
+    {
+      "id": 32,
+      "filename": "hex_tile_032.png",
+      "avg_color": [
+        35,
+        81,
+        0
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 94.07407407407406,
+      "row": 2,
+      "col": 6
+    },
+    {
+      "id": 33,
+      "filename": "hex_tile_033.png",
+      "avg_color": [
+        36,
+        84,
+        0
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 94.28571428571428,
+      "row": 2,
+      "col": 7
+    },
+    {
+      "id": 34,
+      "filename": "hex_tile_034.png",
+      "avg_color": [
+        35,
+        82,
+        0
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 94.39024390243902,
+      "row": 2,
+      "col": 8
+    },
+    {
+      "id": 35,
+      "filename": "hex_tile_035.png",
+      "avg_color": [
+        29,
+        75,
+        1
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 97.29729729729732,
+      "row": 2,
+      "col": 9
+    },
+    {
+      "id": 36,
+      "filename": "hex_tile_036.png",
+      "avg_color": [
+        37,
+        84,
+        10
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 98.1081081081081,
+      "row": 2,
+      "col": 10
+    },
+    {
+      "id": 37,
+      "filename": "hex_tile_037.png",
+      "avg_color": [
+        48,
+        98,
+        19
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 97.97468354430379,
+      "row": 2,
+      "col": 11
+    },
+    {
+      "id": 38,
+      "filename": "hex_tile_038.png",
+      "avg_color": [
+        65,
+        118,
+        29
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 95.73033707865167,
+      "row": 2,
+      "col": 12
+    },
+    {
+      "id": 39,
+      "filename": "hex_tile_039.png",
+      "avg_color": [
+        39,
+        100,
+        54
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 134.75409836065575,
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": 40,
+      "filename": "hex_tile_040.png",
+      "avg_color": [
+        40,
+        96,
+        58
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 139.28571428571428,
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": 41,
+      "filename": "hex_tile_041.png",
+      "avg_color": [
+        52,
+        110,
+        71
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 139.6551724137931,
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": 42,
+      "filename": "hex_tile_042.png",
+      "avg_color": [
+        66,
+        123,
+        84
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 138.94736842105263,
+      "row": 3,
+      "col": 3
+    },
+    {
+      "id": 43,
+      "filename": "hex_tile_043.png",
+      "avg_color": [
+        81,
+        142,
+        99
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 137.70491803278688,
+      "row": 3,
+      "col": 4
+    },
+    {
+      "id": 44,
+      "filename": "hex_tile_044.png",
+      "avg_color": [
+        85,
+        146,
+        104
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 138.68852459016395,
+      "row": 3,
+      "col": 5
+    },
+    {
+      "id": 45,
+      "filename": "hex_tile_045.png",
+      "avg_color": [
+        83,
+        144,
+        105
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 141.63934426229508,
+      "row": 3,
+      "col": 6
+    },
+    {
+      "id": 46,
+      "filename": "hex_tile_046.png",
+      "avg_color": [
+        79,
+        142,
+        97
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 137.14285714285714,
+      "row": 3,
+      "col": 7
+    },
+    {
+      "id": 47,
+      "filename": "hex_tile_047.png",
+      "avg_color": [
+        67,
+        128,
+        85
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 137.70491803278688,
+      "row": 3,
+      "col": 8
+    },
+    {
+      "id": 48,
+      "filename": "hex_tile_048.png",
+      "avg_color": [
+        55,
+        114,
+        67
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 132.20338983050848,
+      "row": 3,
+      "col": 9
+    },
+    {
+      "id": 49,
+      "filename": "hex_tile_049.png",
+      "avg_color": [
+        44,
+        103,
+        56
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 132.20338983050848,
+      "row": 3,
+      "col": 10
+    },
+    {
+      "id": 50,
+      "filename": "hex_tile_050.png",
+      "avg_color": [
+        43,
+        102,
+        53
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 130.16949152542372,
+      "row": 3,
+      "col": 11
+    },
+    {
+      "id": 51,
+      "filename": "hex_tile_051.png",
+      "avg_color": [
+        42,
+        100,
+        55
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 133.44827586206898,
+      "row": 3,
+      "col": 12
+    },
+    {
+      "id": 52,
+      "filename": "hex_tile_052.png",
+      "avg_color": [
+        77,
+        94,
+        17
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 73.24675324675326,
+      "row": 4,
+      "col": 0
+    },
+    {
+      "id": 53,
+      "filename": "hex_tile_053.png",
+      "avg_color": [
+        64,
+        84,
+        14
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 77.14285714285714,
+      "row": 4,
+      "col": 1
+    },
+    {
+      "id": 54,
+      "filename": "hex_tile_054.png",
+      "avg_color": [
+        59,
+        79,
+        13
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 78.18181818181816,
+      "row": 4,
+      "col": 2
+    },
+    {
+      "id": 55,
+      "filename": "hex_tile_055.png",
+      "avg_color": [
+        57,
+        76,
+        12
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 77.8125,
+      "row": 4,
+      "col": 3
+    },
+    {
+      "id": 56,
+      "filename": "hex_tile_056.png",
+      "avg_color": [
+        59,
+        77,
+        11
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 76.36363636363635,
+      "row": 4,
+      "col": 4
+    },
+    {
+      "id": 57,
+      "filename": "hex_tile_057.png",
+      "avg_color": [
+        50,
+        68,
+        9
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 78.30508474576271,
+      "row": 4,
+      "col": 5
+    },
+    {
+      "id": 58,
+      "filename": "hex_tile_058.png",
+      "avg_color": [
+        60,
+        75,
+        11
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 74.0625,
+      "row": 4,
+      "col": 6
+    },
+    {
+      "id": 59,
+      "filename": "hex_tile_059.png",
+      "avg_color": [
+        74,
+        88,
+        17
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 71.83098591549295,
+      "row": 4,
+      "col": 7
+    },
+    {
+      "id": 60,
+      "filename": "hex_tile_060.png",
+      "avg_color": [
+        92,
+        106,
+        22
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 69.99999999999999,
+      "row": 4,
+      "col": 8
+    },
+    {
+      "id": 61,
+      "filename": "hex_tile_061.png",
+      "avg_color": [
+        103,
+        118,
+        26
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 69.78260869565217,
+      "row": 4,
+      "col": 9
+    },
+    {
+      "id": 62,
+      "filename": "hex_tile_062.png",
+      "avg_color": [
+        100,
+        115,
+        24
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 69.89010989010988,
+      "row": 4,
+      "col": 10
+    },
+    {
+      "id": 63,
+      "filename": "hex_tile_063.png",
+      "avg_color": [
+        101,
+        115,
+        23
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 69.13043478260872,
+      "row": 4,
+      "col": 11
+    },
+    {
+      "id": 64,
+      "filename": "hex_tile_064.png",
+      "avg_color": [
+        91,
+        105,
+        21
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 69.99999999999999,
+      "row": 4,
+      "col": 12
+    },
+    {
+      "id": 65,
+      "filename": "hex_tile_065.png",
+      "avg_color": [
+        11,
+        58,
+        166
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.80645161290326,
+      "row": 5,
+      "col": 0
+    },
+    {
+      "id": 66,
+      "filename": "hex_tile_066.png",
+      "avg_color": [
+        0,
+        52,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.7543859649123,
+      "row": 5,
+      "col": 1
+    },
+    {
+      "id": 67,
+      "filename": "hex_tile_067.png",
+      "avg_color": [
+        0,
+        52,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.7543859649123,
+      "row": 5,
+      "col": 2
+    },
+    {
+      "id": 68,
+      "filename": "hex_tile_068.png",
+      "avg_color": [
+        0,
+        52,
+        170
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.64705882352942,
+      "row": 5,
+      "col": 3
+    },
+    {
+      "id": 69,
+      "filename": "hex_tile_069.png",
+      "avg_color": [
+        0,
+        52,
+        172
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.8604651162791,
+      "row": 5,
+      "col": 4
+    },
+    {
+      "id": 70,
+      "filename": "hex_tile_070.png",
+      "avg_color": [
+        9,
+        60,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.1111111111111,
+      "row": 5,
+      "col": 5
+    },
+    {
+      "id": 71,
+      "filename": "hex_tile_071.png",
+      "avg_color": [
+        8,
+        59,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.22699386503064,
+      "row": 5,
+      "col": 6
+    },
+    {
+      "id": 72,
+      "filename": "hex_tile_072.png",
+      "avg_color": [
+        0,
+        52,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.7543859649123,
+      "row": 5,
+      "col": 7
+    },
+    {
+      "id": 73,
+      "filename": "hex_tile_073.png",
+      "avg_color": [
+        0,
+        52,
+        171
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.7543859649123,
+      "row": 5,
+      "col": 8
+    },
+    {
+      "id": 74,
+      "filename": "hex_tile_074.png",
+      "avg_color": [
+        1,
+        52,
+        170
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.89349112426032,
+      "row": 5,
+      "col": 9
+    },
+    {
+      "id": 75,
+      "filename": "hex_tile_075.png",
+      "avg_color": [
+        2,
+        51,
+        168
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 222.28915662650604,
+      "row": 5,
+      "col": 10
+    },
+    {
+      "id": 76,
+      "filename": "hex_tile_076.png",
+      "avg_color": [
+        3,
+        52,
+        168
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 222.1818181818182,
+      "row": 5,
+      "col": 11
+    },
+    {
+      "id": 77,
+      "filename": "hex_tile_077.png",
+      "avg_color": [
+        12,
+        60,
+        168
+      ],
+      "dom_color": [
+        0,
+        51,
+        204
+      ],
+      "hue": 221.53846153846155,
+      "row": 5,
+      "col": 12
+    },
+    {
+      "id": 78,
+      "filename": "hex_tile_078.png",
+      "avg_color": [
+        132,
+        124,
+        51
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 54.074074074074055,
+      "row": 6,
+      "col": 0
+    },
+    {
+      "id": 79,
+      "filename": "hex_tile_079.png",
+      "avg_color": [
+        123,
+        114,
+        42
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 53.33333333333334,
+      "row": 6,
+      "col": 1
+    },
+    {
+      "id": 80,
+      "filename": "hex_tile_080.png",
+      "avg_color": [
+        132,
+        122,
+        51
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 52.59259259259258,
+      "row": 6,
+      "col": 2
+    },
+    {
+      "id": 81,
+      "filename": "hex_tile_081.png",
+      "avg_color": [
+        148,
+        140,
+        64
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.285714285714285,
+      "row": 6,
+      "col": 3
+    },
+    {
+      "id": 82,
+      "filename": "hex_tile_082.png",
+      "avg_color": [
+        170,
+        159,
+        83
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 52.41379310344828,
+      "row": 6,
+      "col": 4
+    },
+    {
+      "id": 83,
+      "filename": "hex_tile_083.png",
+      "avg_color": [
+        180,
+        172,
+        95
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.35294117647059,
+      "row": 6,
+      "col": 5
+    },
+    {
+      "id": 84,
+      "filename": "hex_tile_084.png",
+      "avg_color": [
+        178,
+        171,
+        95
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.93975903614457,
+      "row": 6,
+      "col": 6
+    },
+    {
+      "id": 85,
+      "filename": "hex_tile_085.png",
+      "avg_color": [
+        177,
+        169,
+        94
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.216867469879524,
+      "row": 6,
+      "col": 7
+    },
+    {
+      "id": 86,
+      "filename": "hex_tile_086.png",
+      "avg_color": [
+        165,
+        157,
+        83
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.146341463414636,
+      "row": 6,
+      "col": 8
+    },
+    {
+      "id": 87,
+      "filename": "hex_tile_087.png",
+      "avg_color": [
+        152,
+        143,
+        68
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 53.57142857142857,
+      "row": 6,
+      "col": 9
+    },
+    {
+      "id": 88,
+      "filename": "hex_tile_088.png",
+      "avg_color": [
+        141,
+        131,
+        54
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 53.10344827586206,
+      "row": 6,
+      "col": 10
+    },
+    {
+      "id": 89,
+      "filename": "hex_tile_089.png",
+      "avg_color": [
+        135,
+        128,
+        50
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 55.05882352941176,
+      "row": 6,
+      "col": 11
+    },
+    {
+      "id": 90,
+      "filename": "hex_tile_090.png",
+      "avg_color": [
+        134,
+        127,
+        51
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 54.93975903614457,
+      "row": 6,
+      "col": 12
+    },
+    {
+      "id": 91,
+      "filename": "hex_tile_091.png",
+      "avg_color": [
+        58,
+        96,
+        22
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 90.81081081081082,
+      "row": 7,
+      "col": 0
+    },
+    {
+      "id": 92,
+      "filename": "hex_tile_092.png",
+      "avg_color": [
+        47,
+        81,
+        14
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 90.44776119402985,
+      "row": 7,
+      "col": 1
+    },
+    {
+      "id": 93,
+      "filename": "hex_tile_093.png",
+      "avg_color": [
+        34,
+        68,
+        5
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 92.38095238095237,
+      "row": 7,
+      "col": 2
+    },
+    {
+      "id": 94,
+      "filename": "hex_tile_094.png",
+      "avg_color": [
+        31,
+        68,
+        2
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 93.63636363636364,
+      "row": 7,
+      "col": 3
+    },
+    {
+      "id": 95,
+      "filename": "hex_tile_095.png",
+      "avg_color": [
+        35,
+        76,
+        2
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 93.24324324324323,
+      "row": 7,
+      "col": 4
+    },
+    {
+      "id": 96,
+      "filename": "hex_tile_096.png",
+      "avg_color": [
+        33,
+        71,
+        3
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 93.52941176470587,
+      "row": 7,
+      "col": 5
+    },
+    {
+      "id": 97,
+      "filename": "hex_tile_097.png",
+      "avg_color": [
+        41,
+        77,
+        7
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 90.85714285714286,
+      "row": 7,
+      "col": 6
+    },
+    {
+      "id": 98,
+      "filename": "hex_tile_098.png",
+      "avg_color": [
+        50,
+        83,
+        12
+      ],
+      "dom_color": [
+        0,
+        51,
+        0
+      ],
+      "hue": 87.88732394366195,
+      "row": 7,
+      "col": 7
+    },
+    {
+      "id": 99,
+      "filename": "hex_tile_099.png",
+      "avg_color": [
+        63,
+        97,
+        20
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 86.49350649350649,
+      "row": 7,
+      "col": 8
+    },
+    {
+      "id": 100,
+      "filename": "hex_tile_100.png",
+      "avg_color": [
+        71,
+        110,
+        25
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 87.52941176470588,
+      "row": 7,
+      "col": 9
+    },
+    {
+      "id": 101,
+      "filename": "hex_tile_101.png",
+      "avg_color": [
+        65,
+        110,
+        27
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 92.53012048192772,
+      "row": 7,
+      "col": 10
+    },
+    {
+      "id": 102,
+      "filename": "hex_tile_102.png",
+      "avg_color": [
+        70,
+        117,
+        34
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 93.97590361445782,
+      "row": 7,
+      "col": 11
+    },
+    {
+      "id": 103,
+      "filename": "hex_tile_103.png",
+      "avg_color": [
+        70,
+        113,
+        31
+      ],
+      "dom_color": [
+        102,
+        153,
+        51
+      ],
+      "hue": 91.46341463414635,
+      "row": 7,
+      "col": 12
+    },
+    {
+      "id": 104,
+      "filename": "hex_tile_104.png",
+      "avg_color": [
+        160,
+        155,
+        86
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 55.94594594594594,
+      "row": 8,
+      "col": 0
+    },
+    {
+      "id": 105,
+      "filename": "hex_tile_105.png",
+      "avg_color": [
+        166,
+        159,
+        92
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.324324324324316,
+      "row": 8,
+      "col": 1
+    },
+    {
+      "id": 106,
+      "filename": "hex_tile_106.png",
+      "avg_color": [
+        169,
+        162,
+        93
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.473684210526315,
+      "row": 8,
+      "col": 2
+    },
+    {
+      "id": 107,
+      "filename": "hex_tile_107.png",
+      "avg_color": [
+        166,
+        158,
+        91
+      ],
+      "dom_color": [
+        204,
+        204,
+        153
+      ],
+      "hue": 53.599999999999994,
+      "row": 8,
+      "col": 3
+    },
+    {
+      "id": 108,
+      "filename": "hex_tile_108.png",
+      "avg_color": [
+        153,
+        146,
+        77
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 54.473684210526315,
+      "row": 8,
+      "col": 4
+    },
+    {
+      "id": 109,
+      "filename": "hex_tile_109.png",
+      "avg_color": [
+        137,
+        131,
+        63
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 55.13513513513513,
+      "row": 8,
+      "col": 5
+    },
+    {
+      "id": 110,
+      "filename": "hex_tile_110.png",
+      "avg_color": [
+        126,
+        120,
+        53
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 55.06849315068493,
+      "row": 8,
+      "col": 6
+    },
+    {
+      "id": 111,
+      "filename": "hex_tile_111.png",
+      "avg_color": [
+        124,
+        117,
+        50
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 54.324324324324316,
+      "row": 8,
+      "col": 7
+    },
+    {
+      "id": 112,
+      "filename": "hex_tile_112.png",
+      "avg_color": [
+        127,
+        120,
+        50
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 54.54545454545455,
+      "row": 8,
+      "col": 8
+    },
+    {
+      "id": 113,
+      "filename": "hex_tile_113.png",
+      "avg_color": [
+        124,
+        118,
+        49
+      ],
+      "dom_color": [
+        153,
+        153,
+        102
+      ],
+      "hue": 55.2,
+      "row": 8,
+      "col": 9
+    },
+    {
+      "id": 114,
+      "filename": "hex_tile_114.png",
+      "avg_color": [
+        120,
+        113,
+        41
+      ],
+      "dom_color": [
+        153,
+        153,
+        51
+      ],
+      "hue": 54.68354430379747,
+      "row": 8,
+      "col": 10
+    },
+    {
+      "id": 115,
+      "filename": "hex_tile_115.png",
+      "avg_color": [
+        124,
+        118,
+        50
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 55.135135135135144,
+      "row": 8,
+      "col": 11
+    },
+    {
+      "id": 116,
+      "filename": "hex_tile_116.png",
+      "avg_color": [
+        136,
+        130,
+        62
+      ],
+      "dom_color": [
+        204,
+        204,
+        102
+      ],
+      "hue": 55.13513513513513,
+      "row": 8,
+      "col": 12
+    },
+    {
+      "id": 117,
+      "filename": "hex_tile_117.png",
+      "avg_color": [
+        39,
+        47,
+        20
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 77.77777777777777,
+      "row": 9,
+      "col": 0
+    },
+    {
+      "id": 118,
+      "filename": "hex_tile_118.png",
+      "avg_color": [
+        39,
+        46,
+        19
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 75.55555555555554,
+      "row": 9,
+      "col": 1
+    },
+    {
+      "id": 119,
+      "filename": "hex_tile_119.png",
+      "avg_color": [
+        43,
+        50,
+        20
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 74.0,
+      "row": 9,
+      "col": 2
+    },
+    {
+      "id": 120,
+      "filename": "hex_tile_120.png",
+      "avg_color": [
+        52,
+        57,
+        24
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 69.09090909090908,
+      "row": 9,
+      "col": 3
+    },
+    {
+      "id": 121,
+      "filename": "hex_tile_121.png",
+      "avg_color": [
+        59,
+        65,
+        30
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 70.28571428571428,
+      "row": 9,
+      "col": 4
+    },
+    {
+      "id": 122,
+      "filename": "hex_tile_122.png",
+      "avg_color": [
+        67,
+        72,
+        35
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 68.1081081081081,
+      "row": 9,
+      "col": 5
+    },
+    {
+      "id": 123,
+      "filename": "hex_tile_123.png",
+      "avg_color": [
+        67,
+        75,
+        37
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 72.63157894736841,
+      "row": 9,
+      "col": 6
+    },
+    {
+      "id": 124,
+      "filename": "hex_tile_124.png",
+      "avg_color": [
+        67,
+        75,
+        38
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 72.97297297297298,
+      "row": 9,
+      "col": 7
+    },
+    {
+      "id": 125,
+      "filename": "hex_tile_125.png",
+      "avg_color": [
+        64,
+        71,
+        35
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 71.66666666666667,
+      "row": 9,
+      "col": 8
+    },
+    {
+      "id": 126,
+      "filename": "hex_tile_126.png",
+      "avg_color": [
+        54,
+        62,
+        28
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 74.11764705882354,
+      "row": 9,
+      "col": 9
+    },
+    {
+      "id": 127,
+      "filename": "hex_tile_127.png",
+      "avg_color": [
+        43,
+        52,
+        21
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 77.41935483870967,
+      "row": 9,
+      "col": 10
+    },
+    {
+      "id": 128,
+      "filename": "hex_tile_128.png",
+      "avg_color": [
+        37,
+        43,
+        19
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 75.0,
+      "row": 9,
+      "col": 11
+    },
+    {
+      "id": 129,
+      "filename": "hex_tile_129.png",
+      "avg_color": [
+        38,
+        46,
+        19
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 77.77777777777777,
+      "row": 9,
+      "col": 12
+    },
+    {
+      "id": 130,
+      "filename": "hex_tile_130.png",
+      "avg_color": [
+        66,
+        80,
+        29
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 76.47058823529412,
+      "row": 10,
+      "col": 0
+    },
+    {
+      "id": 131,
+      "filename": "hex_tile_131.png",
+      "avg_color": [
+        54,
+        69,
+        19
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 77.99999999999999,
+      "row": 10,
+      "col": 1
+    },
+    {
+      "id": 132,
+      "filename": "hex_tile_132.png",
+      "avg_color": [
+        44,
+        60,
+        14
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 80.8695652173913,
+      "row": 10,
+      "col": 2
+    },
+    {
+      "id": 133,
+      "filename": "hex_tile_133.png",
+      "avg_color": [
+        43,
+        59,
+        13
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 80.8695652173913,
+      "row": 10,
+      "col": 3
+    },
+    {
+      "id": 134,
+      "filename": "hex_tile_134.png",
+      "avg_color": [
+        41,
+        55,
+        14
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 80.48780487804876,
+      "row": 10,
+      "col": 4
+    },
+    {
+      "id": 135,
+      "filename": "hex_tile_135.png",
+      "avg_color": [
+        40,
+        54,
+        16
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 82.10526315789473,
+      "row": 10,
+      "col": 5
+    },
+    {
+      "id": 136,
+      "filename": "hex_tile_136.png",
+      "avg_color": [
+        40,
+        51,
+        13
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 77.36842105263159,
+      "row": 10,
+      "col": 6
+    },
+    {
+      "id": 137,
+      "filename": "hex_tile_137.png",
+      "avg_color": [
+        49,
+        63,
+        18
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 78.66666666666666,
+      "row": 10,
+      "col": 7
+    },
+    {
+      "id": 138,
+      "filename": "hex_tile_138.png",
+      "avg_color": [
+        62,
+        75,
+        24
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 75.29411764705883,
+      "row": 10,
+      "col": 8
+    },
+    {
+      "id": 139,
+      "filename": "hex_tile_139.png",
+      "avg_color": [
+        79,
+        91,
+        32
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 72.20338983050847,
+      "row": 10,
+      "col": 9
+    },
+    {
+      "id": 140,
+      "filename": "hex_tile_140.png",
+      "avg_color": [
+        82,
+        98,
+        35
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 75.23809523809524,
+      "row": 10,
+      "col": 10
+    },
+    {
+      "id": 141,
+      "filename": "hex_tile_141.png",
+      "avg_color": [
+        80,
+        93,
+        36
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 73.68421052631578,
+      "row": 10,
+      "col": 11
+    },
+    {
+      "id": 142,
+      "filename": "hex_tile_142.png",
+      "avg_color": [
+        76,
+        92,
+        40
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 78.46153846153845,
+      "row": 10,
+      "col": 12
+    },
+    {
+      "id": 143,
+      "filename": "hex_tile_143.png",
+      "avg_color": [
+        74,
+        78,
+        28
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 64.80000000000001,
+      "row": 11,
+      "col": 0
+    },
+    {
+      "id": 144,
+      "filename": "hex_tile_144.png",
+      "avg_color": [
+        85,
+        85,
+        30
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 60.0,
+      "row": 11,
+      "col": 1
+    },
+    {
+      "id": 145,
+      "filename": "hex_tile_145.png",
+      "avg_color": [
+        92,
+        94,
+        33
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 61.967213114754095,
+      "row": 11,
+      "col": 2
+    },
+    {
+      "id": 146,
+      "filename": "hex_tile_146.png",
+      "avg_color": [
+        85,
+        89,
+        30
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 64.06779661016948,
+      "row": 11,
+      "col": 3
+    },
+    {
+      "id": 147,
+      "filename": "hex_tile_147.png",
+      "avg_color": [
+        79,
+        82,
+        28
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 63.33333333333334,
+      "row": 11,
+      "col": 4
+    },
+    {
+      "id": 148,
+      "filename": "hex_tile_148.png",
+      "avg_color": [
+        70,
+        75,
+        25
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 66.0,
+      "row": 11,
+      "col": 5
+    },
+    {
+      "id": 149,
+      "filename": "hex_tile_149.png",
+      "avg_color": [
+        53,
+        59,
+        18
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 68.78048780487805,
+      "row": 11,
+      "col": 6
+    },
+    {
+      "id": 150,
+      "filename": "hex_tile_150.png",
+      "avg_color": [
+        48,
+        51,
+        14
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 64.86486486486487,
+      "row": 11,
+      "col": 7
+    },
+    {
+      "id": 151,
+      "filename": "hex_tile_151.png",
+      "avg_color": [
+        53,
+        58,
+        15
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 66.9767441860465,
+      "row": 11,
+      "col": 8
+    },
+    {
+      "id": 152,
+      "filename": "hex_tile_152.png",
+      "avg_color": [
+        47,
+        53,
+        13
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 69.0,
+      "row": 11,
+      "col": 9
+    },
+    {
+      "id": 153,
+      "filename": "hex_tile_153.png",
+      "avg_color": [
+        45,
+        50,
+        12
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 67.89473684210525,
+      "row": 11,
+      "col": 10
+    },
+    {
+      "id": 154,
+      "filename": "hex_tile_154.png",
+      "avg_color": [
+        47,
+        53,
+        15
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 69.47368421052632,
+      "row": 11,
+      "col": 11
+    },
+    {
+      "id": 155,
+      "filename": "hex_tile_155.png",
+      "avg_color": [
+        62,
+        65,
+        21
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 64.09090909090908,
+      "row": 11,
+      "col": 12
+    },
+    {
+      "id": 156,
+      "filename": "hex_tile_156.png",
+      "avg_color": [
+        74,
+        88,
+        18
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 71.99999999999999,
+      "row": 12,
+      "col": 0
+    },
+    {
+      "id": 157,
+      "filename": "hex_tile_157.png",
+      "avg_color": [
+        65,
+        84,
+        13
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 76.05633802816902,
+      "row": 12,
+      "col": 1
+    },
+    {
+      "id": 158,
+      "filename": "hex_tile_158.png",
+      "avg_color": [
+        64,
+        78,
+        12
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 72.72727272727275,
+      "row": 12,
+      "col": 2
+    },
+    {
+      "id": 159,
+      "filename": "hex_tile_159.png",
+      "avg_color": [
+        74,
+        88,
+        25
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 73.33333333333334,
+      "row": 12,
+      "col": 3
+    },
+    {
+      "id": 160,
+      "filename": "hex_tile_160.png",
+      "avg_color": [
+        91,
+        108,
+        40
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 75.0,
+      "row": 12,
+      "col": 4
+    },
+    {
+      "id": 161,
+      "filename": "hex_tile_161.png",
+      "avg_color": [
+        114,
+        132,
+        50
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 73.17073170731709,
+      "row": 12,
+      "col": 5
+    },
+    {
+      "id": 162,
+      "filename": "hex_tile_162.png",
+      "avg_color": [
+        117,
+        138,
+        47
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 73.84615384615385,
+      "row": 12,
+      "col": 6
+    },
+    {
+      "id": 163,
+      "filename": "hex_tile_163.png",
+      "avg_color": [
+        118,
+        131,
+        36
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 68.21052631578948,
+      "row": 12,
+      "col": 7
+    },
+    {
+      "id": 164,
+      "filename": "hex_tile_164.png",
+      "avg_color": [
+        110,
+        130,
+        30
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 71.99999999999999,
+      "row": 12,
+      "col": 8
+    },
+    {
+      "id": 165,
+      "filename": "hex_tile_165.png",
+      "avg_color": [
+        99,
+        115,
+        31
+      ],
+      "dom_color": [
+        102,
+        153,
+        0
+      ],
+      "hue": 71.42857142857144,
+      "row": 12,
+      "col": 9
+    },
+    {
+      "id": 166,
+      "filename": "hex_tile_166.png",
+      "avg_color": [
+        85,
+        103,
+        35
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 75.88235294117646,
+      "row": 12,
+      "col": 10
+    },
+    {
+      "id": 167,
+      "filename": "hex_tile_167.png",
+      "avg_color": [
+        75,
+        95,
+        31
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 78.75,
+      "row": 12,
+      "col": 11
+    },
+    {
+      "id": 168,
+      "filename": "hex_tile_168.png",
+      "avg_color": [
+        74,
+        95,
+        27
+      ],
+      "dom_color": [
+        51,
+        102,
+        0
+      ],
+      "hue": 78.52941176470587,
+      "row": 12,
+      "col": 12
+    },
+    {
+      "id": 169,
+      "filename": "hex_tile_169.png",
+      "avg_color": [
+        124,
+        94,
+        62
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 30.96774193548388,
+      "row": 13,
+      "col": 0
+    },
+    {
+      "id": 170,
+      "filename": "hex_tile_170.png",
+      "avg_color": [
+        112,
+        87,
+        53
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 34.57627118644068,
+      "row": 13,
+      "col": 1
+    },
+    {
+      "id": 171,
+      "filename": "hex_tile_171.png",
+      "avg_color": [
+        101,
+        80,
+        46
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 37.09090909090909,
+      "row": 13,
+      "col": 2
+    },
+    {
+      "id": 172,
+      "filename": "hex_tile_172.png",
+      "avg_color": [
+        97,
+        75,
+        42
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 36.00000000000001,
+      "row": 13,
+      "col": 3
+    },
+    {
+      "id": 173,
+      "filename": "hex_tile_173.png",
+      "avg_color": [
+        96,
+        75,
+        41
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 37.09090909090909,
+      "row": 13,
+      "col": 4
+    },
+    {
+      "id": 174,
+      "filename": "hex_tile_174.png",
+      "avg_color": [
+        94,
+        72,
+        40
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 35.55555555555556,
+      "row": 13,
+      "col": 5
+    },
+    {
+      "id": 175,
+      "filename": "hex_tile_175.png",
+      "avg_color": [
+        86,
+        64,
+        34
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 34.61538461538461,
+      "row": 13,
+      "col": 6
+    },
+    {
+      "id": 176,
+      "filename": "hex_tile_176.png",
+      "avg_color": [
+        91,
+        73,
+        42
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 37.959183673469376,
+      "row": 13,
+      "col": 7
+    },
+    {
+      "id": 177,
+      "filename": "hex_tile_177.png",
+      "avg_color": [
+        101,
+        80,
+        51
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 34.800000000000004,
+      "row": 13,
+      "col": 8
+    },
+    {
+      "id": 178,
+      "filename": "hex_tile_178.png",
+      "avg_color": [
+        120,
+        89,
+        61
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 28.47457627118644,
+      "row": 13,
+      "col": 9
+    },
+    {
+      "id": 179,
+      "filename": "hex_tile_179.png",
+      "avg_color": [
+        134,
+        104,
+        73
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 30.49180327868852,
+      "row": 13,
+      "col": 10
+    },
+    {
+      "id": 180,
+      "filename": "hex_tile_180.png",
+      "avg_color": [
+        134,
+        104,
+        73
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 30.49180327868852,
+      "row": 13,
+      "col": 11
+    },
+    {
+      "id": 181,
+      "filename": "hex_tile_181.png",
+      "avg_color": [
+        133,
+        103,
+        72
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 30.49180327868852,
+      "row": 13,
+      "col": 12
+    },
+    {
+      "id": 182,
+      "filename": "hex_tile_182.png",
+      "avg_color": [
+        34,
+        29,
+        25
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 26.666666666666664,
+      "row": 14,
+      "col": 0
+    },
+    {
+      "id": 183,
+      "filename": "hex_tile_183.png",
+      "avg_color": [
+        45,
+        43,
+        38
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 42.85714285714286,
+      "row": 14,
+      "col": 1
+    },
+    {
+      "id": 184,
+      "filename": "hex_tile_184.png",
+      "avg_color": [
+        63,
+        59,
+        50
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 41.53846153846155,
+      "row": 14,
+      "col": 2
+    },
+    {
+      "id": 185,
+      "filename": "hex_tile_185.png",
+      "avg_color": [
+        60,
+        53,
+        40
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 39.00000000000001,
+      "row": 14,
+      "col": 3
+    },
+    {
+      "id": 186,
+      "filename": "hex_tile_186.png",
+      "avg_color": [
+        28,
+        27,
+        10
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 56.66666666666667,
+      "row": 14,
+      "col": 4
+    },
+    {
+      "id": 187,
+      "filename": "hex_tile_187.png",
+      "avg_color": [
+        31,
+        29,
+        11
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 54.0,
+      "row": 14,
+      "col": 5
+    },
+    {
+      "id": 188,
+      "filename": "hex_tile_188.png",
+      "avg_color": [
+        31,
+        29,
+        11
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 54.0,
+      "row": 14,
+      "col": 6
+    },
+    {
+      "id": 189,
+      "filename": "hex_tile_189.png",
+      "avg_color": [
+        31,
+        29,
+        11
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 54.0,
+      "row": 14,
+      "col": 7
+    },
+    {
+      "id": 190,
+      "filename": "hex_tile_190.png",
+      "avg_color": [
+        31,
+        29,
+        11
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 54.0,
+      "row": 14,
+      "col": 8
+    },
+    {
+      "id": 191,
+      "filename": "hex_tile_191.png",
+      "avg_color": [
+        21,
+        19,
+        3
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 53.33333333333333,
+      "row": 14,
+      "col": 9
+    },
+    {
+      "id": 192,
+      "filename": "hex_tile_192.png",
+      "avg_color": [
+        25,
+        15,
+        8
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 24.705882352941174,
+      "row": 14,
+      "col": 10
+    },
+    {
+      "id": 193,
+      "filename": "hex_tile_193.png",
+      "avg_color": [
+        12,
+        8,
+        3
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 33.333333333333336,
+      "row": 14,
+      "col": 11
+    },
+    {
+      "id": 194,
+      "filename": "hex_tile_194.png",
+      "avg_color": [
+        11,
+        6,
+        3
+      ],
+      "dom_color": [
+        0,
+        0,
+        0
+      ],
+      "hue": 22.5,
+      "row": 14,
+      "col": 12
+    }
+  ]
+}

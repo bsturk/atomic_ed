@@ -1,0 +1,2941 @@
+{
+  "source_image": "/home/user/atomic_ed/extracted_images/PICT_128.png",
+  "tile_size": {
+    "width": 34,
+    "height": 38
+  },
+  "grid": {
+    "columns": 13,
+    "rows": 15
+  },
+  "total_tiles": 195,
+  "non_empty_tiles": 195,
+  "empty_tiles": 0,
+  "tiles": [
+    {
+      "id": 0,
+      "filename": "hex_tile_000.png",
+      "position": {
+        "row": 0,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 1,
+      "filename": "hex_tile_001.png",
+      "position": {
+        "row": 0,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 2,
+      "filename": "hex_tile_002.png",
+      "position": {
+        "row": 0,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 3,
+      "filename": "hex_tile_003.png",
+      "position": {
+        "row": 0,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 4,
+      "filename": "hex_tile_004.png",
+      "position": {
+        "row": 0,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 5,
+      "filename": "hex_tile_005.png",
+      "position": {
+        "row": 0,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 6,
+      "filename": "hex_tile_006.png",
+      "position": {
+        "row": 0,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 7,
+      "filename": "hex_tile_007.png",
+      "position": {
+        "row": 0,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 8,
+      "filename": "hex_tile_008.png",
+      "position": {
+        "row": 0,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 9,
+      "filename": "hex_tile_009.png",
+      "position": {
+        "row": 0,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 10,
+      "filename": "hex_tile_010.png",
+      "position": {
+        "row": 0,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 11,
+      "filename": "hex_tile_011.png",
+      "position": {
+        "row": 0,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 12,
+      "filename": "hex_tile_012.png",
+      "position": {
+        "row": 0,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 0,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 13,
+      "filename": "hex_tile_013.png",
+      "position": {
+        "row": 1,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 14,
+      "filename": "hex_tile_014.png",
+      "position": {
+        "row": 1,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 15,
+      "filename": "hex_tile_015.png",
+      "position": {
+        "row": 1,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 16,
+      "filename": "hex_tile_016.png",
+      "position": {
+        "row": 1,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 17,
+      "filename": "hex_tile_017.png",
+      "position": {
+        "row": 1,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 18,
+      "filename": "hex_tile_018.png",
+      "position": {
+        "row": 1,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 19,
+      "filename": "hex_tile_019.png",
+      "position": {
+        "row": 1,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 20,
+      "filename": "hex_tile_020.png",
+      "position": {
+        "row": 1,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 21,
+      "filename": "hex_tile_021.png",
+      "position": {
+        "row": 1,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 22,
+      "filename": "hex_tile_022.png",
+      "position": {
+        "row": 1,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 23,
+      "filename": "hex_tile_023.png",
+      "position": {
+        "row": 1,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 24,
+      "filename": "hex_tile_024.png",
+      "position": {
+        "row": 1,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 25,
+      "filename": "hex_tile_025.png",
+      "position": {
+        "row": 1,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 38,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 26,
+      "filename": "hex_tile_026.png",
+      "position": {
+        "row": 2,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 27,
+      "filename": "hex_tile_027.png",
+      "position": {
+        "row": 2,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 28,
+      "filename": "hex_tile_028.png",
+      "position": {
+        "row": 2,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 29,
+      "filename": "hex_tile_029.png",
+      "position": {
+        "row": 2,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 30,
+      "filename": "hex_tile_030.png",
+      "position": {
+        "row": 2,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 31,
+      "filename": "hex_tile_031.png",
+      "position": {
+        "row": 2,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 32,
+      "filename": "hex_tile_032.png",
+      "position": {
+        "row": 2,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 33,
+      "filename": "hex_tile_033.png",
+      "position": {
+        "row": 2,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 34,
+      "filename": "hex_tile_034.png",
+      "position": {
+        "row": 2,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 35,
+      "filename": "hex_tile_035.png",
+      "position": {
+        "row": 2,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 36,
+      "filename": "hex_tile_036.png",
+      "position": {
+        "row": 2,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 37,
+      "filename": "hex_tile_037.png",
+      "position": {
+        "row": 2,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 38,
+      "filename": "hex_tile_038.png",
+      "position": {
+        "row": 2,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 76,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 39,
+      "filename": "hex_tile_039.png",
+      "position": {
+        "row": 3,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 40,
+      "filename": "hex_tile_040.png",
+      "position": {
+        "row": 3,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 41,
+      "filename": "hex_tile_041.png",
+      "position": {
+        "row": 3,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 42,
+      "filename": "hex_tile_042.png",
+      "position": {
+        "row": 3,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 43,
+      "filename": "hex_tile_043.png",
+      "position": {
+        "row": 3,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 44,
+      "filename": "hex_tile_044.png",
+      "position": {
+        "row": 3,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 45,
+      "filename": "hex_tile_045.png",
+      "position": {
+        "row": 3,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 46,
+      "filename": "hex_tile_046.png",
+      "position": {
+        "row": 3,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 47,
+      "filename": "hex_tile_047.png",
+      "position": {
+        "row": 3,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 48,
+      "filename": "hex_tile_048.png",
+      "position": {
+        "row": 3,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 49,
+      "filename": "hex_tile_049.png",
+      "position": {
+        "row": 3,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 50,
+      "filename": "hex_tile_050.png",
+      "position": {
+        "row": 3,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 51,
+      "filename": "hex_tile_051.png",
+      "position": {
+        "row": 3,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 114,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 52,
+      "filename": "hex_tile_052.png",
+      "position": {
+        "row": 4,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 53,
+      "filename": "hex_tile_053.png",
+      "position": {
+        "row": 4,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 54,
+      "filename": "hex_tile_054.png",
+      "position": {
+        "row": 4,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 55,
+      "filename": "hex_tile_055.png",
+      "position": {
+        "row": 4,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 56,
+      "filename": "hex_tile_056.png",
+      "position": {
+        "row": 4,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 57,
+      "filename": "hex_tile_057.png",
+      "position": {
+        "row": 4,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 58,
+      "filename": "hex_tile_058.png",
+      "position": {
+        "row": 4,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 59,
+      "filename": "hex_tile_059.png",
+      "position": {
+        "row": 4,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 60,
+      "filename": "hex_tile_060.png",
+      "position": {
+        "row": 4,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 61,
+      "filename": "hex_tile_061.png",
+      "position": {
+        "row": 4,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 62,
+      "filename": "hex_tile_062.png",
+      "position": {
+        "row": 4,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 63,
+      "filename": "hex_tile_063.png",
+      "position": {
+        "row": 4,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 64,
+      "filename": "hex_tile_064.png",
+      "position": {
+        "row": 4,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 152,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 65,
+      "filename": "hex_tile_065.png",
+      "position": {
+        "row": 5,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 66,
+      "filename": "hex_tile_066.png",
+      "position": {
+        "row": 5,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 67,
+      "filename": "hex_tile_067.png",
+      "position": {
+        "row": 5,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 68,
+      "filename": "hex_tile_068.png",
+      "position": {
+        "row": 5,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 69,
+      "filename": "hex_tile_069.png",
+      "position": {
+        "row": 5,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 70,
+      "filename": "hex_tile_070.png",
+      "position": {
+        "row": 5,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 71,
+      "filename": "hex_tile_071.png",
+      "position": {
+        "row": 5,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 72,
+      "filename": "hex_tile_072.png",
+      "position": {
+        "row": 5,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 73,
+      "filename": "hex_tile_073.png",
+      "position": {
+        "row": 5,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 74,
+      "filename": "hex_tile_074.png",
+      "position": {
+        "row": 5,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 75,
+      "filename": "hex_tile_075.png",
+      "position": {
+        "row": 5,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 76,
+      "filename": "hex_tile_076.png",
+      "position": {
+        "row": 5,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 77,
+      "filename": "hex_tile_077.png",
+      "position": {
+        "row": 5,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 190,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 78,
+      "filename": "hex_tile_078.png",
+      "position": {
+        "row": 6,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 79,
+      "filename": "hex_tile_079.png",
+      "position": {
+        "row": 6,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 80,
+      "filename": "hex_tile_080.png",
+      "position": {
+        "row": 6,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 81,
+      "filename": "hex_tile_081.png",
+      "position": {
+        "row": 6,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 82,
+      "filename": "hex_tile_082.png",
+      "position": {
+        "row": 6,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 83,
+      "filename": "hex_tile_083.png",
+      "position": {
+        "row": 6,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 84,
+      "filename": "hex_tile_084.png",
+      "position": {
+        "row": 6,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 85,
+      "filename": "hex_tile_085.png",
+      "position": {
+        "row": 6,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 86,
+      "filename": "hex_tile_086.png",
+      "position": {
+        "row": 6,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 87,
+      "filename": "hex_tile_087.png",
+      "position": {
+        "row": 6,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 88,
+      "filename": "hex_tile_088.png",
+      "position": {
+        "row": 6,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 89,
+      "filename": "hex_tile_089.png",
+      "position": {
+        "row": 6,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 90,
+      "filename": "hex_tile_090.png",
+      "position": {
+        "row": 6,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 228,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 91,
+      "filename": "hex_tile_091.png",
+      "position": {
+        "row": 7,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 92,
+      "filename": "hex_tile_092.png",
+      "position": {
+        "row": 7,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 93,
+      "filename": "hex_tile_093.png",
+      "position": {
+        "row": 7,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 94,
+      "filename": "hex_tile_094.png",
+      "position": {
+        "row": 7,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 95,
+      "filename": "hex_tile_095.png",
+      "position": {
+        "row": 7,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 96,
+      "filename": "hex_tile_096.png",
+      "position": {
+        "row": 7,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 97,
+      "filename": "hex_tile_097.png",
+      "position": {
+        "row": 7,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 98,
+      "filename": "hex_tile_098.png",
+      "position": {
+        "row": 7,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 99,
+      "filename": "hex_tile_099.png",
+      "position": {
+        "row": 7,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 100,
+      "filename": "hex_tile_100.png",
+      "position": {
+        "row": 7,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 101,
+      "filename": "hex_tile_101.png",
+      "position": {
+        "row": 7,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 102,
+      "filename": "hex_tile_102.png",
+      "position": {
+        "row": 7,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 103,
+      "filename": "hex_tile_103.png",
+      "position": {
+        "row": 7,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 266,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 104,
+      "filename": "hex_tile_104.png",
+      "position": {
+        "row": 8,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 105,
+      "filename": "hex_tile_105.png",
+      "position": {
+        "row": 8,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 106,
+      "filename": "hex_tile_106.png",
+      "position": {
+        "row": 8,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 107,
+      "filename": "hex_tile_107.png",
+      "position": {
+        "row": 8,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 108,
+      "filename": "hex_tile_108.png",
+      "position": {
+        "row": 8,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 109,
+      "filename": "hex_tile_109.png",
+      "position": {
+        "row": 8,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 110,
+      "filename": "hex_tile_110.png",
+      "position": {
+        "row": 8,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 111,
+      "filename": "hex_tile_111.png",
+      "position": {
+        "row": 8,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 112,
+      "filename": "hex_tile_112.png",
+      "position": {
+        "row": 8,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 113,
+      "filename": "hex_tile_113.png",
+      "position": {
+        "row": 8,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 114,
+      "filename": "hex_tile_114.png",
+      "position": {
+        "row": 8,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 115,
+      "filename": "hex_tile_115.png",
+      "position": {
+        "row": 8,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 116,
+      "filename": "hex_tile_116.png",
+      "position": {
+        "row": 8,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 304,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 117,
+      "filename": "hex_tile_117.png",
+      "position": {
+        "row": 9,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 118,
+      "filename": "hex_tile_118.png",
+      "position": {
+        "row": 9,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 119,
+      "filename": "hex_tile_119.png",
+      "position": {
+        "row": 9,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 120,
+      "filename": "hex_tile_120.png",
+      "position": {
+        "row": 9,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 121,
+      "filename": "hex_tile_121.png",
+      "position": {
+        "row": 9,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 122,
+      "filename": "hex_tile_122.png",
+      "position": {
+        "row": 9,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 123,
+      "filename": "hex_tile_123.png",
+      "position": {
+        "row": 9,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 124,
+      "filename": "hex_tile_124.png",
+      "position": {
+        "row": 9,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 125,
+      "filename": "hex_tile_125.png",
+      "position": {
+        "row": 9,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 126,
+      "filename": "hex_tile_126.png",
+      "position": {
+        "row": 9,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 127,
+      "filename": "hex_tile_127.png",
+      "position": {
+        "row": 9,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 128,
+      "filename": "hex_tile_128.png",
+      "position": {
+        "row": 9,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 129,
+      "filename": "hex_tile_129.png",
+      "position": {
+        "row": 9,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 342,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 130,
+      "filename": "hex_tile_130.png",
+      "position": {
+        "row": 10,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 131,
+      "filename": "hex_tile_131.png",
+      "position": {
+        "row": 10,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 132,
+      "filename": "hex_tile_132.png",
+      "position": {
+        "row": 10,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 133,
+      "filename": "hex_tile_133.png",
+      "position": {
+        "row": 10,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 134,
+      "filename": "hex_tile_134.png",
+      "position": {
+        "row": 10,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 135,
+      "filename": "hex_tile_135.png",
+      "position": {
+        "row": 10,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 136,
+      "filename": "hex_tile_136.png",
+      "position": {
+        "row": 10,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 137,
+      "filename": "hex_tile_137.png",
+      "position": {
+        "row": 10,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 138,
+      "filename": "hex_tile_138.png",
+      "position": {
+        "row": 10,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 139,
+      "filename": "hex_tile_139.png",
+      "position": {
+        "row": 10,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 140,
+      "filename": "hex_tile_140.png",
+      "position": {
+        "row": 10,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 141,
+      "filename": "hex_tile_141.png",
+      "position": {
+        "row": 10,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 142,
+      "filename": "hex_tile_142.png",
+      "position": {
+        "row": 10,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 380,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 143,
+      "filename": "hex_tile_143.png",
+      "position": {
+        "row": 11,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 144,
+      "filename": "hex_tile_144.png",
+      "position": {
+        "row": 11,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 145,
+      "filename": "hex_tile_145.png",
+      "position": {
+        "row": 11,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 146,
+      "filename": "hex_tile_146.png",
+      "position": {
+        "row": 11,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 147,
+      "filename": "hex_tile_147.png",
+      "position": {
+        "row": 11,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 148,
+      "filename": "hex_tile_148.png",
+      "position": {
+        "row": 11,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 149,
+      "filename": "hex_tile_149.png",
+      "position": {
+        "row": 11,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 150,
+      "filename": "hex_tile_150.png",
+      "position": {
+        "row": 11,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 151,
+      "filename": "hex_tile_151.png",
+      "position": {
+        "row": 11,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 152,
+      "filename": "hex_tile_152.png",
+      "position": {
+        "row": 11,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 153,
+      "filename": "hex_tile_153.png",
+      "position": {
+        "row": 11,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 154,
+      "filename": "hex_tile_154.png",
+      "position": {
+        "row": 11,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 155,
+      "filename": "hex_tile_155.png",
+      "position": {
+        "row": 11,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 418,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 156,
+      "filename": "hex_tile_156.png",
+      "position": {
+        "row": 12,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 157,
+      "filename": "hex_tile_157.png",
+      "position": {
+        "row": 12,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 158,
+      "filename": "hex_tile_158.png",
+      "position": {
+        "row": 12,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 159,
+      "filename": "hex_tile_159.png",
+      "position": {
+        "row": 12,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 160,
+      "filename": "hex_tile_160.png",
+      "position": {
+        "row": 12,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 161,
+      "filename": "hex_tile_161.png",
+      "position": {
+        "row": 12,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 162,
+      "filename": "hex_tile_162.png",
+      "position": {
+        "row": 12,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 163,
+      "filename": "hex_tile_163.png",
+      "position": {
+        "row": 12,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 164,
+      "filename": "hex_tile_164.png",
+      "position": {
+        "row": 12,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 165,
+      "filename": "hex_tile_165.png",
+      "position": {
+        "row": 12,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 166,
+      "filename": "hex_tile_166.png",
+      "position": {
+        "row": 12,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 167,
+      "filename": "hex_tile_167.png",
+      "position": {
+        "row": 12,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 168,
+      "filename": "hex_tile_168.png",
+      "position": {
+        "row": 12,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 456,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 169,
+      "filename": "hex_tile_169.png",
+      "position": {
+        "row": 13,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 170,
+      "filename": "hex_tile_170.png",
+      "position": {
+        "row": 13,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 171,
+      "filename": "hex_tile_171.png",
+      "position": {
+        "row": 13,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 172,
+      "filename": "hex_tile_172.png",
+      "position": {
+        "row": 13,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 173,
+      "filename": "hex_tile_173.png",
+      "position": {
+        "row": 13,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 174,
+      "filename": "hex_tile_174.png",
+      "position": {
+        "row": 13,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 175,
+      "filename": "hex_tile_175.png",
+      "position": {
+        "row": 13,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 176,
+      "filename": "hex_tile_176.png",
+      "position": {
+        "row": 13,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 177,
+      "filename": "hex_tile_177.png",
+      "position": {
+        "row": 13,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 178,
+      "filename": "hex_tile_178.png",
+      "position": {
+        "row": 13,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 179,
+      "filename": "hex_tile_179.png",
+      "position": {
+        "row": 13,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 180,
+      "filename": "hex_tile_180.png",
+      "position": {
+        "row": 13,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 181,
+      "filename": "hex_tile_181.png",
+      "position": {
+        "row": 13,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 494,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 182,
+      "filename": "hex_tile_182.png",
+      "position": {
+        "row": 14,
+        "col": 0
+      },
+      "bounds": {
+        "x": 0,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 183,
+      "filename": "hex_tile_183.png",
+      "position": {
+        "row": 14,
+        "col": 1
+      },
+      "bounds": {
+        "x": 34,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 184,
+      "filename": "hex_tile_184.png",
+      "position": {
+        "row": 14,
+        "col": 2
+      },
+      "bounds": {
+        "x": 68,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 185,
+      "filename": "hex_tile_185.png",
+      "position": {
+        "row": 14,
+        "col": 3
+      },
+      "bounds": {
+        "x": 102,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 186,
+      "filename": "hex_tile_186.png",
+      "position": {
+        "row": 14,
+        "col": 4
+      },
+      "bounds": {
+        "x": 136,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 187,
+      "filename": "hex_tile_187.png",
+      "position": {
+        "row": 14,
+        "col": 5
+      },
+      "bounds": {
+        "x": 170,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 188,
+      "filename": "hex_tile_188.png",
+      "position": {
+        "row": 14,
+        "col": 6
+      },
+      "bounds": {
+        "x": 204,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 189,
+      "filename": "hex_tile_189.png",
+      "position": {
+        "row": 14,
+        "col": 7
+      },
+      "bounds": {
+        "x": 238,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 190,
+      "filename": "hex_tile_190.png",
+      "position": {
+        "row": 14,
+        "col": 8
+      },
+      "bounds": {
+        "x": 272,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 191,
+      "filename": "hex_tile_191.png",
+      "position": {
+        "row": 14,
+        "col": 9
+      },
+      "bounds": {
+        "x": 306,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 192,
+      "filename": "hex_tile_192.png",
+      "position": {
+        "row": 14,
+        "col": 10
+      },
+      "bounds": {
+        "x": 340,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 193,
+      "filename": "hex_tile_193.png",
+      "position": {
+        "row": 14,
+        "col": 11
+      },
+      "bounds": {
+        "x": 374,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    },
+    {
+      "id": 194,
+      "filename": "hex_tile_194.png",
+      "position": {
+        "row": 14,
+        "col": 12
+      },
+      "bounds": {
+        "x": 408,
+        "y": 532,
+        "width": 34,
+        "height": 38
+      },
+      "empty": false
+    }
+  ]
+}
