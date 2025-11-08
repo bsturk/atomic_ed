@@ -32,6 +32,7 @@ from datetime import datetime
 from PIL import Image, ImageTk
 from scenario_parser import DdayScenario
 from terrain_reader import extract_terrain_from_scenario
+from hex_tile_loader import load_hex_tiles
 
 
 class EnhancedUnitParser:
@@ -450,40 +451,18 @@ class MapViewer(ttk.Frame):
         self._configure_pending = False
 
     def _load_hex_tiles(self):
-        """Load hex tile images from extracted assets"""
+        """Load hex tile images from game assets (automatic extraction if needed)"""
         try:
-            # Load configuration
-            config_path = 'hex_tile_config.json'
-            if not os.path.exists(config_path):
-                print(f"Hex tile config not found: {config_path}")
+            # Use the hex_tile_loader library to automatically extract/load tiles
+            # This will extract from PCWATW.REZ if needed, or load from cache
+            tiles = load_hex_tiles()
+
+            if not tiles:
+                print("Could not load hex tiles from game assets")
                 return False
 
-            with open(config_path, 'r') as f:
-                config = json.load(f)
-
-            tiles_dir = config['tiles_directory']
-            tile_mapping = config['tile_mapping']
-
-            # Load base images for each terrain type
-            self.hex_tile_base_images = {}
-            for terrain_id, tile_id in tile_mapping.items():
-                terrain_id = int(terrain_id)
-                tile_filename = f"hex_tile_{tile_id:03d}.png"
-                tile_path = os.path.join(tiles_dir, tile_filename)
-
-                if os.path.exists(tile_path):
-                    try:
-                        img = Image.open(tile_path)
-                        # Convert to RGBA if needed
-                        if img.mode != 'RGBA':
-                            img = img.convert('RGBA')
-                        self.hex_tile_base_images[terrain_id] = img
-                    except Exception as e:
-                        print(f"Error loading tile {tile_path}: {e}")
-                        return False
-                else:
-                    print(f"Tile image not found: {tile_path}")
-                    return False
+            # Store the loaded tiles (already in RGBA format from loader)
+            self.hex_tile_base_images = tiles
 
             print(f"Successfully loaded {len(self.hex_tile_base_images)} hex tile images")
             return True
