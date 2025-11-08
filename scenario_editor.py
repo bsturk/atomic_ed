@@ -23,7 +23,7 @@ import struct
 import shutil
 import re
 from datetime import datetime
-from dday_scenario_parser import DdayScenario
+from scenario_parser import DdayScenario
 
 
 class EnhancedUnitParser:
@@ -989,10 +989,10 @@ class ImprovedScenarioEditor:
 
         # Display in text widgets
         self.allied_text.delete('1.0', tk.END)
-        self.allied_text.insert('1.0', '\n\n'.join(allied_lines))
+        self.allied_text.insert('1.0', '\n'.join(allied_lines))
 
         self.axis_text.delete('1.0', tk.END)
-        self.axis_text.insert('1.0', '\n\n'.join(axis_lines))
+        self.axis_text.insert('1.0', '\n'.join(axis_lines))
 
         self.allied_text.edit_modified(False)
         self.axis_text.edit_modified(False)

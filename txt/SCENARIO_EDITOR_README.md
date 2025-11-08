@@ -67,13 +67,13 @@ A comprehensive graphical scenario creator and editor for World at War: D-Day sc
 
 - Python 3.8 or higher
 - tkinter (usually included with Python)
-- `dday_scenario_parser.py` (included)
+- `scenario_parser.py` (included)
 
 ## Installation
 
 ```bash
 # No installation needed - just run the script
-python3 dday_scenario_creator.py
+python3 scenario_creator.py
 ```
 
 ## Usage
@@ -82,11 +82,11 @@ python3 dday_scenario_creator.py
 
 **Method 1: Command line**
 ```bash
-python3 dday_scenario_creator.py game/SCENARIO/OMAHA.SCN
+python3 scenario_creator.py game/SCENARIO/OMAHA.SCN
 ```
 
 **Method 2: File menu**
-1. Launch the editor: `python3 dday_scenario_creator.py`
+1. Launch the editor: `python3 scenario_creator.py`
 2. Click "File → Open Scenario..." or press `Ctrl+O`
 3. Navigate to `game/SCENARIO/` directory
 4. Select a .SCN file
@@ -248,7 +248,7 @@ The editor works with all 7 D-Day scenarios:
 ## Technical Details
 
 ### Parser
-The editor uses `dday_scenario_parser.py` which:
+The editor uses `scenario_parser.py` which:
 - Validates magic number (0x1230)
 - Parses 12 fixed header counts
 - Reads 8 offset pointers (4 active, 4 null)
@@ -295,13 +295,8 @@ To add features:
 3. Implement data loading method
 4. Add to `_load_scenario_data()`
 
-### Testing
-```bash
-# Test parser
-python3 dday_scenario_parser.py game/SCENARIO/OMAHA.SCN
-
 # Test editor (requires display)
-python3 dday_scenario_creator.py game/SCENARIO/UTAH.SCN
+python3 scenario_creator.py game/SCENARIO/UTAH.SCN
 ```
 
 ## References
@@ -334,7 +329,7 @@ Format reverse-engineered from 7 D-Day scenario files (852 KB analyzed).
 
 For issues or questions, refer to:
 - Format documentation in `txt/` directory
-- Parser source code: `dday_scenario_parser.py`
+- Parser source code: `scenario_parser.py`
 - Implementation guide: `txt/SCENARIO_EDITOR_IMPLEMENTATION_GUIDE.md`
 
 ---
