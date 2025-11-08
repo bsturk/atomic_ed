@@ -528,25 +528,10 @@ class MapViewer(ttk.Frame):
         """Load map data - units is list of unit dicts from EnhancedUnitParser"""
         self.units = units if units else []
 
-        # Generate terrain visualization from coordinate data
-        # Note: Full terrain data parsing is not yet implemented
-        # This provides a visual reference based on scenario numeric data
-        self.terrain = {}
-        if coords:
-            # Use coordinate data to generate terrain patterns
-            # This creates varied terrain based on the scenario's numeric data
-            for y in range(self.MAP_HEIGHT):
-                for x in range(self.MAP_WIDTH):
-                    # Create terrain variation based on coordinate data
-                    idx = (y * self.MAP_WIDTH + x) % len(coords)
-                    # Mix different indices to create more variation
-                    idx2 = (x * 17 + y * 23) % len(coords)
-                    value1 = coords[idx].get('value', 0)
-                    value2 = coords[idx2].get('value', 0)
-
-                    # Combine values to create terrain type
-                    terrain_type = (value1 + value2) % 17
-                    self.terrain[(x, y)] = terrain_type
+        # Generate terrain with contiguous areas
+        # Note: Real terrain data format in scenario files is not yet decoded
+        # This generates plausible terrain patterns using procedural generation
+        self.terrain = self._generate_terrain(coords)
 
         # Count units with valid positions
         units_with_pos = sum(1 for u in self.units if u.get('x', 0) > 0 and u.get('y', 0) > 0)
@@ -556,6 +541,93 @@ class MapViewer(ttk.Frame):
 
         # Force initial redraw after a short delay to ensure canvas is ready
         self.canvas.after(100, self.redraw)
+
+    def _generate_terrain(self, coords):
+        """Generate terrain with contiguous areas using blob-based algorithm"""
+        import random
+
+        terrain = {}
+
+        # Initialize all hexes as grass
+        for y in range(self.MAP_HEIGHT):
+            for x in range(self.MAP_WIDTH):
+                terrain[(x, y)] = 0  # Grass
+
+        if not coords:
+            return terrain
+
+        # Use coords data as seed for deterministic generation
+        seed_value = sum(c.get('value', 0) for c in coords[:10]) % 10000
+        random.seed(seed_value)
+
+        # Define terrain blob configurations
+        # Format: (terrain_type, blob_count, min_size, max_size)
+        terrain_blobs = [
+            (1, 8, 15, 40),    # Water/Ocean - large patches
+            (2, 12, 8, 20),    # Beach/Sand - medium patches
+            (3, 25, 10, 35),   # Forest - many medium patches
+            (4, 15, 5, 15),    # Town - smaller patches
+            (6, 10, 3, 12),    # River - thin patches
+            (8, 8, 8, 20),     # Swamp - medium patches
+            (11, 12, 6, 18),   # Bocage (hedgerows) - medium patches
+            (13, 10, 4, 12),   # Village - small patches
+            (14, 8, 5, 15),    # Farm - medium patches
+        ]
+
+        # Generate terrain blobs
+        for terrain_type, blob_count, min_size, max_size in terrain_blobs:
+            for _ in range(blob_count):
+                # Random center point
+                center_x = random.randint(0, self.MAP_WIDTH - 1)
+                center_y = random.randint(0, self.MAP_HEIGHT - 1)
+
+                # Random blob size
+                blob_size = random.randint(min_size, max_size)
+
+                # Generate blob using flood-fill style growth
+                blob_hexes = set()
+                to_process = [(center_x, center_y)]
+
+                while to_process and len(blob_hexes) < blob_size:
+                    x, y = to_process.pop(0)
+
+                    if (x, y) in blob_hexes:
+                        continue
+                    if x < 0 or x >= self.MAP_WIDTH or y < 0 or y >= self.MAP_HEIGHT:
+                        continue
+
+                    # Add to blob with probability decreasing by distance from center
+                    dist = abs(x - center_x) + abs(y - center_y)
+                    prob = max(0.2, 1.0 - (dist / (blob_size * 0.5)))
+
+                    if random.random() < prob:
+                        blob_hexes.add((x, y))
+
+                        # Add neighbors to process queue
+                        # Hex neighbors (flat-top hexagon)
+                        if y % 2 == 0:  # Even row
+                            neighbors = [
+                                (x-1, y), (x+1, y),           # Left, right
+                                (x-1, y-1), (x, y-1),         # Top-left, top-right
+                                (x-1, y+1), (x, y+1)          # Bottom-left, bottom-right
+                            ]
+                        else:  # Odd row
+                            neighbors = [
+                                (x-1, y), (x+1, y),           # Left, right
+                                (x, y-1), (x+1, y-1),         # Top-left, top-right
+                                (x, y+1), (x+1, y+1)          # Bottom-left, bottom-right
+                            ]
+
+                        for nx, ny in neighbors:
+                            if 0 <= nx < self.MAP_WIDTH and 0 <= ny < self.MAP_HEIGHT:
+                                if (nx, ny) not in blob_hexes:
+                                    to_process.append((nx, ny))
+
+                # Apply blob to terrain
+                for x, y in blob_hexes:
+                    terrain[(x, y)] = terrain_type
+
+        return terrain
 
     def redraw(self):
         """Redraw the entire map"""
@@ -1080,6 +1152,9 @@ class ImprovedScenarioEditor:
         # Tab 5: Scenario Settings (NEW!)
         self._create_settings_tab()
 
+        # Tab 6: Terrain Reference (NEW!)
+        self._create_terrain_reference_tab()
+
     def _create_mission_tab(self):
         """Create mission briefing editor tab"""
         frame = ttk.Frame(self.notebook, padding="10")
@@ -1191,6 +1266,131 @@ class ImprovedScenarioEditor:
 
         self.settings_editor = ScenarioSettingsEditor(frame)
         self.settings_editor.pack(fill=tk.BOTH, expand=True)
+
+    def _create_terrain_reference_tab(self):
+        """Create terrain reference tab"""
+        frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(frame, text="Terrain Reference")
+
+        # Title
+        title = ttk.Label(frame, text="Terrain Types Reference",
+                         font=("TkDefaultFont", 12, "bold"))
+        title.pack(pady=10)
+
+        # Description
+        desc = ttk.Label(frame,
+                        text="D-Day map uses 17 terrain types. Colors shown below match the map viewer.\n"
+                             "Note: Terrain data format in scenario files is not yet decoded. "
+                             "Current map shows procedurally generated terrain.",
+                        justify=tk.CENTER)
+        desc.pack(pady=5)
+
+        # Scrollable frame for terrain types
+        canvas_container = ttk.Frame(frame)
+        canvas_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        terrain_canvas = tk.Canvas(canvas_container, bg='white')
+        scrollbar = ttk.Scrollbar(canvas_container, orient=tk.VERTICAL,
+                                  command=terrain_canvas.yview)
+        terrain_canvas.config(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        terrain_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Container frame inside canvas
+        terrain_frame = ttk.Frame(terrain_canvas)
+        terrain_canvas.create_window((0, 0), window=terrain_frame, anchor=tk.NW)
+
+        # Terrain type definitions with descriptions
+        terrain_info = [
+            (0, 'Grass/Field', 'Open grassland and fields. Easy movement for all unit types.'),
+            (1, 'Water/Ocean', 'Deep water and ocean. Impassable for ground units.'),
+            (2, 'Beach/Sand', 'Sandy beaches and coastal areas. Landing zones for amphibious assaults.'),
+            (3, 'Forest', 'Dense woodland. Provides cover, slows movement.'),
+            (4, 'Town', 'Urban areas and towns. Defensive positions, slows attackers.'),
+            (5, 'Road', 'Paved roads. Faster movement along roads.'),
+            (6, 'River', 'Rivers and streams. May require bridges or ford points.'),
+            (7, 'Mountains', 'Mountainous terrain. Difficult movement, good defensive positions.'),
+            (8, 'Swamp', 'Marshland and swamps. Very slow movement, difficult terrain.'),
+            (9, 'Bridge', 'Bridge crossings. Critical chokepoints over rivers.'),
+            (10, 'Fortification', 'Defensive fortifications. Strong defensive bonuses.'),
+            (11, 'Bocage', 'Norman hedgerows. Dense vegetation barriers, very defensive.'),
+            (12, 'Cliff', 'Steep cliffs. Often impassable, key terrain features.'),
+            (13, 'Village', 'Small villages and hamlets. Minor defensive bonuses.'),
+            (14, 'Farm', 'Farmland and agricultural areas. Open terrain with buildings.'),
+            (15, 'Canal', 'Canals and waterways. Water obstacles.'),
+            (16, 'Unknown', 'Unidentified terrain type.'),
+        ]
+
+        # Get terrain colors from MapViewer
+        terrain_colors = {
+            0: '#90EE90',  # Grass/Field - light green
+            1: '#4169E1',  # Water/Ocean - blue
+            2: '#F4A460',  # Beach/Sand - sandy brown
+            3: '#228B22',  # Forest - dark green
+            4: '#A9A9A9',  # Town - gray
+            5: '#8B4513',  # Road - brown
+            6: '#4682B4',  # River - steel blue
+            7: '#696969',  # Mountains - dim gray
+            8: '#6B8E23',  # Swamp - olive
+            9: '#8B7355',  # Bridge - tan
+            10: '#708090', # Fortification - slate gray
+            11: '#556B2F', # Bocage - dark olive
+            12: '#A0522D', # Cliff - sienna
+            13: '#BC8F8F', # Village - rosy brown
+            14: '#DEB887', # Farm - burlywood
+            15: '#5F9EA0', # Canal - cadet blue
+            16: '#C0C0C0', # Unknown - silver
+        }
+
+        # Create terrain type entries
+        for idx, (terrain_id, name, description) in enumerate(terrain_info):
+            entry_frame = ttk.Frame(terrain_frame, relief=tk.RIDGE, borderwidth=1)
+            entry_frame.grid(row=idx, column=0, sticky=tk.EW, padx=5, pady=3)
+
+            # Color swatch
+            color = terrain_colors.get(terrain_id, '#FFFFFF')
+            swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
+                                      bg=color, highlightthickness=1,
+                                      highlightbackground='black')
+            swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
+
+            # Create hex pattern in swatch
+            self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
+
+            # Type ID and name
+            type_label = ttk.Label(entry_frame,
+                                  text=f"Type {terrain_id}: {name}",
+                                  font=("TkDefaultFont", 10, "bold"))
+            type_label.grid(row=0, column=1, sticky=tk.W, padx=10, pady=(5, 0))
+
+            # Description
+            desc_label = ttk.Label(entry_frame, text=description,
+                                  foreground='#555555')
+            desc_label.grid(row=1, column=1, sticky=tk.W, padx=10, pady=(0, 5))
+
+            # Hex color code
+            hex_label = ttk.Label(entry_frame, text=f"Color: {color}",
+                                 font=("Courier", 8), foreground='#888888')
+            hex_label.grid(row=0, column=2, padx=10, sticky=tk.E)
+
+        # Configure grid weights
+        terrain_frame.columnconfigure(0, weight=1)
+
+        # Update scroll region
+        terrain_frame.update_idletasks()
+        terrain_canvas.config(scrollregion=terrain_canvas.bbox('all'))
+
+    def _draw_mini_hex(self, canvas, center_x, center_y, size, color):
+        """Draw a small hexagon for terrain swatch"""
+        points = []
+        for i in range(6):
+            angle = math.pi / 3 * i - math.pi / 6
+            px = center_x + size * math.cos(angle)
+            py = center_y + size * math.sin(angle) * 0.8  # Slightly flatter
+            points.extend([px, py])
+
+        canvas.create_polygon(points, fill=color, outline='#333333', width=2)
 
     def _create_statusbar(self):
         """Create status bar"""

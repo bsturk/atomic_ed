@@ -1,0 +1,161 @@
+================================================================================
+TERRAIN DATA STORAGE: QUICK REFERENCE
+================================================================================
+
+CURRENT SITUATION
+-----------------
+Where is the terrain being read from?
+  ❌ NOT from a stored file (currently PROCEDURALLY GENERATED)
+  └─ Line 548 in scenario_editor.py: terrain_type = (value1 + value2) % 17
+
+How does the current implementation work?
+  1. Extract values from PTR5 section (numeric/coordinate data)
+  2. Use these values to generate PSEUDO-RANDOM terrain
+  3. Result: NOISY pattern that varies by scenario but isn't realistic
+
+What does this create?
+  ❌ Noisy/random terrain patches
+  ❌ No correlation to real Normandy geography
+  ❌ Not matching what the game actually displays
+  ❌ Defeats purpose of geographic accuracy
+
+================================================================================
+WHAT WE KNOW ABOUT TERRAIN
+================================================================================
+
+17 Terrain Types (Fixed):
+  1. Grass/Field         9. Swamp/Marsh       
+  2. Water/Ocean         10. Bridge            
+  3. Beach/Sand          11. Fortification     
+  4. Forest/Woods        12. Bocage            
+  5. Town/Urban          13. Cliff/Escarpment  
+  6. Road/Path           14. Village           
+  7. River               15. Farm              
+  8. Mountains/Hills     16. Canal             
+                         17. Unknown/Unused    
+
+Map Size: 125 × 100 = 12,500 hexes total
+
+Location Names Found (50+):
+  Utah Beach, Omaha Beach, Point du Hoc
+  Cherbourg, Carentan, Isigny, St Mere Eglise
+  Periers, Lessay, St Lo, Coutances
+  Rivers: Vire, Taute, Merderet, Aure, Drome, Soulles
+  Hills: Hill 122, Hill 192
+
+================================================================================
+TERRAIN DATA LOCATION: UNKNOWN
+================================================================================
+
+Size Analysis:
+  PTR5 (765 bytes)      ← Too small for terrain (need 12,500+ bytes)
+  PTR6 (85,849 bytes)   ← Plausible size, but structure is sparse/scattered
+  PTR4 (74,523 bytes)   ← Large enough, but mixed with other data
+  Pre-section          ← Possible but unlikely
+
+Binary Format: Unknown
+  Bit-packed?           ← 5 bits per hex would be 6,250 bytes
+  Run-length encoded?   ← Only store non-default terrain
+  Compressed?           ← LZSS or other compression
+  Grouped?              ← By row/sector/region
+
+================================================================================
+WHAT'S CURRENTLY BEING USED
+================================================================================
+
+PTR5 Section Analysis (765 bytes):
+  Actual purpose:  Unit coordinates, strengths, timings
+  Typical values:  0x0100-0x0400 (256-1024), then 0x0000 padding
+  Used for:        parse_coordinates_from_ptr5() function
+  
+  Example first 32 bytes (hex):
+    02 b8 02 70 00 61 00 fd 00 01 03 1b 03 31 03 26 01 26 01 26 01 26 01 a0
+
+  Extracted as 16-bit UINT16 values (little-endian):
+    0x02b8=696, 0x0270=624, 0x0061=97, 0x00fd=253, 0x0001=1, 0x031b=795...
+    
+  How it's used for terrain (PROCEDURAL):
+    terrain_type = (value1 + value2) % 17
+    Result: Completely random/noisy, not real terrain data
+
+================================================================================
+SECTION SIZES (UTAH.SCN EXAMPLE)
+================================================================================
+
+Section         Location          Size      Content
+--------        --------          ----      -------
+Header          0x000000-0x000060  96 B     Magic, counts, pointers
+PTR5            0x002a03-0x002d00 765 B     Numeric data (mostly zeros)
+PTR6            0x002d00-0x017c59 85 KB    Sparse data (52% zeros)
+PTR3            0x017c59-0x017cf3 154 B     Unit roster (B-801-VII etc)
+PTR4            0x017cf3-0x02a00e 74 KB    Mission text + positioning
+
+File Size: 172,046 bytes total
+
+================================================================================
+POSSIBLE SOLUTIONS
+================================================================================
+
+Option 1: REVERSE ENGINEERING (Most Accurate)
+  - Hex-edit test file to change one hex's terrain
+  - Load in DOSBox/INVADE.EXE and observe results
+  - Identify offset and format
+  - Build decoder from findings
+  Status: Not yet attempted
+  Effort: Medium (requires DOSBox setup)
+  Confidence: High (will find real data)
+
+Option 2: LOCATION-BASED GENERATION (Practical)
+  - Use 50+ location names already parsed from PTR4
+  - Map locations to coordinates
+  - Generate realistic terrain around known locations
+  - Interpolate between locations
+  Status: Feasible with current data
+  Effort: Low-Medium
+  Confidence: Medium (may not match exactly)
+
+Option 3: COMPARATIVE ANALYSIS (Exploratory)
+  - Compare all 7 scenario files for patterns
+  - Look for correlations with location data
+  - Statistical analysis of non-zero regions
+  Status: Requires multiple file analysis
+  Effort: Medium
+  Confidence: Low-Medium
+
+================================================================================
+KEY INSIGHT: THE TERRAIN DATA PROBLEM
+================================================================================
+
+The fundamental issue:
+  1. Real D-Day game definitely has terrain (visible in gameplay)
+  2. But we don't know WHERE or HOW it's stored
+  3. Current implementation GENERATES fake terrain procedurally
+  4. This creates noisy patterns, not realistic Normandy geography
+
+Why this matters:
+  - Terrain affects unit movement and combat
+  - Procedural generation defeats scenario authenticity
+  - Proper terrain is needed for scenario editing
+  - Location names (Utah Beach, etc) suggest terrain should exist
+
+The missing piece:
+  - PTR4 is most likely location (74 KB is big enough)
+  - But PTR4 is also complex (mixed binary + text)
+  - No one has fully reverse-engineered it yet
+
+================================================================================
+FILES AND CODE REFERENCES
+================================================================================
+
+Key Files:
+  /home/user/atomic_ed/scenario_parser.py      (Main parser)
+  /home/user/atomic_ed/scenario_editor.py      (GUI + terrain generation)
+  /home/user/atomic_ed/game/SCENARIO/*.SCN     (7 scenario files to analyze)
+  /home/user/atomic_ed/txt/TERRAIN_DATA_INVESTIGATION.md (Full analysis)
+
+Relevant Code:
+  scenario_editor.py:527-549   (Current procedural terrain generation)
+  scenario_editor.py:278-317   (PTR5 coordinate parsing)
+  scenario_parser.py:111-131   (Section extraction logic)
+
+================================================================================
