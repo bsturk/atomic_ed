@@ -1,0 +1,41 @@
+{
+  "tiles_directory": "extracted_images/hex_tiles",
+  "tile_mapping": {
+    "0": 0,
+    "1": 13,
+    "2": 26,
+    "3": 39,
+    "4": 52,
+    "5": 65,
+    "6": 78,
+    "7": 91,
+    "8": 104,
+    "9": 117,
+    "10": 130,
+    "11": 143,
+    "12": 156,
+    "13": 169,
+    "14": 182,
+    "15": 78,
+    "16": 0
+  },
+  "terrain_names": {
+    "0": "Grass/Field",
+    "1": "Water/Ocean",
+    "2": "Beach/Sand",
+    "3": "Forest",
+    "4": "Town",
+    "5": "Road",
+    "6": "River",
+    "7": "Mountains",
+    "8": "Swamp",
+    "9": "Bridge",
+    "10": "Fortification",
+    "11": "Bocage",
+    "12": "Cliff",
+    "13": "Village",
+    "14": "Farm",
+    "15": "Canal",
+    "16": "Unknown"
+  }
+}
