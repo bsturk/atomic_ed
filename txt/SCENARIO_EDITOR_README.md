@@ -295,11 +295,6 @@ To add features:
 3. Implement data loading method
 4. Add to `_load_scenario_data()`
 
-### Testing
-```bash
-# Test parser
-python3 scenario_parser.py game/SCENARIO/OMAHA.SCN
-
 # Test editor (requires display)
 python3 scenario_creator.py game/SCENARIO/UTAH.SCN
 ```

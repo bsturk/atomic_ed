@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,22 +7,18 @@ __pycache__/
 dist/
 build/
 
-# Scenario backups
 *.bak
 *.SCN.bak
 *.[0-9]*[0-9]*.bak
 
-# Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# Test outputs
 *.test
 TEST_*.SCN
