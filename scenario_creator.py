@@ -96,7 +96,7 @@ class UnitEditor(ttk.Frame):
 
         # Instructions
         inst_label = ttk.Label(self,
-            text="Unit Roster: List of units defined in this scenario (PTR3 section)",
+            text="Unit Roster: List of units from scenario (PTR4 section)",
             font=("TkDefaultFont", 9, "bold"))
         inst_label.pack(pady=5)
 
@@ -142,40 +142,45 @@ class UnitEditor(ttk.Frame):
             ))
 
     def _parse_units(self, data):
-        """Parse unit data from binary"""
+        """Parse unit data from binary (PTR4 format)"""
         units = []
         i = 0
 
-        while i < len(data):
-            # Look for unit name patterns (ASCII text)
-            if i + 20 < len(data):
-                # Extract potential unit name (look for ASCII sequences)
-                chunk = data[i:i+32]
+        while i < len(data) - 30:
+            # Look for unit entry pattern: 3 bytes (often 07 07 07, 08 08 08, etc.)
+            # followed by control bytes, then unit name at offset +9
+            if data[i] == data[i+1] == data[i+2] and data[i] in [0x06, 0x07, 0x08, 0x09]:
+                chunk = data[i:i+150]
 
-                # Find ASCII strings
-                name = b''
-                for b in chunk[8:24]:  # Typically name starts after type bytes
-                    if 32 <= b < 127:
-                        name += bytes([b])
-                    elif name:
-                        break
+                # Unit name typically starts at offset 9
+                name_start = 9
+                if name_start < len(chunk):
+                    # Extract unit name (null-terminated or space-padded ASCII)
+                    name = b''
+                    for j in range(name_start, min(name_start + 20, len(chunk))):
+                        if chunk[j] == 0:  # Null terminator
+                            break
+                        elif 32 <= chunk[j] < 127:  # Printable ASCII
+                            name += bytes([chunk[j]])
+                        else:
+                            break
 
-                if len(name) >= 3:  # Valid unit name
-                    unit_type_code = f"{chunk[0]:02x} {chunk[1]:02x} {chunk[2]:02x}"
-                    hex_data = ' '.join(f'{b:02x}' for b in chunk[:16])
+                    if len(name) >= 3:  # Valid unit name (at least 3 chars)
+                        unit_type_code = f"{chunk[0]:02x} {chunk[1]:02x} {chunk[2]:02x}"
+                        hex_data = ' '.join(f'{b:02x}' for b in chunk[:16])
 
-                    units.append({
-                        'name': name.decode('ascii', errors='ignore').strip(),
-                        'type': unit_type_code,
-                        'hex': hex_data,
-                        'offset': i
-                    })
+                        units.append({
+                            'name': name.decode('ascii', errors='ignore').strip(),
+                            'type': unit_type_code,
+                            'hex': hex_data,
+                            'offset': i
+                        })
 
-                    i += 32  # Move to next potential unit
-                else:
-                    i += 1
-            else:
-                break
+                        # Skip past this unit entry (typical size ~160-180 bytes)
+                        i += 150
+                        continue
+
+            i += 1
 
         return units
 
@@ -963,9 +968,9 @@ class DdayScenarioCreator:
         # Load mission text
         self._load_mission_text()
 
-        # Load units
-        if 'PTR3' in self.scenario.sections:
-            self.unit_editor.load_units(self.scenario.sections['PTR3'])
+        # Load units (from PTR4 which contains unit instances with names)
+        if 'PTR4' in self.scenario.sections:
+            self.unit_editor.load_units(self.scenario.sections['PTR4'])
 
         # Load coordinates
         if 'PTR5' in self.scenario.sections:
