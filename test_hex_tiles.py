@@ -29,11 +29,11 @@ def test_hex_tiles():
 
     # Test loading each terrain type's tile
     success_count = 0
-    for terrain_id, tile_id in tile_mapping.items():
+    for terrain_id, tile_filename in tile_mapping.items():
         terrain_id = int(terrain_id)
         terrain_name = terrain_names.get(str(terrain_id), f"Type {terrain_id}")
 
-        tile_filename = f"hex_tile_{tile_id:03d}.png"
+        # tile_filename is already the filename string (e.g., "hex_tile_r00_c00.png")
         tile_path = os.path.join(tiles_dir, tile_filename)
 
         if os.path.exists(tile_path):
