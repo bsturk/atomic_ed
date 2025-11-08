@@ -333,6 +333,34 @@ class HexTileLoader:
 
         return None
 
+    def _load_preextracted_tile(self, terrain_id):
+        """
+        Load a pre-extracted tile from the correct_hex_tiles directory.
+
+        These tiles were extracted using the verified correct method and should
+        be used as the primary source before attempting sprite sheet extraction.
+        """
+        row, col = self.TERRAIN_MAPPING.get(terrain_id, (0, 0))
+        preextracted_file = Path('extracted_images/correct_hex_tiles') / f"hex_tile_r{row:02d}_c{col:02d}.png"
+
+        if preextracted_file.exists():
+            try:
+                img = Image.open(preextracted_file)
+                # Pre-extracted tiles may be in palette mode (P), convert to RGBA
+                # but preserve the palette information properly
+                if img.mode == 'P':
+                    # Convert palette image to RGBA while preserving colors
+                    return img.convert('RGBA')
+                elif img.mode == 'RGBA':
+                    return img
+                else:
+                    return img.convert('RGBA')
+            except Exception as e:
+                print(f"Error loading pre-extracted tile for terrain {terrain_id}: {e}")
+                return None
+
+        return None
+
     def _save_tile_to_cache(self, terrain_id, tile):
         """Save a tile to the cache"""
         row, col = self.TERRAIN_MAPPING.get(terrain_id, (0, 0))
@@ -346,9 +374,31 @@ class HexTileLoader:
         """
         Load all terrain hex tiles.
 
+        Priority order:
+        1. Pre-extracted tiles from correct_hex_tiles/ (verified working)
+        2. Cached tiles from .hex_tile_cache/
+        3. Extract from sprite sheet (fallback)
+
         Returns dict mapping terrain_id -> PIL.Image, or None if extraction fails.
         """
-        # Try to load from cache first
+        self.tiles = {}
+
+        # First, try to load all tiles from pre-extracted directory (highest priority)
+        all_preextracted = True
+        for terrain_id in self.TERRAIN_MAPPING.keys():
+            tile = self._load_preextracted_tile(terrain_id)
+            if tile:
+                self.tiles[terrain_id] = tile
+            else:
+                all_preextracted = False
+                break
+
+        if all_preextracted and self.tiles:
+            print(f"✓ Loaded {len(self.tiles)} hex tiles from pre-extracted directory")
+            return self.tiles
+
+        # Second priority: try to load from cache
+        self.tiles = {}
         all_cached = True
         for terrain_id in self.TERRAIN_MAPPING.keys():
             tile = self._load_cached_tile(terrain_id)
@@ -359,11 +409,14 @@ class HexTileLoader:
                 break
 
         if all_cached and self.tiles:
+            print(f"✓ Loaded {len(self.tiles)} hex tiles from cache")
             return self.tiles
 
-        # Need to load sprite sheet and extract tiles
+        # Last resort: load sprite sheet and extract tiles
+        print("Loading hex tiles from sprite sheet...")
         self.sprite_sheet = self._get_sprite_sheet()
         if self.sprite_sheet is None:
+            print("✗ Failed to load sprite sheet")
             return None
 
         # Extract individual tiles
@@ -373,6 +426,9 @@ class HexTileLoader:
             if tile:
                 self.tiles[terrain_id] = tile
                 self._save_tile_to_cache(terrain_id, tile)
+
+        if self.tiles:
+            print(f"✓ Extracted {len(self.tiles)} hex tiles from sprite sheet")
 
         return self.tiles if self.tiles else None
 
