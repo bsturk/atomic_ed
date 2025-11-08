@@ -28,7 +28,7 @@ Map Viewer Features:
 - Real-time hex coordinate display
 
 Usage:
-    python3 dday_scenario_creator.py [scenario_file.scn]
+    python3 scenario_creator.py [scenario_file.scn]
 """
 
 import tkinter as tk
@@ -38,7 +38,7 @@ import struct
 import shutil
 from datetime import datetime
 import math
-from dday_scenario_parser import DdayScenario
+from scenario_parser import DdayScenario
 
 
 class HexViewer(ttk.Frame):
