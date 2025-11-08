@@ -22,3 +22,5 @@ Thumbs.db
 
 *.test
 TEST_*.SCN
+.hex_tile_cache/
+terrain_sprite_sheet.png
