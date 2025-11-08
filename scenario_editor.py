@@ -204,11 +204,15 @@ class EnhancedUnitParser:
                 # Common pattern: bytes at offset -16 to -1 before name
                 strength = 0
                 unit_type = 0
+                x = 0
+                y = 0
+                side = 'Unknown'
 
                 if match.start() >= 64:
                     # Look at bytes before the unit name
                     # Unit type is at offset -27 (27 bytes before name)
                     # Strength is a 16-bit value at offset -64 (64 bytes before name)
+                    # Coordinates are at offset -58 (X) and -56 (Y)
                     pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
@@ -222,11 +226,45 @@ class EnhancedUnitParser:
                         if strength > 500:
                             strength = 0
 
+                    # Extract coordinates from offset -58 (X) and -56 (Y)
+                    if len(pre_data) >= 58:
+                        x = struct.unpack('<H', pre_data[-58:-56])[0]
+                    if len(pre_data) >= 56:
+                        y = struct.unpack('<H', pre_data[-56:-54])[0]
+
+                    # Validate coordinates (D-Day map is 125x100)
+                    if x > 125 or y > 100:
+                        x = 0
+                        y = 0
+
+                # Determine side based on naming patterns
+                german_terms = ['Panzer', 'Grenadier', 'Ost', 'FJ', 'Flak', 'Sturm',
+                               'Jager', 'Kampf', 'Schnelle', 'Korps', 'Luftwaffe', 'Festung']
+                is_german = any(term in unit_name for term in german_terms)
+
+                # Check for numbered US divisions/corps
+                us_pattern = r'\d+(st|nd|rd|th)\s+(Infantry|Airborne|Armored|Cavalry)'
+                is_us = bool(re.search(us_pattern, unit_name))
+
+                # VII Corps, VIII Corps style
+                us_corps = bool(re.search(r'(VII|VIII|V|XIX)\s+Corps', unit_name))
+
+                if is_german:
+                    side = 'Axis'
+                elif is_us or us_corps:
+                    side = 'Allied'
+                elif has_military:
+                    # Most military terms without German identifiers are Allied in D-Day scenarios
+                    side = 'Allied'
+
                 units.append({
                     'index': unit_index,
                     'name': unit_name,
                     'type': unit_type,
                     'strength': strength,
+                    'x': x,
+                    'y': y,
+                    'side': side,
                     'section': section_name,
                     'offset': offset_base + match.start(),
                     'raw_data': context[:64].hex() if len(context) >= 64 else context.hex()
@@ -474,18 +512,15 @@ class MapViewer(ttk.Frame):
         """Load map data - units is list of unit dicts from EnhancedUnitParser"""
         self.units = units if units else []
 
-        # Generate terrain from coords data if available
+        # Note: Terrain data is not currently available in scenario files
+        # The map shows a neutral background with unit positions marked
         self.terrain = {}
-        if coords:
-            # Use coordinate data to generate semi-random terrain
-            for y in range(min(self.MAP_HEIGHT, 50)):
-                for x in range(min(self.MAP_WIDTH, 50)):
-                    idx = (y * self.MAP_WIDTH + x) % len(coords)
-                    terrain_type = coords[idx].get('value', 0) % 6
-                    self.terrain[(x, y)] = terrain_type
+
+        # Count units with valid positions
+        units_with_pos = sum(1 for u in self.units if u.get('x', 0) > 0 and u.get('y', 0) > 0)
 
         self.status_label.config(
-            text=f"Loaded {len(self.units)} units, {len(self.terrain)} terrain tiles")
+            text=f"Loaded {len(self.units)} units ({units_with_pos} with positions)")
         self.redraw()
 
     def redraw(self):
@@ -502,20 +537,43 @@ class MapViewer(ttk.Frame):
         # Draw only visible hexes for performance
         visible_hexes = self._get_visible_hexes()
 
-        # Draw terrain
+        # Draw terrain (background grid)
         for hex_y in range(visible_hexes['min_y'], visible_hexes['max_y']):
             for hex_x in range(visible_hexes['min_x'], visible_hexes['max_x']):
                 if 0 <= hex_x < self.MAP_WIDTH and 0 <= hex_y < self.MAP_HEIGHT:
                     self._draw_hex_tile(hex_x, hex_y)
 
-        # Draw units
+        # Draw units at their actual positions
         for unit in self.units:
-            # Use index to place units in a grid pattern for now
-            # In a real implementation, would parse actual coordinates from unit data
-            idx = unit.get('index', 0)
-            hex_x = (idx % 10) * 5
-            hex_y = (idx // 10) * 5
-            self._draw_unit(hex_x, hex_y, unit.get('name', 'Unknown'))
+            # Get actual coordinates from unit data
+            hex_x = unit.get('x', 0)
+            hex_y = unit.get('y', 0)
+
+            # Only draw units with valid coordinates
+            if hex_x > 0 and hex_y > 0 and hex_x < self.MAP_WIDTH and hex_y < self.MAP_HEIGHT:
+                # Determine unit color based on side
+                side = unit.get('side', 'Unknown')
+                unit_type = unit.get('type', 0)
+
+                # Color coding:
+                # - Blue for Allied units
+                # - Red for Axis units
+                # - Yellow for Unknown
+                # - Darker shades for higher-level units (Corps/Division)
+                if side == 'Allied':
+                    if unit_type in [0x11, 0x13, 0x07]:  # Corps, Division, HQ
+                        color = '#0000CD'  # Medium blue
+                    else:
+                        color = '#4169E1'  # Royal blue
+                elif side == 'Axis':
+                    if unit_type in [0x12, 0x13, 0x07]:  # Korps, Division, HQ
+                        color = '#8B0000'  # Dark red
+                    else:
+                        color = '#DC143C'  # Crimson
+                else:
+                    color = '#FFD700'  # Gold for unknown
+
+                self._draw_unit(hex_x, hex_y, unit.get('name', 'Unknown'), color)
 
         # Update scroll region
         self._update_scroll_region()
@@ -558,22 +616,43 @@ class MapViewer(ttk.Frame):
                                    font=("Arial", max(6, int(self.hex_size / 3))),
                                    fill='black')
 
-    def _draw_unit(self, hex_x, hex_y, name):
+    def _draw_unit(self, hex_x, hex_y, name, color='red'):
         """Draw a unit marker"""
         px, py = self.hex_to_pixel(hex_x, hex_y)
 
-        # Draw unit marker (red circle)
+        # Draw unit marker (colored circle)
         radius = self.hex_size * 0.4
+        # Calculate darker outline color
+        outline_color = self._darken_color(color)
+
         self.canvas.create_oval(px - radius, py - radius,
                                px + radius, py + radius,
-                               fill='red', outline='darkred', width=2)
+                               fill=color, outline=outline_color, width=2)
 
         # Draw unit name if zoom is large enough
         if self.hex_size >= 15:
             self.canvas.create_text(px, py - self.hex_size - 5,
                                    text=name,
                                    font=("Arial", max(7, int(self.hex_size / 2))),
-                                   fill='darkred')
+                                   fill=outline_color)
+
+    def _darken_color(self, color):
+        """Darken a hex color by 30%"""
+        # Remove '#' if present
+        if color.startswith('#'):
+            color = color[1:]
+
+        # Convert to RGB
+        r = int(color[0:2], 16)
+        g = int(color[2:4], 16)
+        b = int(color[4:6], 16)
+
+        # Darken by 30%
+        r = int(r * 0.7)
+        g = int(g * 0.7)
+        b = int(b * 0.7)
+
+        return f'#{r:02x}{g:02x}{b:02x}'
 
     def _update_scroll_region(self):
         """Update canvas scroll region"""
@@ -1024,21 +1103,23 @@ class ImprovedScenarioEditor:
         left_frame = ttk.LabelFrame(paned, text="Unit List", padding="5")
         paned.add(left_frame, weight=1)
 
-        columns = ("Index", "Name", "Strength", "Type", "Section")
+        columns = ("Index", "Name", "Side", "Position", "Strength", "Type")
         self.unit_tree = ttk.Treeview(left_frame, columns=columns,
                                       show='headings', height=20)
 
         self.unit_tree.heading("Index", text="#")
         self.unit_tree.heading("Name", text="Unit Name")
+        self.unit_tree.heading("Side", text="Side")
+        self.unit_tree.heading("Position", text="Position")
         self.unit_tree.heading("Strength", text="Str")
         self.unit_tree.heading("Type", text="Type")
-        self.unit_tree.heading("Section", text="Section")
 
         self.unit_tree.column("Index", width=40)
-        self.unit_tree.column("Name", width=200)
+        self.unit_tree.column("Name", width=180)
+        self.unit_tree.column("Side", width=60)
+        self.unit_tree.column("Position", width=70)
         self.unit_tree.column("Strength", width=50)
         self.unit_tree.column("Type", width=100)
-        self.unit_tree.column("Section", width=60)
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL,
                                  command=self.unit_tree.yview)
@@ -1219,12 +1300,21 @@ class ImprovedScenarioEditor:
             type_code = unit.get('type', 0)
             type_name = EnhancedUnitParser.get_unit_type_name(type_code)
 
+            # Get position
+            x = unit.get('x', 0)
+            y = unit.get('y', 0)
+            position_str = f"({x},{y})" if x > 0 and y > 0 else '-'
+
+            # Get side
+            side = unit.get('side', 'Unknown')
+
             self.unit_tree.insert("", tk.END, values=(
                 unit.get('index', '?'),
                 unit.get('name', 'Unknown'),
+                side,
+                position_str,
                 strength_str,
-                type_name,
-                unit.get('section', '?')
+                type_name
             ))
 
     def _load_data_overview(self):
