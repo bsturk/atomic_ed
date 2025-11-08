@@ -10,7 +10,7 @@
 **Recommendation: Start with D-Day**
 
 **Reasons:**
-1. Working parser already provided (`dday_scenario_parser.py`)
+1. Working parser already provided (`scenario_parser.py`)
 2. Smaller number of scenarios (7 vs 27) for testing
 3. Pure binary format (simpler than V4V's text/binary hybrid)
 4. Fewer files to test against
@@ -38,7 +38,7 @@ DOSBox (game testing)
 
 ```python
 # File: test_parser.py
-from dday_scenario_parser import parse_scenario
+from scenario_parser import parse_scenario
 
 # Test 1: Parse all scenarios
 scenarios = [
@@ -72,7 +72,7 @@ for scn_file in scenarios:
 **Goal:** Round-trip testing (read → write → verify)
 
 ```python
-# Add to dday_scenario_parser.py
+# Add to scenario_parser.py
 
 def write_scenario(filename, data):
     """Write scenario data back to file"""
@@ -197,10 +197,10 @@ write_scenario('OMAHA_MODIFIED.SCN', data)
 **Goal:** User-friendly interface
 
 ```python
-# File: dday_editor_gui.py
+# File: editor_gui.py
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from dday_scenario_parser import parse_scenario, write_scenario
+from scenario_parser import parse_scenario, write_scenario
 
 class DdayEditor:
     def __init__(self, root):
@@ -550,13 +550,13 @@ def test_scenario_editor(parse_func, write_func, scenario_files):
     return results
 
 # Test D-Day editor
-from dday_scenario_parser import parse_scenario, write_scenario
-dday_scenarios = [
+from scenario_parser import parse_scenario, write_scenario
+scenarios = [
     'game/dday/game/SCENARIO/OMAHA.SCN',
     'game/dday/game/SCENARIO/UTAH.SCN',
     # ... add all 7
 ]
-test_scenario_editor(parse_scenario, write_scenario, dday_scenarios)
+test_scenario_editor(parse_scenario, write_scenario, scenarios)
 
 # Test V4V editor
 from v4v_scenario_parser import parse_v4v_scenario, write_v4v_scenario

@@ -990,6 +990,6 @@ Associated Documents:
 - D_DAY_FORMAT_FINAL_SUMMARY.txt (Technical specification)
 - D_DAY_SCN_FORMAT_SPECIFICATION.txt (Detailed format)
 - D_DAY_SCN_QUICK_REFERENCE.txt (Quick lookup)
-- dday_scenario_parser.py (Python reference implementation)
+- scenario_parser.py (Python reference implementation)
 - DISASSEMBLY_COMPARISON_V4V_vs_INVADE.txt (Game comparison)
 

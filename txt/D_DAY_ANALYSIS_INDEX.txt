@@ -74,8 +74,8 @@ DELIVERABLE DOCUMENTS
    Size: ~10 KB
    Purpose: Documents critical discovery about pointer ordering
 
-5. dday_scenario_parser.py
-   Location: /home/user/atomic_ed/dday_scenario_parser.py
+5. scenario_parser.py
+   Location: /home/user/atomic_ed/scenario_parser.py
    Type: Functional Python module
    Content:
      - DdayScenario class for parsing .SCN files
@@ -101,13 +101,13 @@ READING ORDER
 FOR QUICK UNDERSTANDING (30 minutes):
   1. Read: D_DAY_FORMAT_FINAL_SUMMARY.txt (Executive Summary section)
   2. Read: D_DAY_SCN_QUICK_REFERENCE.txt (entire file)
-  3. Test: Run dday_scenario_parser.py on a .SCN file
+  3. Test: Run scenario_parser.py on a .SCN file
 
 FOR COMPLETE UNDERSTANDING (2-3 hours):
   1. Read: D_DAY_FORMAT_FINAL_SUMMARY.txt (entire)
   2. Study: D_DAY_SCN_FORMAT_SPECIFICATION.txt (entire)
   3. Reference: D_DAY_SCN_FORMAT_CORRECTED.txt (critical parts)
-  4. Review: dday_scenario_parser.py code
+  4. Review: scenario_parser.py code
   5. Run experiments with parser on different scenarios
 
 FOR IMPLEMENTATION (varies):
@@ -235,7 +235,7 @@ TOOLS AND RESOURCES
 ================================================================================
 
 INCLUDED PARSER:
-  dday_scenario_parser.py
+  scenario_parser.py
   - Read and analyze .SCN files
   - Display header information
   - Extract and display data sections
@@ -244,7 +244,7 @@ INCLUDED PARSER:
   - Command-line interface
 
 USAGE:
-  python3 dday_scenario_parser.py /path/to/scenario.scn
+  python3 scenario_parser.py /path/to/scenario.scn
 
 REFERENCE IMPLEMENTATIONS:
   See "PYTHON EXAMPLE" sections in D_DAY_FORMAT_FINAL_SUMMARY.txt

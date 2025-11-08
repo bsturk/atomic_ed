@@ -270,7 +270,7 @@ Due to the complete incompatibility, you'll need separate editors:
 
 **Advantages:**
 - Format documented (see D_DAY_FORMAT_FINAL_SUMMARY.txt)
-- Working parser provided (dday_scenario_parser.py)
+- Working parser provided (scenario_parser.py)
 - Fixed header counts (never change)
 
 **Implementation Path:**
@@ -305,7 +305,7 @@ Due to the complete incompatibility, you'll need separate editors:
 2. `D_DAY_SCN_QUICK_REFERENCE.txt` - Quick lookup
 3. `D_DAY_SCN_FORMAT_SPECIFICATION.txt` - Detailed analysis
 4. `D_DAY_SCN_FORMAT_CORRECTED.txt` - Critical discovery notes
-5. `dday_scenario_parser.py` - Working Python parser
+5. `scenario_parser.py` - Working Python parser
 6. `D_DAY_ANALYSIS_INDEX.txt` - Navigation guide
 
 **Comparison & Analysis:**
@@ -396,7 +396,7 @@ Due to the complete incompatibility, you'll need separate editors:
 ### For D-Day Scenario Editor:
 
 1. **Phase 1:** Extend Parser (1 week)
-   - Use provided dday_scenario_parser.py
+   - Use provided scenario_parser.py
    - Add write functionality
    - Test round-trip (read→write→compare)
 
@@ -514,9 +514,7 @@ Despite being from the same company and having similar gameplay themes, **V is f
 
 ### Estimated Effort
 
-- **V4V Editor:** 4-6 weeks (1 developer)
 - **D-Day Editor:** 4-6 weeks (1 developer)
-- **Both Editors:** 8-12 weeks (parallel development possible)
 
 ---
 
@@ -525,9 +523,8 @@ Despite being from the same company and having similar gameplay themes, **V is f
 All analysis files are located in: `/home/user/atomic_ed/`
 
 **Start with these files:**
-1. `V4V_FORMAT_QUICK_REFERENCE.txt` - V4V editor guide
 2. `D_DAY_FORMAT_FINAL_SUMMARY.txt` - D-Day editor guide
-3. `dday_scenario_parser.py` - Working D-Day parser
+3. `scenario_parser.py` - Working D-Day parser
 4. This document - Overall project guide
 
 **Good luck with your scenario editor development!**
