@@ -46,7 +46,7 @@ atomic_ed/
 │   ├── D_DAY_SCN_FORMAT_SPECIFICATION.txt   # Detailed format spec
 │   ├── D_DAY_SCN_FORMAT_CORRECTED.txt       # Critical discoveries
 │   ├── D_DAY_ANALYSIS_INDEX.txt             # Navigation guide
-│   └── dday_scenario_parser.py              # ✅ Working parser!
+│   └── scenario_parser.py              # ✅ Working parser!
 │
 ├── V4V Analysis Files:
 │   ├── V4V_FORMAT_QUICK_REFERENCE.txt       # Quick lookup
@@ -84,7 +84,7 @@ atomic_ed/
 **D-Day Editor:**
 ```bash
 # Use the provided parser
-python3 dday_scenario_parser.py
+python3 scenario_parser.py
 
 # Read the documentation
 cat D_DAY_FORMAT_FINAL_SUMMARY.txt
@@ -152,7 +152,7 @@ cat V4V_SCENARIO_FORMAT_SPECIFICATION.txt
    - Binary structure details
    - Parsing algorithms
 
-4. **dday_scenario_parser.py** (11 KB)
+4. **scenario_parser.py** (11 KB)
    - **Working Python parser**
    - Ready to use
    - Extensible for editor
@@ -343,7 +343,7 @@ INVADE.EXE
 ### Scenario 2: I want to build a D-Day editor
 
 1. Read `D_DAY_FORMAT_FINAL_SUMMARY.txt`
-2. Study `dday_scenario_parser.py`
+2. Study `scenario_parser.py`
 3. Follow `SCENARIO_EDITOR_IMPLEMENTATION_GUIDE.md`
 4. Implement write functionality
 5. Test with DOSBox

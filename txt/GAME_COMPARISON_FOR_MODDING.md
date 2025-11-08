@@ -351,7 +351,7 @@ D-Day allows editing victory conditions, mission objectives, and possibly unit s
 - Flat memory model (easier to understand)
 
 **2. Working Parser Already Exists:**
-- `dday_scenario_parser.py` provided (11 KB, functional)
+- `scenario_parser.py` provided (11 KB, functional)
 - Ready to extend with write functionality
 - Tested on all 7 scenarios
 
@@ -486,7 +486,7 @@ V4V requires ~6-8 weeks due to complexity.
 ### D-Day Scenario Editor (Recommended)
 
 **Phase 1: Basic Editor (Week 1)**
-- ✅ Parser already exists (`dday_scenario_parser.py`)
+- ✅ Parser already exists (`scenario_parser.py`)
 - Extend with write functionality
 - Test round-trip on all 7 scenarios
 - Deliverable: Read/write without modification

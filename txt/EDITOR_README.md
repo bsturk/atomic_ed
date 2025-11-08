@@ -295,15 +295,15 @@ Edited:   137,440 bytes
 |------|---------|
 | `scenario_editor_cli.py` | **Main CLI editor** (use this!) |
 | `scenario_editor.py` | GUI editor (requires tkinter) |
-| `dday_scenario_parser.py` | Core parser library |
-| `dday_mission_editor.py` | Text extraction only (superseded) |
+| `scenario_parser.py` | Core parser library |
+| `mission_editor.py` | Text extraction only (superseded) |
 | `test_editing.py` | Automated test suite |
 | `test_roundtrip.py` | Binary integrity tests |
 
 ### Usage Priority:
 
 1. **Use first**: `scenario_editor_cli.py` ← **RECOMMENDED**
-2. View-only: `dday_mission_editor.py` (displays but doesn't edit)
+2. View-only: `mission_editor.py` (displays but doesn't edit)
 3. Testing: `test_editing.py` (verifies functionality)
 
 ---
@@ -401,7 +401,7 @@ Your edited scenario is ready when:
 
 **Questions?**
 - See `test_editing.py` for working examples
-- Check `dday_scenario_parser.py` for format details
+- Check `scenario_parser.py` for format details
 - Review `D_DAY_FORMAT_FINAL_SUMMARY.txt` for binary spec
 
 ---

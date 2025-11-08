@@ -454,7 +454,7 @@ Documents Created:
   1. D_DAY_SCN_FORMAT_SPECIFICATION.txt (original detailed analysis)
   2. D_DAY_SCN_QUICK_REFERENCE.txt (quick lookup)
   3. D_DAY_SCN_FORMAT_CORRECTED.txt (offset ordering discovery)
-  4. dday_scenario_parser.py (Python parser module)
+  4. scenario_parser.py (Python parser module)
   5. D_DAY_FORMAT_FINAL_SUMMARY.txt (this document)
 
 Key Discovery:

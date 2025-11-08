@@ -139,11 +139,11 @@ def get_axis_briefing(self):
 1. **`test_all_scenarios.py`** - Quick test of all 7 scenario files
 2. **`test_roundtrip.py`** - Comprehensive round-trip testing with SHA256 verification
 3. **`mission_text_extractor.py`** - First attempt at text extraction (superseded)
-4. **`dday_mission_editor.py`** - Working mission text editor with extraction
+4. **`mission_editor.py`** - Working mission text editor with extraction
 
 ### Modified Files:
 
-1. **`dday_scenario_parser.py`** - Major enhancements:
+1. **`scenario_parser.py`** - Major enhancements:
    - Added `self.sections` dict to store parsed section data
    - Added `self.section_order` list to track actual file order
    - Added `_parse_sections()` method to correctly parse sections by file offset
@@ -330,7 +330,7 @@ Results: 7/7 scenarios passed (100%)
 ### Loading and Displaying Mission Text:
 
 ```python
-from dday_mission_editor import MissionEditor
+from mission_editor import MissionEditor
 
 # Load scenario
 editor = MissionEditor('game/dday/game/SCENARIO/OMAHA.SCN')
@@ -349,7 +349,7 @@ print("Axis briefing has", len(axis_lines), "lines")
 ### Round-Trip Test:
 
 ```python
-from dday_scenario_parser import DdayScenario
+from scenario_parser import DdayScenario
 import hashlib
 
 # Load original
@@ -439,8 +439,8 @@ editor.save('OMAHA_MODIFIED.SCN')
 - `README.md` - Project overview
 
 ### Code Files:
-- `dday_scenario_parser.py` - Core parser (enhanced)
-- `dday_mission_editor.py` - Mission text editor
+- `scenario_parser.py` - Core parser (enhanced)
+- `mission_editor.py` - Mission text editor
 - `test_roundtrip.py` - Validation testing
 
 ### Test Files:

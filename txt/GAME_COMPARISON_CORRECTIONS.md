@@ -436,7 +436,7 @@ Why D-Day has fewer disassembly lines:
 ### Files that remain mostly accurate:
 
 1. **D_DAY_FORMAT_FINAL_SUMMARY.txt** - ✅ Still valid
-2. **dday_scenario_parser.py** - ✅ Still valid
+2. **scenario_parser.py** - ✅ Still valid
 3. **SCENARIO_EDITOR_IMPLEMENTATION_GUIDE.md** - ✅ Still valid
 
 ---
