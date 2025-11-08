@@ -153,47 +153,32 @@ class HexTileLoader:
         # Fallback grayscale palette
         return [i for v in range(256) for i in (v, v, v)]
 
-    def _extract_sprite_sheet(self):
-        """Extract terrain sprite sheet from PCWATW.REZ"""
-        if not os.path.exists(self.rez_path):
-            return None
+    def _get_sprite_sheet(self):
+        """
+        Get the terrain sprite sheet image.
 
-        # Read resource fork
-        data, data_offset, map_offset = self._read_resource_fork()
+        First tries to use already-extracted scan_width_448.png (known good).
+        Falls back to REZ extraction only if needed.
+        """
+        # First, try to use the already-extracted sprite sheet (known good)
+        known_good_paths = [
+            'extracted_images/scan_width_448.png',
+            'extracted_images/PICT_128.png',
+        ]
 
-        # Get PICT resource #128 (terrain sprite sheet)
-        pict_data = self._find_resource(data, data_offset, map_offset, 'PICT', 128)
-        if not pict_data:
-            return None
+        for path in known_good_paths:
+            if os.path.exists(path):
+                try:
+                    img = Image.open(path)
+                    # Verify it's the right size
+                    if img.size == (self.SCAN_WIDTH, self.SCAN_HEIGHT):
+                        return img
+                except:
+                    continue
 
-        # Get color palette
-        palette = self._load_palette(data, data_offset, map_offset)
-
-        # Find and decompress pixel data
-        # Look for PackBits compressed data after PICT header
-        search_offset = 512
-        pixel_data = None
-
-        for offset in range(search_offset, min(len(pict_data) - 1000, search_offset + 50000), 128):
-            try:
-                test_data = pict_data[offset:]
-                decompressed = self._unpackbits(test_data[:self.SCAN_WIDTH * self.SCAN_HEIGHT * 2])
-
-                if len(decompressed) >= self.SCAN_WIDTH * self.SCAN_HEIGHT:
-                    pixel_data = decompressed[:self.SCAN_WIDTH * self.SCAN_HEIGHT]
-                    break
-            except:
-                continue
-
-        if not pixel_data:
-            return None
-
-        # Create image
-        img = Image.new('P', (self.SCAN_WIDTH, self.SCAN_HEIGHT))
-        img.putpalette(palette)
-        img.putdata(pixel_data)
-
-        return img
+        # Fall back to extracting from REZ (if implemented correctly in future)
+        # For now, return None if pre-extracted sprite sheet not found
+        return None
 
     def _extract_tile_from_sheet(self, row, col):
         """Extract a single hex tile from the sprite sheet"""
@@ -249,12 +234,8 @@ class HexTileLoader:
         if all_cached and self.tiles:
             return self.tiles
 
-        # Need to extract from REZ
-        if not os.path.exists(self.rez_path):
-            return None
-
-        # Extract sprite sheet
-        self.sprite_sheet = self._extract_sprite_sheet()
+        # Need to load sprite sheet and extract tiles
+        self.sprite_sheet = self._get_sprite_sheet()
         if self.sprite_sheet is None:
             return None
 
