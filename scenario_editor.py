@@ -28,6 +28,7 @@ import re
 import math
 from datetime import datetime
 from scenario_parser import DdayScenario
+from terrain_reader import extract_terrain_from_scenario
 
 
 class EnhancedUnitParser:
@@ -524,26 +525,30 @@ class MapViewer(ttk.Frame):
 
         return self.canvas.create_polygon(points, fill=fill, outline=outline, width=1)
 
-    def load_data(self, units, coords):
+    def load_data(self, units, scenario=None):
         """Load map data - units is list of unit dicts from EnhancedUnitParser"""
         self.units = units if units else []
 
-        # Generate terrain with contiguous areas
-        # Note: Real terrain data format in scenario files is not yet decoded
-        # This generates plausible terrain patterns using procedural generation
-        self.terrain = self._generate_terrain(coords)
+        # Extract REAL terrain data from scenario file!
+        if scenario and scenario.is_valid:
+            self.terrain = extract_terrain_from_scenario(scenario)
+            terrain_source = "REAL terrain data from scenario file"
+        else:
+            # Fallback to generated terrain if scenario not available
+            self.terrain = self._generate_fallback_terrain()
+            terrain_source = "generated terrain (fallback)"
 
         # Count units with valid positions
         units_with_pos = sum(1 for u in self.units if u.get('x', 0) > 0 and u.get('y', 0) > 0)
 
         self.status_label.config(
-            text=f"Loaded {len(self.units)} units ({units_with_pos} with positions)")
+            text=f"Loaded {len(self.units)} units ({units_with_pos} with positions) | {terrain_source}")
 
         # Force initial redraw after a short delay to ensure canvas is ready
         self.canvas.after(100, self.redraw)
 
-    def _generate_terrain(self, coords):
-        """Generate terrain with contiguous areas using blob-based algorithm"""
+    def _generate_fallback_terrain(self):
+        """Generate fallback terrain (only used if real terrain can't be loaded)"""
         import random
 
         terrain = {}
@@ -553,12 +558,8 @@ class MapViewer(ttk.Frame):
             for x in range(self.MAP_WIDTH):
                 terrain[(x, y)] = 0  # Grass
 
-        if not coords:
-            return terrain
-
-        # Use coords data as seed for deterministic generation
-        seed_value = sum(c.get('value', 0) for c in coords[:10]) % 10000
-        random.seed(seed_value)
+        # Use fixed seed for deterministic generation
+        random.seed(42)
 
         # Define terrain blob configurations
         # Format: (terrain_type, blob_count, min_size, max_size)
@@ -1280,8 +1281,8 @@ class ImprovedScenarioEditor:
         # Description
         desc = ttk.Label(frame,
                         text="D-Day map uses 17 terrain types. Colors shown below match the map viewer.\n"
-                             "Note: Terrain data format in scenario files is not yet decoded. "
-                             "Current map shows procedurally generated terrain.",
+                             "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
+                             "Format: 4-bit packed nibbles at offset 0 in PTR4 section (6,250 bytes).",
                         justify=tk.CENTER)
         desc.pack(pady=5)
 
@@ -1462,8 +1463,8 @@ class ImprovedScenarioEditor:
         # Load mission text
         self._load_mission_text()
 
-        # Load map viewer
-        self.map_viewer.load_data(self.units, self.coords)
+        # Load map viewer with REAL terrain data
+        self.map_viewer.load_data(self.units, self.scenario)
 
         # Load unit editor
         self._load_units_into_tree()
