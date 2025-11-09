@@ -22,9 +22,11 @@ from PIL import Image
 class HexTileLoader:
     """Automatic hex tile extraction and loading from game assets"""
 
-    # Tile configuration
-    HEX_WIDTH = 34
-    HEX_HEIGHT = 38
+    # Tile configuration - CRITICAL VALUES determined by sprite sheet analysis
+    HEX_WIDTH = 32        # Actual hex content width (NOT 34!)
+    HEX_HEIGHT = 38       # Hex height
+    HEX_SPACING = 34      # Distance between hex centers (column spacing)
+    HEX_OFFSET_X = 12     # Where first hex content starts in sprite sheet
     SCAN_WIDTH = 448
     SCAN_HEIGHT = 570
     VARIANTS_PER_ROW = 13
@@ -98,9 +100,11 @@ class HexTileLoader:
         if self.sprite_sheet is None:
             raise RuntimeError("Sprite sheet not loaded")
 
-        # Calculate position - offset by 2 pixels to skip wraparound artifact
-        # The sprite sheet has wraparound from the previous row's rightmost hex
-        x = col * self.HEX_WIDTH + 2
+        # Calculate position using correct spacing and offset
+        # Analysis showed: hexes are spaced 34 pixels apart (center-to-center)
+        # but actual hex content is only 32 pixels wide
+        # First hex starts at x=12 in the sprite sheet
+        x = col * self.HEX_SPACING + self.HEX_OFFSET_X
         y = row * self.HEX_HEIGHT
 
         # Extract tile from sprite sheet
