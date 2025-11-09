@@ -98,9 +98,9 @@ class HexTileLoader:
         if self.sprite_sheet is None:
             raise RuntimeError("Sprite sheet not loaded")
 
-        # Calculate position - offset by 6 pixels to skip wraparound artifact
-        # The sprite sheet has a 6-pixel wraparound from the previous row's rightmost hex
-        x = col * self.HEX_WIDTH + 6
+        # Calculate position - offset by 2 pixels to skip wraparound artifact
+        # The sprite sheet has wraparound from the previous row's rightmost hex
+        x = col * self.HEX_WIDTH + 2
         y = row * self.HEX_HEIGHT
 
         # Extract tile from sprite sheet
