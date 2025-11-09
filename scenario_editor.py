@@ -448,8 +448,8 @@ class MapViewer(ttk.Frame):
                                height=600)
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        h_scroll.config(command=self.canvas.xview)
-        v_scroll.config(command=self.canvas.yview)
+        h_scroll.config(command=self._on_xscroll)
+        v_scroll.config(command=self._on_yscroll)
 
         # Status bar
         status_frame = ttk.Frame(self)
@@ -469,6 +469,18 @@ class MapViewer(ttk.Frame):
         self.drag_start_x = 0
         self.drag_start_y = 0
         self._configure_pending = False
+
+    def _on_xscroll(self, *args):
+        """Handle horizontal scroll and redraw"""
+        self.canvas.xview(*args)
+        if self.units or self.terrain:
+            self.redraw()
+
+    def _on_yscroll(self, *args):
+        """Handle vertical scroll and redraw"""
+        self.canvas.yview(*args)
+        if self.units or self.terrain:
+            self.redraw()
 
     def _load_hex_tiles(self):
         """
