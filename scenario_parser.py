@@ -33,7 +33,7 @@ class DdayScenario:
     
     # Expected fixed header counts (mostly fixed, but dimensions can vary)
     # Note: Count 11 (height) and Count 12 (width) vary by scenario
-    # Most scenarios: 100×125, but COBRA.SCN is 100×112
+    # Most scenarios: 100 wide × 125 tall, but COBRA.SCN is 100 wide × 112 tall
     FIXED_COUNTS = [
         0x11, 0x05, 0x0a, 0x08, 0x05, 0x08, 0x00,
         0x0a, 0x14, 0x05, 0x7d, 0x64
@@ -106,12 +106,12 @@ class DdayScenario:
 
     @property
     def map_height(self) -> int:
-        """Map height in hexes (Count 11 at offset 0x2c)"""
+        """Map height in hexes (Count 11 at offset 0x2c) - rows (vertical)"""
         return self.counts[10] if len(self.counts) > 10 else 125
 
     @property
     def map_width(self) -> int:
-        """Map width in hexes (Count 12 at offset 0x30)"""
+        """Map width in hexes (Count 12 at offset 0x30) - columns (horizontal)"""
         return self.counts[11] if len(self.counts) > 11 else 100
     
     def _parse_pointers(self):
@@ -200,8 +200,8 @@ class DdayScenario:
             "Count 8  (unknown)",
             "Count 9  (objectives?)",
             "Count 10 (unknown)",
-            "Count 11 (MAP HEIGHT in hexes)",
-            "Count 12 (MAP WIDTH in hexes)",
+            "Count 11 (MAP HEIGHT in hexes - rows/vertical)",
+            "Count 12 (MAP WIDTH in hexes - columns/horizontal)",
         ]
         
         for i, (count, label) in enumerate(zip(self.counts, count_labels)):

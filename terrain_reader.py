@@ -26,10 +26,10 @@ def extract_terrain_from_scenario(scenario):
           - Bits 0-3: Terrain type (0-16, capped at 19 in code)
           - Bits 4-7: Variant column (0-12)
         - Size: map_width × map_height bytes (varies by scenario)
-        - Layout: COLUMN-MAJOR (y = index % height, x = index // height)
-          - Data fills columns first, then moves to next column
-          - Index 0-(height-1): Column 0 (x=0), rows y=0 to y=(height-1)
-          - Index height-(2*height-1): Column 1 (x=1), rows y=0 to y=(height-1)
+        - Layout: ROW-MAJOR (x = index % width, y = index // width)
+          - Data fills rows first, then moves to next row
+          - Index 0-(width-1): Row 0 (y=0), columns x=0 to x=(width-1)
+          - Index width-(2*width-1): Row 1 (y=1), columns x=0 to x=(width-1)
           - etc.
         - Terrain types: 0-16 (17 types)
         - Variants: 0-12 (13 variants per terrain type)
@@ -37,7 +37,7 @@ def extract_terrain_from_scenario(scenario):
     Note: Map dimensions vary by scenario:
           - Most scenarios: 100 columns × 125 rows (12,500 hexes)
           - COBRA.SCN: 100 columns × 112 rows (11,200 hexes)
-          - Dimensions read from scenario file at offsets 0x2c and 0x30
+          - Dimensions read from scenario file at offsets 0x2c (height) and 0x30 (width)
     """
     # Get dimensions from scenario file (varies by scenario!)
     MAP_WIDTH = scenario.map_width    # Columns (X axis) - usually 100
@@ -71,10 +71,10 @@ def extract_terrain_from_scenario(scenario):
                 if terrain_type > 19:
                     terrain_type = 19
 
-                # Calculate coordinates - COLUMN-MAJOR storage
+                # Calculate coordinates - ROW-MAJOR storage
                 # Map is 100 wide × 125 tall (longer dimension is vertical)
-                y = hex_index % MAP_HEIGHT   # Y changes fastest (0-124)
-                x = hex_index // MAP_HEIGHT  # X changes every 125 entries (0-99)
+                x = hex_index % MAP_WIDTH    # X changes fastest (0 to width-1)
+                y = hex_index // MAP_WIDTH   # Y changes every width entries
 
                 # Store as tuple: (terrain_type, variant)
                 terrain[(x, y)] = (terrain_type, variant)
