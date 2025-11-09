@@ -1363,24 +1363,6 @@ class ImprovedScenarioEditor:
         frame = ttk.Frame(self.notebook, padding="10")
         self.notebook.add(frame, text="Terrain Reference")
 
-        # Title
-        title = ttk.Label(frame, text="Terrain Types Reference",
-                         font=("TkDefaultFont", 12, "bold"))
-        title.pack(pady=10)
-
-        # Description
-        use_real_images = hasattr(self.map_viewer, 'use_images') and self.map_viewer.use_images
-        if use_real_images:
-            desc_text = ("D-Day map uses 17 terrain types. Actual hex tile images from game assets shown below.\n"
-                        "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
-                        "✓ Hex tile images extracted from PCWATW.REZ resource file!")
-        else:
-            desc_text = ("D-Day map uses 17 terrain types. Colors shown below match the map viewer.\n"
-                        "✓ Terrain data successfully decoded! Map viewer shows REAL terrain from scenario files.\n"
-                        "Format: 4-bit packed nibbles at offset 0 in PTR4 section (6,250 bytes).")
-        desc = ttk.Label(frame, text=desc_text, justify=tk.CENTER)
-        desc.pack(pady=5)
-
         # Scrollable frame for terrain types
         canvas_container = ttk.Frame(frame)
         canvas_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -1488,11 +1470,6 @@ class ImprovedScenarioEditor:
             desc_label = ttk.Label(entry_frame, text=description,
                                   foreground='#555555')
             desc_label.grid(row=1, column=1, sticky=tk.W, padx=10, pady=(0, 5))
-
-            # Hex color code
-            hex_label = ttk.Label(entry_frame, text=f"Color: {color}",
-                                 font=("Courier", 8), foreground='#888888')
-            hex_label.grid(row=0, column=2, padx=10, sticky=tk.E)
 
         # Configure grid weights
         terrain_frame.columnconfigure(0, weight=1)
