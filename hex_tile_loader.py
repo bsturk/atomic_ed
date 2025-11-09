@@ -24,9 +24,10 @@ class HexTileLoader:
 
     # Tile configuration - CRITICAL VALUES determined by sprite sheet analysis
     HEX_WIDTH = 32        # Actual hex content width (NOT 34!)
-    HEX_HEIGHT = 38       # Hex height
+    HEX_HEIGHT = 36       # Actual hex content height (NOT 38!)
     HEX_SPACING = 34      # Distance between hex centers (column spacing)
     HEX_OFFSET_X = 12     # Where first hex content starts in sprite sheet
+    HEX_ROW_SPACING = 38  # Distance between row centers (row spacing)
     SCAN_WIDTH = 448
     SCAN_HEIGHT = 570
     VARIANTS_PER_ROW = 13
@@ -101,11 +102,11 @@ class HexTileLoader:
             raise RuntimeError("Sprite sheet not loaded")
 
         # Calculate position using correct spacing and offset
-        # Analysis showed: hexes are spaced 34 pixels apart (center-to-center)
-        # but actual hex content is only 32 pixels wide
-        # First hex starts at x=12 in the sprite sheet
+        # Analysis showed: hexes are spaced 34 pixels apart horizontally (center-to-center)
+        # but actual hex content is only 32 pixels wide, starting at x=12
+        # Vertically: rows are spaced 38 pixels apart, but content is only 36 pixels tall
         x = col * self.HEX_SPACING + self.HEX_OFFSET_X
-        y = row * self.HEX_HEIGHT
+        y = row * self.HEX_ROW_SPACING
 
         # Extract tile from sprite sheet
         tile = self.sprite_sheet.crop((x, y, x + self.HEX_WIDTH, y + self.HEX_HEIGHT))
