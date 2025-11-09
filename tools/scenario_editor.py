@@ -1022,6 +1022,69 @@ class UnitPropertiesEditor(ttk.Frame):
         self.side_combo.grid(row=5, column=1, sticky=tk.W, pady=3, padx=5)
         self.side_combo.current(0)
 
+        # Separator for AI Scripting section
+        ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=6, column=0, columnspan=2,
+                                                              sticky=tk.EW, pady=10)
+
+        # AI Behavior section label with info
+        ai_header_frame = ttk.Frame(form_frame)
+        ai_header_frame.grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
+
+        ai_label = ttk.Label(ai_header_frame, text="AI Behavior (Scriptable)",
+                            font=("TkDefaultFont", 9, "bold"))
+        ai_label.pack(side=tk.LEFT)
+
+        # Info button
+        info_btn = ttk.Button(ai_header_frame, text="?", width=3,
+                             command=self._show_behavior_help)
+        info_btn.pack(side=tk.LEFT, padx=5)
+
+        # AI Behavior State
+        ttk.Label(form_frame, text="Behavior:").grid(row=8, column=0, sticky=tk.W, pady=3)
+        self.behavior_combo = ttk.Combobox(form_frame, width=28, state='readonly',
+                                          values=[
+                                              'Idle/Ready',
+                                              'Waiting/Defending',
+                                              'Active/Moving',
+                                              'Executing Order',
+                                              'Advance (Offensive)',
+                                              'Defend If Attacked',
+                                              'Retreat If Attacked',
+                                              'Hold At All Costs'
+                                          ])
+        self.behavior_combo.grid(row=8, column=1, sticky=tk.W, pady=3, padx=5)
+        self.behavior_combo.current(0)
+        self.behavior_combo.bind('<<ComboboxSelected>>', self._on_behavior_changed)
+
+        # Behavior Byte (read-only hex display)
+        ttk.Label(form_frame, text="Behavior Byte:").grid(row=9, column=0, sticky=tk.W, pady=3)
+        self.behavior_byte_var = tk.StringVar(value="0x00")
+        self.behavior_byte_entry = ttk.Entry(form_frame, width=10, state='readonly',
+                                             textvariable=self.behavior_byte_var)
+        self.behavior_byte_entry.grid(row=9, column=1, sticky=tk.W, pady=3, padx=5)
+
+        # Behavior description
+        ttk.Label(form_frame, text="Description:").grid(row=10, column=0, sticky=tk.NW, pady=3)
+        self.behavior_desc_label = ttk.Label(form_frame, text="",
+                                             wraplength=250, justify=tk.LEFT,
+                                             foreground='#555555')
+        self.behavior_desc_label.grid(row=10, column=1, sticky=tk.W, pady=3, padx=5)
+
+        # Initialize behavior descriptions
+        self.behavior_descriptions = {
+            'Idle/Ready': 'Unit is idle and ready for orders. No automatic behavior.',
+            'Waiting/Defending': 'Unit holds position and defends if attacked. Will not advance.',
+            'Active/Moving': 'Unit is currently moving or taking action.',
+            'Executing Order': 'Unit is executing a specific order.',
+            'Advance (Offensive)': 'Unit moves toward objectives aggressively. Offensive stance.',
+            'Defend If Attacked': 'Unit defends when engaged but otherwise holds position.',
+            'Retreat If Attacked': 'Unit falls back when attacked by superior forces.',
+            'Hold At All Costs': 'Unit fights to the death without retreating. Last stand.'
+        }
+
+        # Update description on load
+        self._update_behavior_description()
+
         # Buttons
         button_frame = ttk.Frame(self)
         button_frame.grid(row=4, column=0, columnspan=2, pady=10)
@@ -1088,6 +1151,57 @@ class UnitPropertiesEditor(ttk.Frame):
         else:
             self.strength_spin.set(100)  # Default
 
+        # Set side from unit data
+        side = self.current_unit.get('side', 'Allied')
+        if side == 'Axis':
+            self.side_combo.current(1)
+        else:
+            self.side_combo.current(0)
+
+        # Set AI behavior from unit data
+        # Try to extract behavior byte from raw data (at offset +5 in 8-byte record)
+        behavior_byte = self.current_unit.get('behavior_byte', None)
+
+        # If not directly stored, try to extract from raw_data
+        if behavior_byte is None:
+            raw_data = self.current_unit.get('raw_data', '')
+            if raw_data and len(raw_data) >= 10:  # Need at least 5 bytes (10 hex chars)
+                try:
+                    # Behavior byte is at offset +5 in the unit record
+                    # In hex string, that's position 10 (2 chars per byte)
+                    behavior_byte = int(raw_data[10:12], 16)
+                except (ValueError, IndexError):
+                    behavior_byte = 0x00
+            else:
+                behavior_byte = 0x00
+
+        # Map byte value to behavior name
+        byte_to_behavior = {
+            0x00: 'Idle/Ready',
+            0xF2: 'Waiting/Defending',
+            0x80: 'Active/Moving',
+            0x92: 'Executing Order',
+            0x02: 'Advance (Offensive)',
+            0x10: 'Defend If Attacked',
+            0x82: 'Retreat If Attacked',
+            0x0B: 'Hold At All Costs'
+        }
+
+        behavior_name = byte_to_behavior.get(behavior_byte, 'Idle/Ready')
+
+        # Set behavior combo and update display
+        try:
+            index = self.behavior_combo['values'].index(behavior_name)
+            self.behavior_combo.current(index)
+        except (ValueError, tk.TclError):
+            self.behavior_combo.current(0)
+
+        # Update byte display
+        self.behavior_byte_var.set(f"0x{behavior_byte:02X}")
+
+        # Update description
+        self._update_behavior_description()
+
         # Display raw data
         self.raw_text.delete('1.0', tk.END)
         self.raw_text.insert('1.0', f"Section: {self.current_unit.get('section', 'Unknown')}\n")
@@ -1114,16 +1228,160 @@ class UnitPropertiesEditor(ttk.Frame):
         except ValueError:
             pass
 
+        # Update strength
+        try:
+            self.current_unit['strength'] = int(self.strength_spin.get())
+        except ValueError:
+            pass
+
+        # Update side
+        self.current_unit['side'] = self.side_combo.get()
+
+        # Update behavior byte
+        behavior_name = self.behavior_combo.get()
+        behavior_map = {
+            'Idle/Ready': 0x00,
+            'Waiting/Defending': 0xF2,
+            'Active/Moving': 0x80,
+            'Executing Order': 0x92,
+            'Advance (Offensive)': 0x02,
+            'Defend If Attacked': 0x10,
+            'Retreat If Attacked': 0x82,
+            'Hold At All Costs': 0x0B
+        }
+        behavior_byte = behavior_map.get(behavior_name, 0x00)
+        self.current_unit['behavior_byte'] = behavior_byte
+
         # Notify callback
         if self.on_unit_update_callback:
             self.on_unit_update_callback(self.current_unit)
 
-        messagebox.showinfo("Success", "Unit properties updated!\n\n"
-                           "Note: Some changes may require scenario reload to take effect.")
+        messagebox.showinfo("Success",
+                           f"Unit properties updated!\n\n"
+                           f"Changes:\n"
+                           f"- Name: {self.current_unit['name']}\n"
+                           f"- Side: {self.current_unit['side']}\n"
+                           f"- Strength: {self.current_unit.get('strength', 100)}\n"
+                           f"- Behavior: {behavior_name} (0x{behavior_byte:02X})\n\n"
+                           f"Note: Changes are saved in memory. Use File > Save to persist to disk.")
 
     def revert_changes(self):
         """Revert changes to current unit"""
         self.display_unit()
+
+    def _on_behavior_changed(self, event):
+        """Handle behavior selection change"""
+        behavior_name = self.behavior_combo.get()
+
+        # Map behavior names to byte values
+        behavior_map = {
+            'Idle/Ready': 0x00,
+            'Waiting/Defending': 0xF2,
+            'Active/Moving': 0x80,
+            'Executing Order': 0x92,
+            'Advance (Offensive)': 0x02,
+            'Defend If Attacked': 0x10,
+            'Retreat If Attacked': 0x82,
+            'Hold At All Costs': 0x0B
+        }
+
+        # Update the byte display
+        byte_value = behavior_map.get(behavior_name, 0x00)
+        self.behavior_byte_var.set(f"0x{byte_value:02X}")
+
+        # Update description
+        self._update_behavior_description()
+
+    def _update_behavior_description(self):
+        """Update the behavior description label"""
+        behavior_name = self.behavior_combo.get()
+        description = self.behavior_descriptions.get(behavior_name, "")
+        self.behavior_desc_label.config(text=description)
+
+    def _show_behavior_help(self):
+        """Show detailed help about AI behavior system"""
+        help_text = """AI BEHAVIOR SCRIPTING SYSTEM
+
+The D-Day game engine uses a binary AI scripting system where each unit has a
+behavior byte (at offset +5 in its 8-byte record) that determines how it acts
+during AI turns.
+
+BEHAVIOR TYPES:
+
+• Idle/Ready (0x00)
+  Unit is inactive and awaiting orders. No automatic behavior.
+
+• Waiting/Defending (0xF2)
+  Unit holds its current position and defends if attacked. Will not advance
+  on its own. Good for defensive positions and garrison duty.
+
+• Active/Moving (0x80)
+  Unit is currently moving or taking action. This is an execution state
+  that indicates the unit is carrying out orders.
+
+• Executing Order (0x92)
+  Unit is executing a specific order. Another execution state used during
+  the order processing phase.
+
+• Advance (Offensive) (0x02)
+  Unit moves toward assigned objectives aggressively. Offensive stance.
+  Good for units tasked with capturing territory or attacking enemy positions.
+
+• Defend If Attacked (0x10)
+  Unit defends when engaged by enemy forces but otherwise holds position.
+  Will not advance unless given specific orders. Good for flexible defense.
+
+• Retreat If Attacked (0x82)
+  Unit falls back when attacked by superior forces. Conditional withdrawal
+  behavior. Preserves unit strength but gives up territory.
+
+• Hold At All Costs (0x0B)
+  Unit fights to the death without retreating. Last stand behavior.
+  Good for critical defensive positions that must be held.
+
+HOW IT WORKS:
+
+The game engine reads these behavior bytes during the AI turn execution phase
+(Phase 2-3 in the turn sequence). The behavior determines:
+- When the unit moves
+- Whether it attacks or defends
+- Whether it retreats from combat
+- How aggressively it pursues objectives
+
+TECHNICAL DETAILS:
+
+- Behaviors are stored in the PTR6 section of .SCN files
+- Each unit has a behavior byte at offset +5 in its 8-byte record
+- Behavior byte uses bits 3-4 (mask 0x18) to classify behavior type
+- Bit 7 (0x80) indicates if unit is active/moving
+- State transitions happen automatically during turn execution
+
+For more information, see: txt/AI_SCRIPTING_SYSTEM_ANALYSIS.md
+"""
+
+        # Create help dialog
+        help_win = tk.Toplevel(self.master)
+        help_win.title("AI Behavior Help")
+        help_win.geometry("650x600")
+
+        # Text widget with scrollbar
+        text_frame = ttk.Frame(help_win)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        scrollbar = ttk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        text = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=scrollbar.set,
+                      font=("Courier", 9))
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=text.yview)
+
+        text.insert('1.0', help_text)
+        text.config(state=tk.DISABLED)
+
+        # Close button
+        close_btn = ttk.Button(help_win, text="Close", command=help_win.destroy)
+        close_btn.pack(pady=10)
 
 
 class ScenarioSettingsEditor(ttk.Frame):
