@@ -1426,11 +1426,12 @@ class ImprovedScenarioEditor:
             entry_frame = ttk.Frame(terrain_frame, relief=tk.RIDGE, borderwidth=1)
             entry_frame.grid(row=idx, column=0, sticky=tk.EW, padx=5, pady=3)
 
-            # Try to use actual hex tile image, fallback to color swatch
+            # Always try to use actual hex tile image first, fallback to color swatch
             color = terrain_colors.get(terrain_id, '#FFFFFF')
 
-            if use_real_images and hasattr(self.map_viewer, 'hex_tile_base_images'):
-                # Load and display actual hex tile image
+            # Try to load actual hex tile image
+            image_displayed = False
+            if hasattr(self.map_viewer, 'hex_tile_base_images'):
                 base_img = self.map_viewer.hex_tile_base_images.get(terrain_id)
                 if base_img:
                     # Scale to a reasonable preview size (60x68 to match roughly 2x original size)
@@ -1445,15 +1446,10 @@ class ImprovedScenarioEditor:
                     # Create label to display image
                     img_label = ttk.Label(entry_frame, image=photo_img, relief=tk.SOLID, borderwidth=1)
                     img_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                else:
-                    # Fallback to color swatch
-                    swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
-                                              bg=color, highlightthickness=1,
-                                              highlightbackground='black')
-                    swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                    self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
-            else:
-                # Color swatch fallback
+                    image_displayed = True
+
+            # Fallback to color swatch if image not available
+            if not image_displayed:
                 swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
                                           bg=color, highlightthickness=1,
                                           highlightbackground='black')
