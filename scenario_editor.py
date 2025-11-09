@@ -325,10 +325,10 @@ class EnhancedUnitParser:
 class MapViewer(ttk.Frame):
     """Interactive hex map viewer for D-Day scenarios"""
 
-    # Map constants
-    MAP_WIDTH = 125  # hexes
-    MAP_HEIGHT = 100  # hexes
-    HEX_SIZE = 12    # initial hex radius in pixels
+    # Default map constants (will be overridden by scenario data)
+    DEFAULT_MAP_WIDTH = 100   # hexes (columns)
+    DEFAULT_MAP_HEIGHT = 125  # hexes (rows) - longer dimension is vertical
+    HEX_SIZE = 12     # initial hex radius in pixels
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -341,6 +341,11 @@ class MapViewer(ttk.Frame):
         self.show_coords = False
         self.units = []  # List of unit dicts from EnhancedUnitParser
         self.terrain = {}  # Dict of (x,y): terrain_type
+        self.scenario = None  # Store scenario for accessing dynamic dimensions
+
+        # Map dimensions (will be set from scenario, defaults used as fallback)
+        self.map_width = self.DEFAULT_MAP_WIDTH
+        self.map_height = self.DEFAULT_MAP_HEIGHT
 
         # Colors (fallback if images not available)
         self.terrain_colors = {
@@ -390,8 +395,9 @@ class MapViewer(ttk.Frame):
         control_frame = ttk.Frame(self)
         control_frame.pack(fill=tk.X, padx=5, pady=5)
 
-        ttk.Label(control_frame, text="Map Viewer (125×100 hex grid)",
-                 font=("TkDefaultFont", 9, "bold")).pack(side=tk.LEFT, padx=5)
+        self.map_title_label = ttk.Label(control_frame, text="Map Viewer",
+                 font=("TkDefaultFont", 9, "bold"))
+        self.map_title_label.pack(side=tk.LEFT, padx=5)
 
         ttk.Button(control_frame, text="+ Zoom In",
                   command=self.zoom_in).pack(side=tk.LEFT, padx=2)
@@ -571,7 +577,7 @@ class MapViewer(ttk.Frame):
         # Convert screen to hex coordinates
         hex_x, hex_y = self.pixel_to_hex(event.x, event.y)
 
-        if 0 <= hex_x < self.MAP_WIDTH and 0 <= hex_y < self.MAP_HEIGHT:
+        if 0 <= hex_x < self.map_width and 0 <= hex_y < self.map_height:
             terrain_data = self.terrain.get((hex_x, hex_y), (0, 0))
 
             # Handle both old format (int) and new format (tuple)
@@ -641,6 +647,17 @@ class MapViewer(ttk.Frame):
     def load_data(self, units, scenario=None):
         """Load map data - units is list of unit dicts from EnhancedUnitParser"""
         self.units = units if units else []
+        self.scenario = scenario
+
+        # Get map dimensions from scenario (or use defaults)
+        if scenario and scenario.is_valid:
+            self.map_width = scenario.map_width
+            self.map_height = scenario.map_height
+            self.map_title_label.config(text=f"Map Viewer ({self.map_width}×{self.map_height} hex grid)")
+        else:
+            self.map_width = self.DEFAULT_MAP_WIDTH
+            self.map_height = self.DEFAULT_MAP_HEIGHT
+            self.map_title_label.config(text=f"Map Viewer ({self.map_width}×{self.map_height} hex grid)")
 
         # Extract REAL terrain data from scenario file!
         if scenario and scenario.is_valid:
@@ -667,8 +684,8 @@ class MapViewer(ttk.Frame):
         terrain = {}
 
         # Initialize all hexes as grass
-        for y in range(self.MAP_HEIGHT):
-            for x in range(self.MAP_WIDTH):
+        for y in range(self.map_height):
+            for x in range(self.map_width):
                 terrain[(x, y)] = 0  # Grass
 
         # Use fixed seed for deterministic generation
@@ -692,8 +709,8 @@ class MapViewer(ttk.Frame):
         for terrain_type, blob_count, min_size, max_size in terrain_blobs:
             for _ in range(blob_count):
                 # Random center point
-                center_x = random.randint(0, self.MAP_WIDTH - 1)
-                center_y = random.randint(0, self.MAP_HEIGHT - 1)
+                center_x = random.randint(0, self.map_width - 1)
+                center_y = random.randint(0, self.map_height - 1)
 
                 # Random blob size
                 blob_size = random.randint(min_size, max_size)
@@ -707,7 +724,7 @@ class MapViewer(ttk.Frame):
 
                     if (x, y) in blob_hexes:
                         continue
-                    if x < 0 or x >= self.MAP_WIDTH or y < 0 or y >= self.MAP_HEIGHT:
+                    if x < 0 or x >= self.map_width or y < 0 or y >= self.map_height:
                         continue
 
                     # Add to blob with probability decreasing by distance from center
@@ -733,7 +750,7 @@ class MapViewer(ttk.Frame):
                             ]
 
                         for nx, ny in neighbors:
-                            if 0 <= nx < self.MAP_WIDTH and 0 <= ny < self.MAP_HEIGHT:
+                            if 0 <= nx < self.map_width and 0 <= ny < self.map_height:
                                 if (nx, ny) not in blob_hexes:
                                     to_process.append((nx, ny))
 
@@ -752,7 +769,7 @@ class MapViewer(ttk.Frame):
 
         # Update info
         zoom_pct = int(self.hex_size / self.HEX_SIZE * 100)
-        self.info_label.config(text=f"Zoom: {zoom_pct}% | Hexes: {self.MAP_WIDTH}×{self.MAP_HEIGHT}")
+        self.info_label.config(text=f"Zoom: {zoom_pct}% | Hexes: {self.map_width}×{self.map_height}")
 
         # Draw only visible hexes for performance
         visible_hexes = self._get_visible_hexes()
@@ -760,7 +777,7 @@ class MapViewer(ttk.Frame):
         # Draw terrain (background grid)
         for hex_y in range(visible_hexes['min_y'], visible_hexes['max_y']):
             for hex_x in range(visible_hexes['min_x'], visible_hexes['max_x']):
-                if 0 <= hex_x < self.MAP_WIDTH and 0 <= hex_y < self.MAP_HEIGHT:
+                if 0 <= hex_x < self.map_width and 0 <= hex_y < self.map_height:
                     self._draw_hex_tile(hex_x, hex_y)
 
         # Draw units at their actual positions
@@ -770,7 +787,7 @@ class MapViewer(ttk.Frame):
             hex_y = unit.get('y', 0)
 
             # Only draw units with valid coordinates
-            if hex_x > 0 and hex_y > 0 and hex_x < self.MAP_WIDTH and hex_y < self.MAP_HEIGHT:
+            if hex_x > 0 and hex_y > 0 and hex_x < self.map_width and hex_y < self.map_height:
                 # Determine unit color based on side
                 side = unit.get('side', 'Unknown')
                 unit_type = unit.get('type', 0)
@@ -812,9 +829,9 @@ class MapViewer(ttk.Frame):
 
         return {
             'min_x': max(0, min_x - padding),
-            'max_x': min(self.MAP_WIDTH, max_x + padding),
+            'max_x': min(self.map_width, max_x + padding),
             'min_y': max(0, min_y - padding),
-            'max_y': min(self.MAP_HEIGHT, max_y + padding)
+            'max_y': min(self.map_height, max_y + padding)
         }
 
     def _draw_hex_tile(self, hex_x, hex_y):
@@ -910,8 +927,8 @@ class MapViewer(ttk.Frame):
     def _update_scroll_region(self):
         """Update canvas scroll region"""
         # Calculate map bounds
-        max_x = self.MAP_WIDTH * self.hex_size * math.sqrt(3) + self.offset_x + 100
-        max_y = self.MAP_HEIGHT * self.hex_size * 1.5 + self.offset_y + 100
+        max_x = self.map_width * self.hex_size * math.sqrt(3) + self.offset_x + 100
+        max_y = self.map_height * self.hex_size * 1.5 + self.offset_y + 100
 
         self.canvas.config(scrollregion=(0, 0, max_x, max_y))
 

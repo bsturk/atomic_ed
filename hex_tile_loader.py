@@ -165,7 +165,6 @@ class HexTileLoader:
                 f"but only extracted {len(self.tiles)}"
             )
 
-        print(f"✓ Extracted {len(self.tiles)} hex tiles in memory from sprite sheet")
         return self.tiles
 
     def get_tile_with_variant(self, terrain_id, variant):

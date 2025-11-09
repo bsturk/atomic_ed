@@ -18,26 +18,32 @@ def extract_terrain_from_scenario(scenario):
         scenario: DdayScenario object (already loaded)
 
     Returns:
-        dict: (x, y) -> (terrain_type, variant) tuples for all 12,500 hexes
+        dict: (x, y) -> (terrain_type, variant) tuples for all hexes
 
     Format Details (CONFIRMED from disassembly analysis):
         - Location: Offset 0x57E4 in .SCN file
         - Encoding: 1 byte per hex (VVVVTTTT format)
           - Bits 0-3: Terrain type (0-16, capped at 19 in code)
           - Bits 4-7: Variant column (0-12)
-        - Size: 12,500 bytes (125×100 hexes)
-        - Layout: COLUMN-MAJOR (y = index % 100, x = index // 100)
-          - NOT row-major! Data fills columns first, then moves to next column
-          - Index 0-99: Column 0 (x=0), rows y=0 to y=99
-          - Index 100-199: Column 1 (x=1), rows y=0 to y=99
+        - Size: map_width × map_height bytes (varies by scenario)
+        - Layout: COLUMN-MAJOR (y = index % height, x = index // height)
+          - Data fills columns first, then moves to next column
+          - Index 0-(height-1): Column 0 (x=0), rows y=0 to y=(height-1)
+          - Index height-(2*height-1): Column 1 (x=1), rows y=0 to y=(height-1)
           - etc.
         - Terrain types: 0-16 (17 types)
         - Variants: 0-12 (13 variants per terrain type)
+
+    Note: Map dimensions vary by scenario:
+          - Most scenarios: 100 columns × 125 rows (12,500 hexes)
+          - COBRA.SCN: 100 columns × 112 rows (11,200 hexes)
+          - Dimensions read from scenario file at offsets 0x2c and 0x30
     """
-    MAP_WIDTH = 125
-    MAP_HEIGHT = 100
+    # Get dimensions from scenario file (varies by scenario!)
+    MAP_WIDTH = scenario.map_width    # Columns (X axis) - usually 100
+    MAP_HEIGHT = scenario.map_height  # Rows (Y axis) - usually 125, but 112 for COBRA
     MAP_DATA_OFFSET = 0x57E4  # Discovered from disassembly analysis
-    TOTAL_HEXES = 12500
+    TOTAL_HEXES = MAP_WIDTH * MAP_HEIGHT
 
     if not scenario.is_valid:
         return {}
@@ -65,11 +71,10 @@ def extract_terrain_from_scenario(scenario):
                 if terrain_type > 19:
                     terrain_type = 19
 
-                # Calculate coordinates
-                # CRITICAL FIX: Data is stored in COLUMN-MAJOR order, not row-major!
-                # This was causing symmetrical patterns and misplaced terrain
-                y = hex_index % MAP_HEIGHT  # Column-major: Y changes fastest
-                x = hex_index // MAP_HEIGHT  # X changes every 100 entries
+                # Calculate coordinates - COLUMN-MAJOR storage
+                # Map is 100 wide × 125 tall (longer dimension is vertical)
+                y = hex_index % MAP_HEIGHT   # Y changes fastest (0-124)
+                x = hex_index // MAP_HEIGHT  # X changes every 125 entries (0-99)
 
                 # Store as tuple: (terrain_type, variant)
                 terrain[(x, y)] = (terrain_type, variant)

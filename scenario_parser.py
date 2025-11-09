@@ -31,7 +31,9 @@ class DdayScenario:
     MAGIC_BYTES = b'\x30\x12\x00\x00'
     HEADER_SIZE = 0x60  # Header is 96 bytes
     
-    # Expected fixed header counts (all D-Day scenarios have these)
+    # Expected fixed header counts (mostly fixed, but dimensions can vary)
+    # Note: Count 11 (height) and Count 12 (width) vary by scenario
+    # Most scenarios: 100×125, but COBRA.SCN is 100×112
     FIXED_COUNTS = [
         0x11, 0x05, 0x0a, 0x08, 0x05, 0x08, 0x00,
         0x0a, 0x14, 0x05, 0x7d, 0x64
@@ -101,6 +103,16 @@ class DdayScenario:
         for offset in self.COUNT_OFFSETS:
             value = struct.unpack('<I', self.data[offset:offset+4])[0]
             self.counts.append(value)
+
+    @property
+    def map_height(self) -> int:
+        """Map height in hexes (Count 11 at offset 0x2c)"""
+        return self.counts[10] if len(self.counts) > 10 else 125
+
+    @property
+    def map_width(self) -> int:
+        """Map width in hexes (Count 12 at offset 0x30)"""
+        return self.counts[11] if len(self.counts) > 11 else 100
     
     def _parse_pointers(self):
         """Parse the 8 offset pointers from header"""
@@ -188,8 +200,8 @@ class DdayScenario:
             "Count 8  (unknown)",
             "Count 9  (objectives?)",
             "Count 10 (unknown)",
-            "Count 11 (map cells?)",
-            "Count 12 (additional data?)",
+            "Count 11 (MAP HEIGHT in hexes)",
+            "Count 12 (MAP WIDTH in hexes)",
         ]
         
         for i, (count, label) in enumerate(zip(self.counts, count_labels)):
