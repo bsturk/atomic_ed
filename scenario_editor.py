@@ -363,9 +363,22 @@ class MapViewer(ttk.Frame):
             16: '#C0C0C0', # Unknown - silver
         }
 
-        # Load hex tile images
+        # Load hex tile images - CRITICAL, will raise RuntimeError if it fails
         self.hex_tile_images = {}  # Cache of PhotoImage objects by terrain type and size
-        self.use_images = self._load_hex_tiles()
+        self.hex_tile_base_images = {}
+
+        try:
+            self.use_images = self._load_hex_tiles()
+        except RuntimeError as e:
+            messagebox.showerror(
+                "Critical Error: Hex Tiles Not Available",
+                f"{e}\n\nThe scenario editor cannot function without hex tile images.\n"
+                f"Please ensure extracted_images/scan_width_448.png exists.\n\n"
+                f"The application will now exit."
+            )
+            # Force exit
+            import sys
+            sys.exit(1)
 
         self._create_ui()
         self._bind_events()
@@ -451,25 +464,20 @@ class MapViewer(ttk.Frame):
         self._configure_pending = False
 
     def _load_hex_tiles(self):
-        """Load hex tile images from game assets (automatic extraction if needed)"""
-        try:
-            # Use the hex_tile_loader library to automatically extract/load tiles
-            # This will extract from PCWATW.REZ if needed, or load from cache
-            tiles = load_hex_tiles()
+        """
+        Load hex tile images by extracting from sprite sheet IN MEMORY.
 
-            if not tiles:
-                print("Could not load hex tiles from game assets")
-                return False
+        Raises RuntimeError if sprite sheet unavailable or extraction fails.
+        This is a CRITICAL operation - the editor cannot function without hex tiles.
+        """
+        # Load tiles - will raise RuntimeError if it fails
+        tiles = load_hex_tiles()
 
-            # Store the loaded tiles (already in RGBA format from loader)
-            self.hex_tile_base_images = tiles
+        # Store the loaded tiles (already in RGBA format with transparency)
+        self.hex_tile_base_images = tiles
 
-            print(f"Successfully loaded {len(self.hex_tile_base_images)} hex tile images")
-            return True
-
-        except Exception as e:
-            print(f"Error loading hex tiles: {e}")
-            return False
+        print(f"Successfully loaded {len(self.hex_tile_base_images)} hex tile images")
+        return True
 
     def _get_hex_tile_image(self, terrain_type, size):
         """Get a scaled hex tile image for the given terrain type and size"""
@@ -1422,43 +1430,27 @@ class ImprovedScenarioEditor:
         }
 
         # Create terrain type entries
+        # Initialize image list for garbage collection protection
+        if not hasattr(self, '_terrain_preview_images'):
+            self._terrain_preview_images = []
+
         for idx, (terrain_id, name, description) in enumerate(terrain_info):
             entry_frame = ttk.Frame(terrain_frame, relief=tk.RIDGE, borderwidth=1)
             entry_frame.grid(row=idx, column=0, sticky=tk.EW, padx=5, pady=3)
 
-            # Try to use actual hex tile image, fallback to color swatch
-            color = terrain_colors.get(terrain_id, '#FFFFFF')
+            # Get and display actual hex tile image (always available)
+            base_img = self.map_viewer.hex_tile_base_images[terrain_id]
 
-            if use_real_images and hasattr(self.map_viewer, 'hex_tile_base_images'):
-                # Load and display actual hex tile image
-                base_img = self.map_viewer.hex_tile_base_images.get(terrain_id)
-                if base_img:
-                    # Scale to a reasonable preview size (60x68 to match roughly 2x original size)
-                    preview_img = base_img.resize((60, 68), Image.Resampling.LANCZOS)
-                    photo_img = ImageTk.PhotoImage(preview_img)
+            # Scale to a reasonable preview size (60x68 to match roughly 2x original size)
+            preview_img = base_img.resize((60, 68), Image.Resampling.LANCZOS)
+            photo_img = ImageTk.PhotoImage(preview_img)
 
-                    # Store reference to prevent garbage collection
-                    if not hasattr(self, '_terrain_preview_images'):
-                        self._terrain_preview_images = []
-                    self._terrain_preview_images.append(photo_img)
+            # Store reference to prevent garbage collection
+            self._terrain_preview_images.append(photo_img)
 
-                    # Create label to display image
-                    img_label = ttk.Label(entry_frame, image=photo_img, relief=tk.SOLID, borderwidth=1)
-                    img_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                else:
-                    # Fallback to color swatch
-                    swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
-                                              bg=color, highlightthickness=1,
-                                              highlightbackground='black')
-                    swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                    self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
-            else:
-                # Color swatch fallback
-                swatch_canvas = tk.Canvas(entry_frame, width=60, height=40,
-                                          bg=color, highlightthickness=1,
-                                          highlightbackground='black')
-                swatch_canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
-                self._draw_mini_hex(swatch_canvas, 30, 20, 15, color)
+            # Create label to display image
+            img_label = ttk.Label(entry_frame, image=photo_img, relief=tk.SOLID, borderwidth=1)
+            img_label.grid(row=0, column=0, rowspan=2, padx=10, pady=5)
 
             # Type ID and name
             type_label = ttk.Label(entry_frame,
