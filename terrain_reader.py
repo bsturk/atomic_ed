@@ -26,7 +26,11 @@ def extract_terrain_from_scenario(scenario):
           - Bits 0-3: Terrain type (0-16, capped at 19 in code)
           - Bits 4-7: Variant column (0-12)
         - Size: 12,500 bytes (125×100 hexes)
-        - Layout: Left-to-right, top-to-bottom
+        - Layout: COLUMN-MAJOR (y = index % 100, x = index // 100)
+          - NOT row-major! Data fills columns first, then moves to next column
+          - Index 0-99: Column 0 (x=0), rows y=0 to y=99
+          - Index 100-199: Column 1 (x=1), rows y=0 to y=99
+          - etc.
         - Terrain types: 0-16 (17 types)
         - Variants: 0-12 (13 variants per terrain type)
     """
@@ -62,8 +66,10 @@ def extract_terrain_from_scenario(scenario):
                     terrain_type = 19
 
                 # Calculate coordinates
-                x = hex_index % MAP_WIDTH
-                y = hex_index // MAP_WIDTH
+                # CRITICAL FIX: Data is stored in COLUMN-MAJOR order, not row-major!
+                # This was causing symmetrical patterns and misplaced terrain
+                y = hex_index % MAP_HEIGHT  # Column-major: Y changes fastest
+                x = hex_index // MAP_HEIGHT  # X changes every 100 entries
 
                 # Store as tuple: (terrain_type, variant)
                 terrain[(x, y)] = (terrain_type, variant)
@@ -117,11 +123,11 @@ if __name__ == '__main__':
         terrain = extract_terrain_from_file(sys.argv[1])
         print(f"Extracted {len(terrain)} hexes from {sys.argv[1]}")
 
-        # Count terrain types
+        # Count terrain types (extract just terrain from (terrain, variant) tuples)
         from collections import Counter
-        counter = Counter(terrain.values())
+        terrain_only = Counter(t for t, v in terrain.values())
         print("\nTerrain distribution:")
-        for terrain_type, count in sorted(counter.items()):
+        for terrain_type, count in sorted(terrain_only.items()):
             name = TERRAIN_TYPES.get(terrain_type, 'Unknown')
             pct = 100 * count / len(terrain)
             print(f"  {terrain_type:2d} {name:15s}: {count:5,} ({pct:5.1f}%)")
