@@ -1470,6 +1470,19 @@ class ImprovedScenarioEditor:
         terrain_frame.update_idletasks()
         terrain_canvas.config(scrollregion=terrain_canvas.bbox('all'))
 
+        # Enable mousewheel scrolling anywhere on the canvas
+        def _on_mousewheel(event):
+            terrain_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _bind_mousewheel(event):
+            terrain_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        def _unbind_mousewheel(event):
+            terrain_canvas.unbind_all("<MouseWheel>")
+
+        terrain_canvas.bind("<Enter>", _bind_mousewheel)
+        terrain_canvas.bind("<Leave>", _unbind_mousewheel)
+
     def _draw_mini_hex(self, canvas, center_x, center_y, size, color):
         """Draw a small hexagon for terrain swatch"""
         points = []
