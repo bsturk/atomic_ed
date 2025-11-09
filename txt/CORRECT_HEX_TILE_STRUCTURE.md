@@ -49,11 +49,21 @@ Each of the 14 terrain rows contains **13 variant tiles** (columns 0-12). These 
 - **Edge transitions** - How terrain connects to adjacent hexes
 - **Special features** - Like carriers in ocean tiles, or darker flags
 
-### Critical Sprite Sheet Issue
+### Critical Sprite Sheet Extraction Parameters
 
-**Offset Problem:** The sprite sheet has a wraparound artifact where the tail (rightmost edge) of each row appears at the beginning of the next row, followed by some garbage pixels, then the correct hexes.
+**VERIFIED EXTRACTION VALUES** (determined by pixel-level sprite sheet analysis):
 
-**Resolution:** Extract with a small X-offset (+2 pixels) to skip the wraparound artifact.
+```python
+HEX_WIDTH = 32        # Actual hex content width (NOT 34!)
+HEX_HEIGHT = 36       # Actual hex content height (NOT 38!)
+HEX_SPACING = 34      # Distance between hex centers horizontally
+HEX_ROW_SPACING = 38  # Distance between row centers vertically
+HEX_OFFSET_X = 12     # Where first hex content starts in sprite sheet
+```
+
+**Offset Problem:** The sprite sheet has a 12-pixel offset before the first hex starts. Hexes are spaced 34 pixels apart (center-to-center) but actual content is only 32 pixels wide. Similarly, rows are spaced 38 pixels apart but content is only 36 pixels tall.
+
+**Resolution:** Extract tiles starting at x=12 with dimensions 32×36, using spacing values for column/row calculations.
 
 ## Terrain Type to Row Mapping
 
@@ -93,17 +103,25 @@ This makes sense - these are related terrain types that differ in detail/orienta
 
 ## Extraction Details
 
-### Tile Dimensions
-- **Width**: 34 pixels
-- **Height**: 38 pixels
+### Tile Dimensions (CRITICAL - VERIFIED VALUES)
+- **Content Width**: 32 pixels (actual hex width)
+- **Content Height**: 36 pixels (actual hex height)
+- **Horizontal Spacing**: 34 pixels (center-to-center between hexes)
+- **Vertical Spacing**: 38 pixels (center-to-center between rows)
+- **Starting Offset X**: 12 pixels (where first hex begins)
 
 ### Grid Layout
-- **Columns per row**: 13
+- **Columns per row**: 13 (max, some incomplete)
 - **Terrain rows**: 14
 - **Special tiles row**: 1 (partial, 3 tiles)
-- **Total tiles extracted**: 185
-  - 182 terrain tiles (14 × 13)
-  - 3 special tiles
+- **Sprite sheet dimensions**: 448 × 570 pixels
+
+### Extraction Formula
+```python
+x = col * 34 + 12    # Column position
+y = row * 38         # Row position
+tile = crop(x, y, x+32, y+36)  # Extract 32×36 tile
+```
 
 ### File Naming Convention
 

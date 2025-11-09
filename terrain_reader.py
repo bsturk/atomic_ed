@@ -12,60 +12,66 @@ from scenario_parser import DdayScenario
 
 def extract_terrain_from_scenario(scenario):
     """
-    Extract REAL terrain data from a D-Day scenario.
+    Extract REAL terrain data from a D-Day scenario with variant information.
 
     Args:
         scenario: DdayScenario object (already loaded)
 
     Returns:
-        dict: (x, y) -> terrain_type mapping for all 12,500 hexes
+        dict: (x, y) -> (terrain_type, variant) tuples for all 12,500 hexes
 
-    Format Details:
-        - Location: PTR4 section, offset 0x0000
-        - Encoding: 4-bit packed (2 hexes per byte, low nibble first)
-        - Size: 6,250 bytes (12,500 hexes)
+    Format Details (CONFIRMED from disassembly analysis):
+        - Location: Offset 0x57E4 in .SCN file
+        - Encoding: 1 byte per hex (VVVVTTTT format)
+          - Bits 0-3: Terrain type (0-16, capped at 19 in code)
+          - Bits 4-7: Variant column (0-12)
+        - Size: 12,500 bytes (125×100 hexes)
         - Layout: Left-to-right, top-to-bottom
-        - Terrain types: 0-16
+        - Terrain types: 0-16 (17 types)
+        - Variants: 0-12 (13 variants per terrain type)
     """
     MAP_WIDTH = 125
     MAP_HEIGHT = 100
+    MAP_DATA_OFFSET = 0x57E4  # Discovered from disassembly analysis
     TOTAL_HEXES = 12500
 
     if not scenario.is_valid:
         return {}
 
-    ptr4_data = scenario.sections.get('PTR4', b'')
-    if not ptr4_data:
+    # Read raw file data to get map section
+    try:
+        with open(scenario.filename, 'rb') as f:
+            # Seek to map data offset
+            f.seek(MAP_DATA_OFFSET)
+            map_data = f.read(TOTAL_HEXES)
+
+            if len(map_data) < TOTAL_HEXES:
+                return {}
+
+            # Extract terrain and variant from packed bytes
+            terrain = {}
+            for hex_index in range(TOTAL_HEXES):
+                hex_byte = map_data[hex_index]
+
+                # Extract fields (as validated in disassembly)
+                terrain_type = hex_byte & 0x0F  # Bits 0-3
+                variant = (hex_byte >> 4) & 0x0F  # Bits 4-7
+
+                # Cap terrain at 19 (as game does - see disasm line 8073)
+                if terrain_type > 19:
+                    terrain_type = 19
+
+                # Calculate coordinates
+                x = hex_index % MAP_WIDTH
+                y = hex_index // MAP_WIDTH
+
+                # Store as tuple: (terrain_type, variant)
+                terrain[(x, y)] = (terrain_type, variant)
+
+            return terrain
+
+    except (FileNotFoundError, IOError):
         return {}
-
-    # Terrain is 4-bit packed at offset 0
-    packed_size = TOTAL_HEXES // 2  # 6,250 bytes
-
-    if len(ptr4_data) < packed_size:
-        return {}
-
-    # Unpack 4-bit values (2 per byte)
-    terrain = {}
-    hex_index = 0
-
-    for i in range(packed_size):
-        byte = ptr4_data[i]
-
-        # Low nibble (first hex)
-        low = byte & 0x0F
-        x = hex_index % MAP_WIDTH
-        y = hex_index // MAP_WIDTH
-        terrain[(x, y)] = low
-        hex_index += 1
-
-        # High nibble (second hex)
-        high = (byte >> 4) & 0x0F
-        x = hex_index % MAP_WIDTH
-        y = hex_index // MAP_WIDTH
-        terrain[(x, y)] = high
-        hex_index += 1
-
-    return terrain
 
 
 def extract_terrain_from_file(scenario_path):

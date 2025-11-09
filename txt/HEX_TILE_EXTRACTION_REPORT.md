@@ -9,15 +9,16 @@
 
 ## Executive Summary
 
-Successfully extracted and integrated **195 authentic hex tile images** from the original D-Day game's resource file (PCWATW.REZ). The scenario editor now displays actual game graphics instead of procedurally-generated colored hexagons.
+Successfully integrated **17 authentic hex tile images** from the original D-Day game's resource file (PCWATW.REZ). The scenario editor now displays actual game graphics extracted in-memory from the sprite sheet.
 
 ### Key Achievements
 
 ✅ **Extracted 301 resources** from Apple HFS/HFS+ resource fork file
 ✅ **Converted PICT v2 images** to modern PNG format
-✅ **Sliced sprite sheet** into 195 individual 34×38 pixel hex tiles
+✅ **Created sprite sheet** scan_width_448.png (448×570 pixels, 8-bit indexed color)
+✅ **In-memory tile extraction** - 17 terrain tiles extracted as 32×36 pixels at runtime
 ✅ **Integrated into editor** - Map viewer and terrain reference tab now use actual game graphics
-✅ **Full 17 terrain type coverage** - All terrain types have proper tile imagery
+✅ **Full 17 terrain type coverage** - All terrain types have proper tile imagery with transparency
 
 ---
 
@@ -42,7 +43,8 @@ Successfully extracted and integrated **195 authentic hex tile images** from the
 - **1 clut resource** - 256-color palette
 
 **Key PICT Resources:**
-- `PICT_128.pict` (442×570 px, 250 KB) - **Main terrain hex sprite sheet**
+- `PICT_128.pict` (444×575 px, 250 KB) - **Original terrain hex sprite sheet**
+- `scan_width_448.png` (448×570 px) - **Corrected sprite sheet** (rearranged to 448-pixel width)
 - `PICT_200-203` - Hex edge graphics (day/night, large/small)
 - `PICT_137` - Explosions
 - `PICT_251` - Toolbox graphics
@@ -62,14 +64,15 @@ Successfully extracted and integrated **195 authentic hex tile images** from the
 
 **Known Issue:** Horizontal banding artifacts due to PICT stride mismatch (does not affect tile extraction)
 
-### 4. Sprite Sheet Slicing
+### 4. In-Memory Hex Tile Extraction
 
-**Script:** `extract_hex_tiles.py`
-**Input:** PICT_128.png (444×575 pixels)
-**Grid:** 13 columns × 15 rows = **195 tiles**
-**Tile Size:** 34 × 38 pixels each
-**Output Directory:** `extracted_images/hex_tiles/`
-**Manifest:** `tiles_manifest.json` (complete metadata)
+**Module:** `hex_tile_loader.py` (HexTileLoader class)
+**Input:** `extracted_images/scan_width_448.png` (448×570 pixels, 8-bit indexed color)
+**Method:** Runtime extraction directly from sprite sheet in memory
+**Tile Size:** 32 × 36 pixels (actual content dimensions)
+**Grid Spacing:** 34 pixels horizontal, 38 pixels vertical (center-to-center)
+**Offset:** First hex starts at x=12 pixels
+**Output:** 17 terrain tiles as RGBA images with transparent backgrounds
 
 ### 5. Terrain Type Mapping
 
@@ -245,17 +248,39 @@ If hex tile images are unavailable:
 ## Technical Specifications
 
 ### Image Format
-- **Source:** PICT v2 (Apple QuickDraw)
-- **Conversion:** PNG with RGBA
-- **Color Depth:** 8-bit indexed → 24-bit RGB
-- **Tile Dimensions:** 34 × 38 pixels (original)
-- **Sprite Sheet:** 442 × 570 pixels (converted PNG)
+- **Source:** PICT v2 (Apple QuickDraw) from PICT_128 resource
+- **Sprite Sheet:** `scan_width_448.png` - 448 × 570 pixels, 8-bit indexed color with 256-color palette
+- **Extraction:** In-memory at runtime via HexTileLoader class
+- **Tile Dimensions:** 32 × 36 pixels (actual hex content)
+- **Grid Spacing:** 34 pixels horizontal, 38 pixels vertical (center-to-center)
+- **Starting Offset:** X=12 pixels (first hex position)
+- **Output Format:** RGBA with palette index 0 (white) converted to transparent
+- **Color Depth:** 8-bit indexed → 32-bit RGBA
+
+### Extraction Algorithm
+```python
+# Sprite sheet analysis determined these CRITICAL values:
+HEX_WIDTH = 32        # Actual hex content width
+HEX_HEIGHT = 36       # Actual hex content height
+HEX_SPACING = 34      # Distance between hex centers horizontally
+HEX_ROW_SPACING = 38  # Distance between row centers vertically
+HEX_OFFSET_X = 12     # Where first hex starts in sprite sheet
+
+# Extraction formula:
+x = col * HEX_SPACING + HEX_OFFSET_X
+y = row * HEX_ROW_SPACING
+tile = sprite_sheet.crop((x, y, x + HEX_WIDTH, y + HEX_HEIGHT))
+
+# Transparency conversion:
+# Palette index 0 (white background) → RGBA (255,255,255,0)
+# All other colors → RGBA with alpha=255
+```
 
 ### Scaling Algorithm
 ```python
 scale_factor = hex_size / 12.0  # 12 = original HEX_SIZE
-new_width = int(34 * scale_factor)
-new_height = int(38 * scale_factor)
+new_width = int(32 * scale_factor)
+new_height = int(36 * scale_factor)
 scaled_img = base_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 ```
 

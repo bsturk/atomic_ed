@@ -168,6 +168,37 @@ class HexTileLoader:
         print(f"✓ Extracted {len(self.tiles)} hex tiles in memory from sprite sheet")
         return self.tiles
 
+    def get_tile_with_variant(self, terrain_id, variant):
+        """
+        Get a specific terrain tile with specific variant column.
+
+        Args:
+            terrain_id: Terrain type (0-16)
+            variant: Variant column (0-12)
+
+        Returns:
+            PIL.Image (RGBA) of the specific hex tile variant
+
+        Raises:
+            RuntimeError if sprite sheet not loaded or invalid parameters
+        """
+        if self.sprite_sheet is None:
+            self.sprite_sheet = self._get_sprite_sheet()
+
+        # Get base row from terrain mapping (use default column 0)
+        if terrain_id not in self.TERRAIN_MAPPING:
+            raise RuntimeError(f"Invalid terrain_id: {terrain_id}")
+
+        row, _ = self.TERRAIN_MAPPING[terrain_id]
+
+        # Validate variant range (0-12 for 13 columns)
+        if variant < 0 or variant >= self.VARIANTS_PER_ROW:
+            # Cap at valid range instead of raising error
+            variant = min(max(0, variant), self.VARIANTS_PER_ROW - 1)
+
+        # Extract tile at specific row and variant column
+        return self._extract_tile_from_sheet(row, variant)
+
 
 def load_hex_tiles():
     """

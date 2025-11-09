@@ -32,7 +32,7 @@ from datetime import datetime
 from PIL import Image, ImageTk
 from scenario_parser import DdayScenario
 from terrain_reader import extract_terrain_from_scenario
-from hex_tile_loader import load_hex_tiles
+from hex_tile_loader import load_hex_tiles, HexTileLoader
 
 
 class EnhancedUnitParser:
@@ -364,8 +364,9 @@ class MapViewer(ttk.Frame):
         }
 
         # Load hex tile images - CRITICAL, will raise RuntimeError if it fails
-        self.hex_tile_images = {}  # Cache of PhotoImage objects by terrain type and size
-        self.hex_tile_base_images = {}
+        self.hex_tile_images = {}  # Cache of PhotoImage objects by (terrain, variant, size)
+        self.hex_tile_base_images = {}  # Cache of base terrain images (without variants)
+        self.hex_tile_loader = None  # HexTileLoader instance for variant support
 
         try:
             self.use_images = self._load_hex_tiles()
@@ -470,39 +471,65 @@ class MapViewer(ttk.Frame):
         Raises RuntimeError if sprite sheet unavailable or extraction fails.
         This is a CRITICAL operation - the editor cannot function without hex tiles.
         """
-        # Load tiles - will raise RuntimeError if it fails
+        # Create HexTileLoader instance for variant support
+        self.hex_tile_loader = HexTileLoader()
+
+        # Load base tiles (default variants) - will raise RuntimeError if it fails
         tiles = load_hex_tiles()
 
         # Store the loaded tiles (already in RGBA format with transparency)
         self.hex_tile_base_images = tiles
 
         print(f"Successfully loaded {len(self.hex_tile_base_images)} hex tile images")
+        print("✓ Variant support enabled - can render specific hex variants from map data")
         return True
 
-    def _get_hex_tile_image(self, terrain_type, size):
-        """Get a scaled hex tile image for the given terrain type and size"""
+    def _get_hex_tile_image(self, terrain_type, size, variant=0):
+        """
+        Get a scaled hex tile image for the given terrain type, size, and variant.
+
+        Args:
+            terrain_type: Terrain type ID (0-16)
+            size: Hex size in pixels
+            variant: Variant column (0-12), defaults to 0
+
+        Returns:
+            PhotoImage ready for canvas use, or None if unavailable
+        """
         if not self.use_images:
             return None
 
-        # Create a cache key
-        cache_key = (terrain_type, size)
+        # Create a cache key including variant
+        cache_key = (terrain_type, variant, size)
 
         # Check cache
         if cache_key in self.hex_tile_images:
             return self.hex_tile_images[cache_key]
 
-        # Get base image
-        base_img = self.hex_tile_base_images.get(terrain_type)
-        if base_img is None:
-            return None
+        # Get base image with specific variant
+        try:
+            if self.hex_tile_loader and variant > 0:
+                # Use variant-specific tile
+                base_img = self.hex_tile_loader.get_tile_with_variant(terrain_type, variant)
+            else:
+                # Use default variant (variant 0) from base images
+                base_img = self.hex_tile_base_images.get(terrain_type)
 
-        # Calculate scaled size (hex tiles are roughly 34×38 pixels)
-        # We want to scale proportionally to the hex size
-        # Original tiles are 34×38, and original HEX_SIZE is 12
-        # So scale factor is approximately size / 12 * (34/34)
+            if base_img is None:
+                return None
+
+        except Exception as e:
+            print(f"Error loading hex tile variant: {e}")
+            # Fall back to default variant
+            base_img = self.hex_tile_base_images.get(terrain_type)
+            if base_img is None:
+                return None
+
+        # Calculate scaled size (hex tiles are 32×36 pixels actual content)
+        # Scale proportionally to the hex size
         scale_factor = size / 12.0
-        new_width = int(34 * scale_factor)
-        new_height = int(38 * scale_factor)
+        new_width = int(32 * scale_factor)
+        new_height = int(36 * scale_factor)
 
         # Ensure minimum size
         new_width = max(4, new_width)
@@ -545,9 +572,16 @@ class MapViewer(ttk.Frame):
         hex_x, hex_y = self.pixel_to_hex(event.x, event.y)
 
         if 0 <= hex_x < self.MAP_WIDTH and 0 <= hex_y < self.MAP_HEIGHT:
-            terrain = self.terrain.get((hex_x, hex_y), 0)
-            self.status_label.config(
-                text=f"Hex: ({hex_x}, {hex_y}) | Terrain: {terrain}")
+            terrain_data = self.terrain.get((hex_x, hex_y), (0, 0))
+
+            # Handle both old format (int) and new format (tuple)
+            if isinstance(terrain_data, tuple):
+                terrain_type, variant = terrain_data
+                self.status_label.config(
+                    text=f"Hex: ({hex_x}, {hex_y}) | Terrain: {terrain_type} | Variant: {variant}")
+            else:
+                self.status_label.config(
+                    text=f"Hex: ({hex_x}, {hex_y}) | Terrain: {terrain_data}")
         else:
             self.status_label.config(text="Outside map bounds")
 
@@ -784,15 +818,23 @@ class MapViewer(ttk.Frame):
         }
 
     def _draw_hex_tile(self, hex_x, hex_y):
-        """Draw a single hex tile"""
+        """Draw a single hex tile with proper variant support"""
         px, py = self.hex_to_pixel(hex_x, hex_y)
 
-        # Get terrain type
-        terrain_type = self.terrain.get((hex_x, hex_y), 0)
+        # Get terrain data (now includes variant)
+        terrain_data = self.terrain.get((hex_x, hex_y), (0, 0))
+
+        # Handle both old format (int) and new format (tuple)
+        if isinstance(terrain_data, tuple):
+            terrain_type, variant = terrain_data
+        else:
+            # Legacy format compatibility
+            terrain_type = terrain_data
+            variant = 0
 
         # Try to use image first, fallback to color
         if self.use_images:
-            tile_img = self._get_hex_tile_image(terrain_type, self.hex_size)
+            tile_img = self._get_hex_tile_image(terrain_type, self.hex_size, variant)
             if tile_img:
                 # Draw the image
                 self.canvas.create_image(px, py, image=tile_img, anchor=tk.CENTER)
@@ -803,8 +845,11 @@ class MapViewer(ttk.Frame):
 
                 # Draw coordinates if enabled
                 if self.show_coords and self.hex_size >= 10:
+                    coord_text = f"{hex_x},{hex_y}"
+                    if variant > 0:
+                        coord_text += f"\nv{variant}"
                     self.canvas.create_text(px, py,
-                                           text=f"{hex_x},{hex_y}",
+                                           text=coord_text,
                                            font=("Arial", max(6, int(self.hex_size / 3))),
                                            fill='black')
                 return
@@ -816,8 +861,11 @@ class MapViewer(ttk.Frame):
 
         # Draw coordinates if enabled
         if self.show_coords and self.hex_size >= 10:
+            coord_text = f"{hex_x},{hex_y}"
+            if variant > 0:
+                coord_text += f"\nv{variant}"
             self.canvas.create_text(px, py,
-                                   text=f"{hex_x},{hex_y}",
+                                   text=coord_text,
                                    font=("Arial", max(6, int(self.hex_size / 3))),
                                    fill='black')
 
