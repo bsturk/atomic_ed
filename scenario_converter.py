@@ -89,6 +89,13 @@ class CrusaderScenarioReader:
         # Text sections are at 128-byte aligned boundaries: 0x80, 0x100, 0x180, etc.
         # Binary data follows after text sections (typically ~0x1000+)
 
+        # First, check if there's data between 0x60 and 0x80 (pre-data section)
+        if self.DATA_START > self.HEADER_SIZE:
+            pre_data = self.data[self.HEADER_SIZE:self.DATA_START]
+            if len(pre_data) > 0 and any(b != 0 for b in pre_data):
+                self.sections['PRE_PTR5'] = pre_data
+                logger.debug(f"PRE_PTR5: 0x{self.HEADER_SIZE:06x}-0x{self.DATA_START:06x} ({len(pre_data)} bytes)")
+
         # Collect all data from 0x80 onwards as one big section
         # We'll treat it as PTR5 to match the expected section naming
         if len(self.data) > self.DATA_START:
@@ -211,6 +218,15 @@ class LegacyScenarioReader:
 
     def _extract_sections(self):
         """Extract data sections from the file"""
+        # First, extract the data between header and PTR5 (if it exists)
+        # This contains important game data like scenario descriptions
+        ptr5 = self.pointers.get('PTR5', 0)
+        if ptr5 > self.HEADER_SIZE:
+            pre_ptr5_data = self.data[self.HEADER_SIZE:ptr5]
+            if len(pre_ptr5_data) > 0:
+                self.sections['PRE_PTR5'] = pre_ptr5_data
+                logger.debug(f"PRE_PTR5: 0x{self.HEADER_SIZE:06x}-0x{ptr5:06x} ({len(pre_ptr5_data)} bytes)")
+
         # Collect non-null pointers (PTR3-PTR8)
         active_ptrs = []
         for name in ['PTR3', 'PTR4', 'PTR5', 'PTR6', 'PTR7', 'PTR8']:
@@ -320,19 +336,26 @@ class DdayScenarioWriter:
         # Build header
         self._build_header()
 
-        # Order sections: PTR5 -> PTR6 -> PTR3 -> PTR4 (typical D-Day order)
+        # Order sections: PRE_PTR5 -> PTR5 -> PTR6 -> PTR3 -> PTR4 (typical D-Day order)
+        # PRE_PTR5 comes first (between header and PTR5) but is not a pointer
         section_order = []
-        for name in ['PTR5', 'PTR6', 'PTR3', 'PTR4', 'PTR7', 'PTR8']:
+        for name in ['PRE_PTR5', 'PTR5', 'PTR6', 'PTR3', 'PTR4', 'PTR7', 'PTR8']:
             if name in self.sections and len(self.sections[name]) > 0:
                 section_order.append(name)
 
         # Calculate pointer offsets
+        # PRE_PTR5 goes right after header, then PTR5 starts after it
         pointers = {}
         current_offset = self.HEADER_SIZE
 
         for name in section_order:
-            pointers[name] = current_offset
-            current_offset += len(self.sections[name])
+            if name == 'PRE_PTR5':
+                # PRE_PTR5 is not a pointer, just add its size
+                current_offset += len(self.sections[name])
+            else:
+                # This is a real pointer (PTR3-PTR8)
+                pointers[name] = current_offset
+                current_offset += len(self.sections[name])
 
         # Update pointers in header
         self._update_pointers(pointers)
@@ -461,7 +484,7 @@ class ScenarioConverter:
 
         # Copy data sections
         for name, data in reader.sections.items():
-            if name in ['PTR3', 'PTR4', 'PTR5', 'PTR6', 'PTR7', 'PTR8']:
+            if name in ['PRE_PTR5', 'PTR3', 'PTR4', 'PTR5', 'PTR6', 'PTR7', 'PTR8']:
                 writer.add_section(name, data)
                 logger.debug(f"Copied {name}: {len(data)} bytes")
 
