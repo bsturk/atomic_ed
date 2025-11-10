@@ -15,12 +15,17 @@ A user-friendly graphical tool to edit sound configuration files for World at Wa
 ### Basic Usage
 
 ```bash
-# Run from game directory
+# Run with auto-detection (searches ./game, script_dir/game, or current dir)
 python3 sound_config_editor.py
 
-# Specify game directory
+# Specify game directory on command line
 python3 sound_config_editor.py --game-dir /path/to/game
+
+# Or just run it and use "Change Directory..." button in the GUI
+python3 sound_config_editor.py
 ```
+
+The GUI now includes a **"Change Directory..."** button at the top that lets you select the folder containing your config files at any time.
 
 ### SYSTEM.SET Tab (Preferences)
 
@@ -46,6 +51,18 @@ Configure hardware settings for both Sound Effects and Music blocks:
 Click **Save Changes** to write the file (creates INVADE.CFG.bak backup).
 
 ## Screenshots
+
+### Main Window
+```
+┌─────────────────────────────────────────────┐
+│ Sound Configuration Editor - D-Day          │
+├─────────────────────────────────────────────┤
+│ Config Directory: /path/to/game             │
+│                        [Change Directory...] │
+├─────────────────────────────────────────────┤
+│ [SYSTEM.SET (Preferences)] [INVADE.CFG]     │
+└─────────────────────────────────────────────┘
+```
 
 ### SYSTEM.SET Tab
 ```
