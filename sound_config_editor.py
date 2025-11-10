@@ -33,9 +33,9 @@ class SystemSetEditor(ttk.Frame):
 
         # File path
         ttk.Label(self, text="File:").grid(row=1, column=0, sticky='w', padx=5)
-        file_label = ttk.Label(self, text=str(self.file_path),
-                              foreground='blue')
-        file_label.grid(row=1, column=1, sticky='w', padx=5)
+        self.file_label = ttk.Label(self, text=str(self.file_path),
+                                    foreground='blue')
+        self.file_label.grid(row=1, column=1, sticky='w', padx=5)
 
         # Separator
         ttk.Separator(self, orient='horizontal').grid(
@@ -93,6 +93,9 @@ class SystemSetEditor(ttk.Frame):
 
     def load_file(self):
         """Load SYSTEM.SET file"""
+        # Update file label
+        self.file_label.config(text=str(self.file_path))
+
         try:
             if not self.file_path.exists():
                 messagebox.showwarning("File Not Found",
@@ -207,9 +210,9 @@ class InvadeCfgEditor(ttk.Frame):
 
         # File path
         ttk.Label(self, text="File:").grid(row=1, column=0, sticky='w', padx=5)
-        file_label = ttk.Label(self, text=str(self.file_path),
-                              foreground='blue')
-        file_label.grid(row=1, column=1, columnspan=3, sticky='w', padx=5)
+        self.file_label = ttk.Label(self, text=str(self.file_path),
+                                    foreground='blue')
+        self.file_label.grid(row=1, column=1, columnspan=3, sticky='w', padx=5)
 
         # Separator
         ttk.Separator(self, orient='horizontal').grid(
@@ -297,6 +300,9 @@ class InvadeCfgEditor(ttk.Frame):
 
     def load_file(self):
         """Load INVADE.CFG file"""
+        # Update file label
+        self.file_label.config(text=str(self.file_path))
+
         try:
             if not self.file_path.exists():
                 messagebox.showwarning("File Not Found",
@@ -462,13 +468,41 @@ class SoundConfigEditor:
 
         # Determine game directory
         if game_dir is None:
-            game_dir = Path(__file__).parent / "game"
+            # Try common locations
+            possible_dirs = [
+                Path.cwd() / "game",
+                Path(__file__).parent / "game",
+                Path.cwd(),
+            ]
+            game_dir = None
+            for pdir in possible_dirs:
+                if pdir.exists():
+                    game_dir = pdir
+                    break
+            if game_dir is None:
+                game_dir = Path.cwd()
         else:
             game_dir = Path(game_dir)
+
+        self.game_dir = game_dir
+
+        # Top toolbar
+        toolbar = ttk.Frame(root)
+        toolbar.pack(fill='x', padx=5, pady=5)
+
+        ttk.Label(toolbar, text="Config Directory:").pack(side='left', padx=5)
+
+        self.dir_label = ttk.Label(toolbar, text=str(game_dir),
+                                   foreground='blue', relief='sunken', padding=3)
+        self.dir_label.pack(side='left', padx=5, fill='x', expand=True)
+
+        ttk.Button(toolbar, text="Change Directory...",
+                  command=self.change_directory).pack(side='left', padx=5)
 
         # Create notebook (tabbed interface)
         notebook = ttk.Notebook(root)
         notebook.pack(fill='both', expand=True, padx=5, pady=5)
+        self.notebook = notebook
 
         # SYSTEM.SET tab
         system_set_path = game_dir / "SYSTEM.SET"
@@ -484,9 +518,8 @@ class SoundConfigEditor:
         status_frame = ttk.Frame(root)
         status_frame.pack(fill='x', side='bottom', padx=5, pady=5)
 
-        ttk.Label(status_frame, text="Game Directory:").pack(side='left')
-        ttk.Label(status_frame, text=str(game_dir),
-                 foreground='blue').pack(side='left', padx=5)
+        ttk.Label(status_frame, text="Ready",
+                 foreground='green').pack(side='left', padx=5)
 
         # Menu bar
         menubar = tk.Menu(root)
@@ -503,6 +536,23 @@ class SoundConfigEditor:
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=self.show_about)
+
+    def change_directory(self):
+        """Change the game directory"""
+        new_dir = filedialog.askdirectory(
+            title="Select Game Directory (containing SYSTEM.SET and INVADE.CFG)",
+            initialdir=self.game_dir
+        )
+        if new_dir:
+            self.game_dir = Path(new_dir)
+            self.dir_label.config(text=str(self.game_dir))
+
+            # Update file paths in editors
+            self.system_set_editor.file_path = self.game_dir / "SYSTEM.SET"
+            self.invade_cfg_editor.file_path = self.game_dir / "INVADE.CFG"
+
+            # Reload files from new directory
+            self.reload_all()
 
     def reload_all(self):
         """Reload all configuration files"""
