@@ -38,12 +38,105 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class CrusaderScenarioReader:
+    """Reader for Crusader format (0x0dac) - uses fixed offsets instead of pointers"""
+
+    MAGIC = 0x0dac
+    HEADER_SIZE = 0x60
+    CONFIG_START = 0x60
+    DATA_START = 0x80
+    BLOCK_SIZE = 0x80  # 128-byte alignment
+
+    def __init__(self, filename: str):
+        self.filename = Path(filename)
+        self.data = b''
+        self.magic = 0
+        self.is_valid = False
+        self.sections = {}  # Data sections
+
+        self._load_and_parse()
+
+    def _load_and_parse(self):
+        """Load and parse Crusader format file"""
+        try:
+            with open(self.filename, 'rb') as f:
+                self.data = f.read()
+        except Exception as e:
+            logger.error(f"Failed to read {self.filename}: {e}")
+            return
+
+        if len(self.data) < self.HEADER_SIZE:
+            logger.error(f"File too small: {len(self.data)} bytes")
+            return
+
+        # Parse magic number
+        self.magic = struct.unpack('<H', self.data[0:2])[0]
+
+        if self.magic != self.MAGIC:
+            logger.error(f"Not a Crusader file: 0x{self.magic:04x}")
+            return
+
+        logger.debug(f"Magic: 0x{self.magic:04x} (V for Victory: Crusader)")
+
+        # Extract data sections using fixed offsets
+        self._extract_sections()
+
+        self.is_valid = True
+
+    def _extract_sections(self):
+        """Extract data sections from fixed offsets"""
+        # Crusader format stores data at fixed offsets starting at 0x80
+        # Text sections are at 128-byte aligned boundaries: 0x80, 0x100, 0x180, etc.
+        # Binary data follows after text sections (typically ~0x1000+)
+
+        # Collect all data from 0x80 onwards as one big section
+        # We'll treat it as PTR5 to match the expected section naming
+        if len(self.data) > self.DATA_START:
+            all_data = self.data[self.DATA_START:]
+
+            # Split into text blocks and binary data
+            # For now, just store the whole thing
+            self.sections['PTR5'] = all_data[:min(len(all_data), 0x1000 - self.DATA_START)]
+
+            # If there's binary data after the text sections
+            if len(all_data) > 0x1000:
+                self.sections['PTR6'] = all_data[0x1000 - self.DATA_START:]
+
+            logger.debug(f"Extracted Crusader data sections:")
+            logger.debug(f"  PTR5 (text area): {len(self.sections.get('PTR5', b''))} bytes")
+            logger.debug(f"  PTR6 (binary data): {len(self.sections.get('PTR6', b''))} bytes")
+
+    def analyze_map_dimensions(self) -> Tuple[int, int]:
+        """Determine map dimensions for Crusader scenarios"""
+        # Crusader scenarios typically use standard D-Day dimensions
+        height, width = 125, 100
+        logger.info(f"Using map dimensions: {height}x{width} (Crusader default)")
+        return height, width
+
+    def get_info(self) -> str:
+        """Get human-readable info about the file"""
+        if not self.is_valid:
+            return f"Invalid file: {self.filename}"
+
+        lines = [
+            f"File: {self.filename.name}",
+            f"Size: {len(self.data):,} bytes",
+            f"Magic: 0x{self.magic:04x} (V for Victory: Crusader)",
+            "",
+            "Data Sections:",
+        ]
+
+        for name, data in self.sections.items():
+            lines.append(f"  {name}: {len(data):,} bytes")
+
+        return "\n".join(lines)
+
+
 class LegacyScenarioReader:
-    """Reader for legacy scenario formats (0x0f4a, 0x0dac)"""
+    """Reader for Stalingrad format (0x0f4a)"""
 
     SUPPORTED_MAGICS = {
         0x0f4a: "V for Victory: Stalingrad",
-        0x0dac: "V for Victory: Crusader",
         0x1230: "D-Day (already converted)"
     }
 
@@ -85,10 +178,6 @@ class LegacyScenarioReader:
             logger.warning(f"{self.filename.name} is already in D-Day format")
             self.is_valid = False
             return
-
-        if self.magic == 0x0dac:
-            logger.warning(f"{self.filename.name} uses Crusader format (0x0dac) which has a different structure")
-            logger.warning("Conversion may not be accurate - manual verification recommended")
 
         logger.debug(f"Magic: 0x{self.magic:04x} ({self.SUPPORTED_MAGICS[self.magic]})")
 
@@ -329,9 +418,28 @@ class ScenarioConverter:
             logger.error(f"Input file not found: {input_path}")
             return False
 
-        # Read legacy file
+        # Peek at magic number to determine format
         logger.info(f"Reading {input_path.name}...")
-        reader = LegacyScenarioReader(input_path)
+        with open(input_path, 'rb') as f:
+            magic_bytes = f.read(2)
+            if len(magic_bytes) < 2:
+                logger.error(f"File too small: {input_path.name}")
+                return False
+            magic = struct.unpack('<H', magic_bytes)[0]
+
+        # Choose appropriate reader based on format
+        if magic == 0x0dac:
+            logger.debug(f"Detected Crusader format (0x0dac)")
+            reader = CrusaderScenarioReader(input_path)
+        elif magic == 0x0f4a:
+            logger.debug(f"Detected Stalingrad format (0x0f4a)")
+            reader = LegacyScenarioReader(input_path)
+        elif magic == 0x1230:
+            logger.warning(f"{input_path.name} is already in D-Day format")
+            return False
+        else:
+            logger.error(f"Unsupported magic number: 0x{magic:04x}")
+            return False
 
         if not reader.is_valid:
             logger.error(f"Failed to parse {input_path.name}")

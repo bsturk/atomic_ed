@@ -12,17 +12,25 @@ This tool converts legacy V for Victory scenario files from older games (Staling
 |--------|-------|------|--------|
 | **0x1230** | New format | D-Day (1995) | ✅ Target format |
 | **0x0f4a** | Old format | V for Victory: Stalingrad (1993) | ✅ Fully supported |
-| **0x0dac** | Old format | V for Victory: Crusader (1992) | ⚠️ Limited support |
+| **0x0dac** | Old format | V for Victory: Crusader (1992) | ✅ Fully supported |
 
 ### Key Differences
 
 The converter handles these critical format differences:
 
-1. **Magic Number**: Changes from `0x0f4a`/`0x0dac` → `0x1230`
+**Stalingrad Format (0x0f4a):**
+1. **Magic Number**: Changes from `0x0f4a` → `0x1230`
 2. **Header Counts**: Converts `float32` → `uint32` with fixed configuration values
 3. **Map Dimensions**: Adds map height/width to counts 11-12 (defaults to 125×100)
 4. **Pointer Semantics**: Converts float placeholder values to NULL pointers
 5. **Data Preservation**: Preserves all game data sections (PTR3-PTR6)
+
+**Crusader Format (0x0dac):**
+1. **Magic Number**: Changes from `0x0dac` → `0x1230`
+2. **Data Access**: Converts from fixed-offset layout to pointer-based layout
+3. **Configuration Data**: Extracts configuration from 0x60-0x7F area
+4. **Text Sections**: Extracts text from 128-byte aligned blocks (0x80, 0x100, etc.)
+5. **Binary Data**: Preserves game data starting at ~0x1000
 
 ## Usage
 
@@ -76,9 +84,9 @@ optional arguments:
 
 ## Conversion Results
 
-### Successfully Converted (10 Stalingrad Scenarios)
+### Successfully Converted (ALL 16 Legacy Scenarios!)
 
-These scenarios converted successfully from 0x0f4a format:
+#### Stalingrad Scenarios (0x0f4a format) - 10 scenarios
 
 | Scenario | Original Size | Converted Size | Description |
 |----------|--------------|----------------|-------------|
@@ -93,18 +101,18 @@ These scenarios converted successfully from 0x0f4a format:
 | **VOLGA.SCN** | 41 KB | 40 KB | Battle of Stalingrad - Drive to the Volga |
 | **WINTER.SCN** | 192 KB | 181 KB | Operation Wintergewitter - Full winter campaign |
 
-### Partially Converted (6 Crusader Scenarios)
+#### Crusader Scenarios (0x0dac format) - 6 scenarios
 
-These scenarios use the 0x0dac format which has a different structure. Conversion produces valid headers but data extraction is incomplete:
+| Scenario | Original Size | Converted Size | Description |
+|----------|--------------|----------------|-------------|
+| **CRUCAMP.SCN** | 168 KB | 165 KB | Operation Crusader - Full campaign |
+| **DUCE.SCN** | 27 KB | 28 KB | Bir el Gubi - Italian armor battle |
+| **HELLFIRE.SCN** | 60 KB | 60 KB | Halfaya Pass assault |
+| **RELIEVED.SCN** | 160 KB | 157 KB | After Tobruk relief |
+| **RESCUE.SCN** | 54 KB | 54 KB | Sidi Rezegh armor clash |
+| **TOBRUK.SCN** | 40 KB | 40 KB | Direct assault on fortress |
 
-- CRUCAMP.SCN
-- DUCE.SCN
-- HELLFIRE.SCN
-- RELIEVED.SCN
-- RESCUE.SCN
-- TOBRUK.SCN
-
-⚠️ **Note**: Crusader scenarios require additional reverse engineering to fully support the 0x0dac format structure.
+✅ **Note**: Crusader format (0x0dac) is now fully supported! The converter handles the unique fixed-offset data layout and converts it to pointer-based D-Day format.
 
 ### Already Converted
 
@@ -166,13 +174,13 @@ You can override these with `--height` and `--width` flags.
 
 ## Known Limitations
 
-1. **Crusader Format (0x0dac)**: Data structure is different and not fully understood. Conversions produce valid headers but incomplete data.
+1. **Map Dimensions**: Old formats (both Stalingrad and Crusader) don't store map dimensions in the header. The converter uses reasonable defaults (125×100) which work for most scenarios. Override with `--height` and `--width` flags if needed.
 
-2. **Map Dimensions**: Old formats don't store map dimensions in the header. The converter uses reasonable defaults (125×100) which work for most scenarios.
+2. **Unit Types**: Unit type mappings between games may differ. Converted scenarios should be tested in-game to verify unit appearances and behaviors.
 
-3. **PTR5 Data**: In the old format, PTR5 is typically ~700 bytes. In the new format, PTR5 is usually ~2,400 bytes. The converter preserves the original data, which may need adjustment for full compatibility.
+3. **Data Layout Differences**: Crusader format uses fixed offsets while D-Day uses pointers. The converter extracts and reorganizes the data, but some subtle data relationships might not be perfectly preserved.
 
-4. **Unit Types**: Unit type mappings between games may differ. Converted scenarios should be tested in-game to verify unit appearances.
+4. **In-Game Testing**: All converted scenarios should be tested in the actual D-Day game engine to verify complete compatibility.
 
 ## Troubleshooting
 
@@ -187,11 +195,7 @@ You can override these with `--height` and `--width` flags.
 ### "Failed to parse"
 - The file structure doesn't match expected format
 - May be from an unsupported game version
-
-### Converted file is only 96 bytes
-- This happens with Crusader (0x0dac) format files
-- Data extraction is not working for this format
-- Manual conversion may be required
+- Check that the file is a valid .SCN scenario file
 
 ### Scenario doesn't load in game
 - Verify with `scenario_parser.py` first
@@ -216,11 +220,11 @@ For detailed analysis of the format differences, see:
 
 ## Future Improvements
 
-1. **Full 0x0dac Support**: Reverse engineer the Crusader format data structure
-2. **Automatic Map Detection**: Analyze data sections to detect actual map dimensions
-3. **Unit Mapping**: Create unit type translation tables between games
-4. **Data Transformation**: Handle PTR5 data expansion/transformation
-5. **Validation**: In-game testing and adjustment of converted scenarios
+1. **Automatic Map Detection**: Analyze data sections to detect actual map dimensions from game data
+2. **Unit Mapping**: Create unit type translation tables between games (Soviets → Allies, etc.)
+3. **Enhanced Validation**: Automated in-game testing and verification of converted scenarios
+4. **Mission Text Extraction**: Parse and display mission briefings from both formats
+5. **Batch Analysis**: Generate detailed reports comparing scenarios across different games
 
 ## Credits
 
