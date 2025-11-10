@@ -89,12 +89,12 @@ class CrusaderScenarioReader:
         # Text sections are at 128-byte aligned boundaries: 0x80, 0x100, 0x180, etc.
         # Binary data follows after text sections (typically ~0x1000+)
 
-        # First, check if there's data between 0x60 and 0x80 (pre-data section)
-        if self.DATA_START > self.HEADER_SIZE:
-            pre_data = self.data[self.HEADER_SIZE:self.DATA_START]
-            if len(pre_data) > 0 and any(b != 0 for b in pre_data):
-                self.sections['PRE_PTR5'] = pre_data
-                logger.debug(f"PRE_PTR5: 0x{self.HEADER_SIZE:06x}-0x{self.DATA_START:06x} ({len(pre_data)} bytes)")
+        # NOTE: Crusader format has configuration data at 0x60-0x7F that must NOT be
+        # preserved in D-Day format. D-Day format requires 0x60-0x7F to be all zeros.
+        # If we preserve this data, it causes game settings corruption (e.g., no sound).
+        # Therefore, we create a zero-filled PRE_PTR5 section instead.
+        self.sections['PRE_PTR5'] = bytes(32)  # 32 zero bytes for 0x60-0x7F
+        logger.debug("PRE_PTR5: Created 32 zero bytes (0x60-0x7F)")
 
         # Collect all data from 0x80 onwards as one big section
         # We'll treat it as PTR5 to match the expected section naming
