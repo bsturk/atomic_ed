@@ -113,6 +113,20 @@ class CrusaderScenarioReader:
             logger.debug(f"  PTR5 (text area): {len(self.sections.get('PTR5', b''))} bytes")
             logger.debug(f"  PTR6 (binary data): {len(self.sections.get('PTR6', b''))} bytes")
 
+        # NOTE: Crusader format doesn't have PTR3/PTR4 data in the file
+        # Create minimal empty PTR3 and PTR4 sections to avoid NULL pointer crashes
+        # Based on analysis, minimal PTR3 can be ~16-28 bytes, PTR4 can be minimal too
+        # Using a simple zeroed structure
+        if 'PTR3' not in self.sections:
+            # Create minimal 16-byte PTR3 (smallest seen in COUNTER.SCN)
+            self.sections['PTR3'] = bytes(16)
+            logger.debug("Created minimal PTR3 section (16 bytes)")
+
+        if 'PTR4' not in self.sections:
+            # Create minimal PTR4 - just a few bytes to avoid NULL pointer
+            self.sections['PTR4'] = bytes(16)
+            logger.debug("Created minimal PTR4 section (16 bytes)")
+
     def analyze_map_dimensions(self) -> Tuple[int, int]:
         """Determine map dimensions for Crusader scenarios"""
         # Crusader scenarios typically use standard D-Day dimensions
