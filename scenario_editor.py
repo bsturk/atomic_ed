@@ -1723,6 +1723,7 @@ class ImprovedScenarioEditor:
         terrain_canvas.create_window((0, 0), window=terrain_frame, anchor=tk.NW)
 
         # Terrain type definitions with descriptions
+        # CORRECTED to match manual + sprite sheet analysis (2025-11-11)
         terrain_info = [
             (0, 'Grass/Field', 'Open grassland and fields. Easy movement for all unit types.'),
             (1, 'Water/Ocean', 'Deep water and ocean. Impassable for ground units.'),
@@ -1740,7 +1741,7 @@ class ImprovedScenarioEditor:
             (13, 'Village', 'Small villages and hamlets. Minor defensive bonuses.'),
             (14, 'Farm', 'Farmland and agricultural areas. Open terrain with buildings.'),
             (15, 'Canal', 'Canals and waterways. Water obstacles.'),
-            (16, 'Unknown', 'Unidentified terrain type.'),
+            (16, 'Clear', 'Open clear terrain. Grass variant, easy movement.'),
         ]
 
         # Get terrain colors from MapViewer

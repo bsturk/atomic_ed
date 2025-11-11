@@ -100,6 +100,7 @@ def extract_terrain_from_file(scenario_path):
 
 
 # Terrain type information
+# CORRECTED to match manual + sprite sheet analysis (2025-11-11)
 TERRAIN_TYPES = {
     0: 'Grass/Field',
     1: 'Water/Ocean',
@@ -117,7 +118,7 @@ TERRAIN_TYPES = {
     13: 'Village',
     14: 'Farm',
     15: 'Canal',
-    16: 'Unknown',
+    16: 'Clear',  # Changed from 'Unknown'
 }
 
 
