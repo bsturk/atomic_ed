@@ -10,7 +10,10 @@ This script investigates terrain data extraction problems by:
 4. Comparing with PTR section data
 """
 
-from scenario_parser import DdayScenario
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.scenario_parser import DdayScenario
 from collections import Counter
 import struct
 

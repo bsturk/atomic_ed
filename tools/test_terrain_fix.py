@@ -7,9 +7,11 @@ Verifies that the coordinate fix produces realistic terrain across all scenarios
 """
 
 import sys
+import os
 from pathlib import Path
 from collections import Counter
-from terrain_reader import extract_terrain_from_file
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.terrain_reader import extract_terrain_from_file
 
 
 def analyze_clustering(terrain_map, width=125, height=100):

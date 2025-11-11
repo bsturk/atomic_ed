@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Test that hex tiles have actual colors (not black)"""
 
-from hex_tile_loader import load_hex_tiles
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.hex_tile_loader import load_hex_tiles
 
 tiles = load_hex_tiles()
 if not tiles:

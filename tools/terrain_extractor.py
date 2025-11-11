@@ -9,9 +9,11 @@ Format: 4-bit packed nibbles at offset 0 in PTR4
 
 import struct
 import sys
+import os
 from pathlib import Path
 from collections import Counter
-from scenario_parser import DdayScenario
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.scenario_parser import DdayScenario
 
 
 class TerrainExtractor:

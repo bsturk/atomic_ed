@@ -6,7 +6,10 @@ Example: Using D-Day Terrain Extraction
 This script demonstrates practical uses of the terrain extraction functionality.
 """
 
-from terrain_reader import extract_terrain_from_file, TERRAIN_TYPES
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.terrain_reader import extract_terrain_from_file, TERRAIN_TYPES
 from collections import Counter
 
 

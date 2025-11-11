@@ -5,9 +5,11 @@ Extract mission briefings, locations, units, and other metadata
 """
 
 import sys
+import os
 import struct
 from pathlib import Path
-from scenario_parser import DdayScenario
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.scenario_parser import DdayScenario
 
 # Scenarios unique to SCENARIO-all (not in SCENARIO)
 UNIQUE_SCENARIOS = [

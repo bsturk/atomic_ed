@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-V for Victory Scenario Format Converter
+Scenario Format Converter
 ========================================
 
-Converts legacy scenario files from V for Victory: Stalingrad (0x0f4a)
-and V for Victory: Crusader (0x0dac) formats to the newer D-Day format (0x1230).
+Converts legacy scenario files from World at War: Stalingrad (0x0f4a)
+and World at War: Crusader (0x0dac) formats to the newer D-Day format (0x1230).
 
 The key differences:
 1. Magic number: 0x0f4a/0x0dac → 0x1230
@@ -30,22 +30,18 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import logging
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s: %(message)s'
-)
+logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class CrusaderScenarioReader:
     """Reader for Crusader format (0x0dac) - uses fixed offsets instead of pointers"""
 
-    MAGIC = 0x0dac
-    HEADER_SIZE = 0x60
+    MAGIC        = 0x0dac
+    HEADER_SIZE  = 0x60
     CONFIG_START = 0x60
-    DATA_START = 0x80
-    BLOCK_SIZE = 0x80  # 128-byte alignment
+    DATA_START   = 0x80
+    BLOCK_SIZE   = 0x80  # 128-byte alignment
 
     def __init__(self, filename: str):
         self.filename = Path(filename)
@@ -76,7 +72,7 @@ class CrusaderScenarioReader:
             logger.error(f"Not a Crusader file: 0x{self.magic:04x}")
             return
 
-        logger.debug(f"Magic: 0x{self.magic:04x} (V for Victory: Crusader)")
+        logger.debug(f"Magic: 0x{self.magic:04x} (World at War: Crusader)")
 
         # Extract data sections using fixed offsets
         self._extract_sections()
@@ -142,7 +138,7 @@ class CrusaderScenarioReader:
         lines = [
             f"File: {self.filename.name}",
             f"Size: {len(self.data):,} bytes",
-            f"Magic: 0x{self.magic:04x} (V for Victory: Crusader)",
+            f"Magic: 0x{self.magic:04x} (World at War: Crusader)",
             "",
             "Data Sections:",
         ]
@@ -157,7 +153,7 @@ class LegacyScenarioReader:
     """Reader for Stalingrad format (0x0f4a)"""
 
     SUPPORTED_MAGICS = {
-        0x0f4a: "V for Victory: Stalingrad",
+        0x0f4a: "World at War: Stalingrad",
         0x1230: "D-Day (already converted)"
     }
 
@@ -584,7 +580,7 @@ class ScenarioConverter:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Convert V for Victory scenario files to D-Day format",
+        description="Convert World at War scenario files to D-Day format",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

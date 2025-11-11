@@ -7,7 +7,9 @@ Shows the terrain map before and after the coordinate fix.
 """
 
 import sys
-from scenario_parser import DdayScenario
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.scenario_parser import DdayScenario
 
 
 def visualize_terrain(terrain_map, width, height, title):

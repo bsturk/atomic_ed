@@ -1,0 +1,412 @@
+================================================================================
+D-DAY SCENARIO FORMAT - PTR6 AI/GAME PARAMETERS SPECIFICATION
+================================================================================
+Date: November 10, 2025
+Status: PARTIALLY DECODED - Structure identified, semantics partially understood
+Game: D-Day (base game scenarios under game/SCENARIO/)
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+PTR6 is a specialized binary data section containing AI parameters, game state
+data, and event triggers. The section uses a variable-length record format
+where each record is prefixed with a 16-bit length field.
+
+Key Findings:
+  - Variable-length record format: [length_word][data...]
+  - 230+ records per large scenario (CAMPAIGN.SCN)
+  - Common record sizes: 1 byte (flags), 449 bytes (sparse arrays), variable
+  - Low entropy (4.5 bits/byte) indicates structured, repetitive data
+  - Contains coordinate data, turn numbers, and state flags
+  - NOT compressed or encrypted
+
+================================================================================
+SECTION OVERVIEW
+================================================================================
+
+PTR6 Location in File:
+  - Pointer at offset 0x54 in scenario header
+  - Size varies dramatically by scenario (1.4 KB to 85 KB)
+  - Follows PTR5 section, precedes PTR3 section (in file order)
+
+Section Sizes Across Scenarios:
+  Scenario         PTR6 Size    ASCII Content
+  ---------------  -----------  -------------
+  STLO.SCN           1,458 B      2.8%
+  COBRA.SCN          5,080 B     21.9%
+  BRADLEY.SCN       27,436 B      7.9%
+  COUNTER.SCN       28,747 B      7.3%
+  CAMPAIGN.SCN      72,753 B      3.8%  <-- Primary analysis target
+  OMAHA.SCN         80,766 B      8.8%
+  UTAH.SCN          85,849 B      8.0%
+
+Characteristics:
+  - Shannon entropy: ~4.5 bits/byte (low, indicates structured data)
+  - NOT compressed (would be ~7.5+ bits/byte)
+  - NOT encrypted (random-looking patterns but low entropy)
+  - Contains embedded coordinate pairs within map bounds
+  - Many runs of repeating values (0x0001, 0x01C1)
+
+================================================================================
+RECORD FORMAT
+================================================================================
+
+PTR6 uses a variable-length record structure:
+
+Structure:
+  [uint16_le length][data of 'length' bytes][uint16_le length][data...]...
+
+Example:
+  Offset  Bytes                         Interpretation
+  ------  ----------------------------  ------------------------------------
+  0x0000  00 00                         Length = 0 (padding/skip)
+  0x0002  10 00                         Length = 16
+  0x0004  09 00 48 00 00 00 cc 00 ...  16 bytes of data
+  0x0014  56 01                         Length = 342
+  0x0016  b6 05 00 00 6b 00 ...        342 bytes of data
+  ...
+
+Special Cases:
+  - Length = 0: Padding/separator, skip zeros until next non-zero
+  - Length = 1: Boolean flag or state byte
+  - Length = 449 (0x01C1): Common sparse array structure
+  - Length > 2048: Invalid, likely misaligned read
+
+Record Count Statistics (CAMPAIGN.SCN):
+  Total records: 230
+  Padding segments: Variable
+  Data records: 230
+
+Common Record Lengths (CAMPAIGN.SCN):
+  Length   Count   Percentage  Interpretation
+  ------   -----   ----------  ---------------------------------------
+  1        91      39.6%       Boolean flags / state bytes
+  449      86      37.4%       Sparse state arrays (see below)
+  16       3       1.3%        Small parameter blocks
+  12       3       1.3%        Small parameter blocks
+  32       3       1.3%        Medium parameter blocks
+  Other    44      19.1%       Variable-size data structures
+
+================================================================================
+449-BYTE SPARSE ARRAY RECORDS
+================================================================================
+
+The most common record type (86 occurrences in OMAHA.SCN) is exactly 449 bytes.
+
+Structure:
+  - 449 bytes total (0x01C1)
+  - Organized as array of 16-bit little-endian values
+  - Mostly filled with repeating pattern: [0x0000][0x01C1]
+  - Some positions have different values
+
+Pattern Analysis:
+  Hex:    00 00 c1 01 00 00 c1 01 00 00 c1 01 00 00 c1 01 ...
+  Words:     0   449     0   449     0   449     0   449 ...
+
+The value 449 (0x01C1) appears to be self-referential - possibly a type ID
+or uninitialized marker. Non-449 values represent actual data.
+
+Variations Observed:
+  - [0x5000][0x09C1] = [20480][2497] - Start of OMAHA's first record
+  - [0x0000][0x0100] = [0][256] - Seen in some positions
+  - [0x4000][0x01C1] = [16384][449] - Seen in some positions
+  - [0x1000][0x03C1] = [4096][961] - Seen in some positions
+
+Hypothesis: These are sparse state arrays where:
+  - First word = value/flag
+  - Second word = record type or next pointer
+  - Most entries are "empty" (marked with 449)
+  - Array might represent: map tiles, AI decision nodes, or unit tracking
+
+Possible interpretations:
+  1. Per-hex tile AI data (but 449 != 125*100 map size)
+  2. Per-unit AI state (449 could be max units + padding)
+  3. Per-turn event triggers (449 turns would be very long scenario)
+  4. Linked list or tree structure (second word as next pointer)
+
+================================================================================
+COORDINATE DATA IN RECORDS
+================================================================================
+
+Many records contain coordinate pairs (x, y) within map bounds:
+
+Method: Scan for consecutive 16-bit pairs where:
+  - First value (X) <= 125
+  - Second value (Y) <= 100
+
+Results (CAMPAIGN.SCN first 4KB):
+  - 420 potential coordinate pairs found
+  - Examples: (16, 9), (9, 72), (107, 13), (13, 13), (1, 1)...
+  - Many repeating (1, 1) - possibly default/unset coordinates
+
+Usage Speculation:
+  - AI waypoints or patrol paths
+  - Reinforcement entry points
+  - Objective locations
+  - Unit formation positions
+  - Pathfinding nodes
+
+================================================================================
+SMALL VALUE RECORDS
+================================================================================
+
+Many records contain only small integer values (< 256):
+
+Common Values Found:
+  1, 9, 12, 13, 16, 72, 204, 342, 405, 486, 836...
+
+Possible Interpretations:
+  - Turn numbers (1-100+ typical scenario length)
+  - Unit counts (number of units in force)
+  - Victory point values
+  - Resource amounts
+  - Delay/timer values
+  - Probability percentages (0-100)
+
+Patterns:
+  - Values like 1, 9, 12, 13, 16 appear frequently
+  - 12 and 13 might be month values (June = 6, but encoded differently?)
+  - 16 appears often (hex grid related? 16x16 sectors?)
+
+================================================================================
+REPEATING BYTE SEQUENCES
+================================================================================
+
+Analysis of first 4KB shows high-frequency patterns:
+
+2-Byte Sequences (as 16-bit LE values):
+  Value    Count   Hex      Interpretation
+  -----    -----   ----     --------------
+  1        328     01 00    Boolean true / enable flag
+  12       80      0c 00    Possibly month or turn increment
+  16       56      10 00    Possibly grid sector size
+  13       49      0d 00    Possibly month or turn increment
+  72       47      48 00    Unknown significance
+  144      20      90 00    Possibly grid calculation (12*12)
+
+4-Byte Sequences (as pairs of 16-bit values):
+  Pattern          Count   Interpretation
+  -------------    -----   ----------------------------------
+  [1][1]           134     Pair of flags or coordinates
+  [0][12]          13      Padding + value
+  [12][0]          12      Value + padding
+  [0][72]          10      Padding + value
+  [0][16]          9       Padding + value
+
+8-Byte Sequences:
+  Pattern                      Count   Interpretation
+  -------------------------    -----   ------------------------
+  [1][1][1][1]                 61      Run of four flags/markers
+  [0][0][0][1][1]              3       Zero padding + flags
+
+These patterns suggest:
+  - Flag/state arrays with mostly "true" (1) values
+  - Sparse data with many zero-padded entries
+  - Grid-based calculations (12, 16, 144)
+  - Turn-based or temporal data (12, 13 months?)
+
+================================================================================
+COMMAND BYTE FREQUENCY
+================================================================================
+
+When interpreting PTR6 as command-parameter sequences, the most common
+first bytes are:
+
+Byte   Count   Percentage  Possible Meaning
+----   -----   ----------  ----------------------------------------
+0x00   692     29.4%       No-op / padding / end marker
+0x01   281     11.9%       Set flag / enable
+0x0C   77      3.3%        Value 12 command
+0x02   70      3.0%        Set/clear command
+0x10   59      2.5%        Value 16 command
+0x20   56      2.4%        Bit 5 flag
+0x48   52      2.2%        Value 72 command
+0x40   51      2.2%        Bit 6 flag
+0x90   24      1.0%        Value 144 command
+
+Note: This is speculative - PTR6 might not be command-based at all,
+but rather pure data arrays.
+
+================================================================================
+HEADER ANALYSIS
+================================================================================
+
+First 64 bytes vary significantly across scenarios, suggesting no fixed header:
+
+CAMPAIGN.SCN:
+  0x00: 0, 16, 9, 72, 0, 204, 1402, 1443, 1468, 1460, 342, 1462...
+
+OMAHA.SCN:
+  0x00: 20480, 2497, 20480, 449, 0, 449, 0, 449, 0, 449...
+
+BRADLEY.SCN:
+  0x00: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0... (mostly zeros)
+
+Observation: No consistent header structure across scenarios.
+Each scenario likely has scenario-specific AI configuration.
+
+================================================================================
+CROSS-SCENARIO COMPARISON
+================================================================================
+
+Analysis shows scenarios with complex AI (CAMPAIGN, OMAHA, UTAH) have large
+PTR6 sections, while simpler scenarios (BRADLEY, STLO) have smaller or
+mostly-zero PTR6 data.
+
+Correlation with Scenario Complexity:
+  CAMPAIGN (72 KB): Large campaign with many turns, complex AI
+  OMAHA (80 KB): D-Day landing, complex multi-phase battle
+  UTAH (85 KB): D-Day landing, similar complexity to OMAHA
+  COUNTER (28 KB): Medium scenario
+  BRADLEY (27 KB): Medium scenario
+  COBRA (5 KB): Smaller, focused scenario
+  STLO (1.4 KB): Small scenario
+
+This suggests PTR6 size scales with:
+  - AI sophistication
+  - Scenario duration (number of turns)
+  - Number of AI-controlled units
+  - Number of event triggers/reinforcements
+
+================================================================================
+SEMANTIC INTERPRETATION (SPECULATIVE)
+================================================================================
+
+Based on all analysis, PTR6 likely contains:
+
+1. **AI Behavior Scripts** (Variable-length records)
+   - When to attack/defend
+   - Target priority lists
+   - Formation preferences
+   - Retreat conditions
+
+2. **Reinforcement Schedules** (Small value records with coordinates)
+   - Turn number for arrival
+   - Entry hex coordinates
+   - Unit IDs to deploy
+
+3. **Event Triggers** (Coordinate + value pairs)
+   - Victory condition checks
+   - Scenario progression gates
+   - Special events (air strikes, etc.)
+
+4. **Per-Hex AI Data** (449-byte sparse arrays)
+   - Defensive priority
+   - Pathfinding costs
+   - Tactical importance
+   - Control status
+
+5. **Global Game State** (Single-byte flags)
+   - AI difficulty settings
+   - Feature enables/disables
+   - Victory condition flags
+
+================================================================================
+LIMITATIONS & UNKNOWNS
+================================================================================
+
+What We Don't Know:
+  - Exact semantic meaning of most values
+  - Why 449 bytes specifically for sparse arrays
+  - How game code interprets these records
+  - Relationship between PTR6 and other sections
+  - Format evolution across game versions
+
+What We Cannot Determine Without Disassembly:
+  - Exact record type IDs
+  - Field meanings within records
+  - Validation rules
+  - Default values
+  - Backward compatibility
+
+Further Research Needed:
+  - Reverse engineer game's PTR6 loading code
+  - Test modifications and observe in-game effects
+  - Compare with similar games from same developer
+  - Find debug symbols or development documentation
+
+================================================================================
+PRACTICAL IMPLICATIONS
+================================================================================
+
+For Scenario Modders:
+  - PTR6 can likely be left as-is for simple edits
+  - Modifying unit positions/names in PTR4 shouldn't affect PTR6
+  - Creating new scenarios may require generating valid PTR6 data
+  - Copying PTR6 from similar scenarios might work
+
+For Tool Developers:
+  - Parser should handle variable-length records
+  - Expect 1-byte and 449-byte records most commonly
+  - Validate length fields before reading
+  - Handle zero-padding gracefully
+
+For Game Analysis:
+  - PTR6 is key to understanding AI behavior
+  - Comparing PTR6 across difficulty levels could reveal AI scaling
+  - Empty/minimal PTR6 might disable AI features
+
+================================================================================
+RELATED DOCUMENTATION
+================================================================================
+
+- SCN_FORMAT_QUICK_REFERENCE.txt: Overall scenario file format
+- UNIT_SIDE_ALLEGIANCE_FORMAT.txt: Unit side determination
+- UNIT_POSITION_OFFMAP_FORMAT.txt: Off-map unit detection
+- UNIT_PARSING_LOCATION_MARKERS.txt: Location markers vs units
+
+================================================================================
+FILES CREATED
+================================================================================
+
+Analysis Tools:
+  - decode_ptr6_deep.py: Initial structure analysis
+  - analyze_ptr6_structure.py: Entropy and pattern analysis
+  - parse_ptr6_records.py: Variable-length record parser
+  - analyze_449byte_records.py: Focused on common record type
+
+Documentation:
+  - PTR6_AI_PARAMETERS_FORMAT.txt: This file
+
+================================================================================
+FUTURE WORK
+================================================================================
+
+To fully decode PTR6:
+  1. Disassemble game's scenario loading code
+  2. Find PTR6 access patterns in game logic
+  3. Modify PTR6 data and test in-game effects
+  4. Compare with other Atomic Games titles
+  5. Search for development tools or debug builds
+
+To create PTR6 editor:
+  1. Implement robust variable-length record parser
+  2. Create record type detection heuristics
+  3. Build UI for common record types (coordinates, flags)
+  4. Add validation for record integrity
+  5. Enable export/import for AI configuration
+
+To understand AI behavior:
+  1. Correlate PTR6 data with observed AI actions
+  2. Compare aggressive vs defensive scenarios
+  3. Analyze reinforcement timing vs PTR6 values
+  4. Test AI with modified PTR6 data
+
+================================================================================
+CONCLUSION
+================================================================================
+
+PTR6 is a sophisticated AI/game parameter system using variable-length records.
+While we've successfully identified the structural format, the semantic meaning
+of most data remains speculative. The section definitely contains AI-related
+data based on:
+  - Correlation with scenario complexity
+  - Coordinate data for waypoints/objectives
+  - Turn-like numeric values
+  - Flag arrays for state tracking
+
+Full understanding requires reverse engineering the game executable, but the
+structural decode is complete and enables safe parsing and basic manipulation.
+
+================================================================================

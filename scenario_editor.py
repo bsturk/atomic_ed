@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-D-Day Scenario Editor - Consolidated Edition
+D-Day Scenario Editor
 =============================================
 
 A comprehensive scenario editor for D-Day scenarios with both high-level editing
@@ -30,9 +30,9 @@ import json
 import os
 from datetime import datetime
 from PIL import Image, ImageTk
-from scenario_parser import DdayScenario
-from terrain_reader import extract_terrain_from_scenario
-from hex_tile_loader import load_hex_tiles, HexTileLoader
+from lib.scenario_parser import DdayScenario
+from lib.terrain_reader import extract_terrain_from_scenario
+from lib.hex_tile_loader import load_hex_tiles, HexTileLoader
 
 
 class EnhancedUnitParser:
@@ -158,9 +158,20 @@ class EnhancedUnitParser:
             if not unit_name or len(unit_name) < 4:
                 continue
 
-            # Reject strings with too many special characters
-            special_count = sum(1 for c in unit_name if c in '!@#$%^&*()+=[]{}|\\<>?/~`')
-            if special_count > 2:  # Allow some dashes/spaces but not garbage
+            # Skip location/objective markers (pattern: short string like "V9" followed by another string)
+            # These appear as: "V9\x00C\x00Carentan\x00" where V9 is a 2-char marker
+            if len(unit_name) == 2 or len(unit_name) == 3:
+                # Check if there's another null-terminated string immediately after
+                next_offset = match.end()
+                if next_offset + 10 < len(data):
+                    # Look for pattern: [1 char][null][readable string]
+                    if data[next_offset] < 0x80 and next_offset + 2 < len(data) and data[next_offset + 1] == 0:
+                        # This looks like a location marker, skip it
+                        continue
+
+            # Reject strings with invalid characters that never appear in real unit names
+            invalid_chars = '!@#$%^&*+=[]{}|\\<>?/~`"\';'
+            if any(c in invalid_chars for c in unit_name):
                 continue
 
             # Must start with alphanumeric
@@ -187,7 +198,8 @@ class EnhancedUnitParser:
 
             military_terms = ['Corps', 'Infantry', 'Airborne', 'Division', 'FJ',
                              'Schnelle', 'Panzer', 'Armor', 'Regiment', 'Battalion',
-                             'Brigade', 'Artillery', 'Cavalry', 'Recon', 'Engineer']
+                             'Brigade', 'Artillery', 'Cavalry', 'Recon', 'Engineer',
+                             'Korps', 'Pz', 'Lehr']
             has_military = any(term in unit_name for term in military_terms)
 
             # Common unit naming patterns
@@ -200,6 +212,25 @@ class EnhancedUnitParser:
             has_ordinal = bool(re.search(ordinal_pattern, unit_name))
 
             if has_number or has_roman or has_military or matches_pattern or has_ordinal:
+                # Additional checks: Skip if the unit type byte looks like ASCII text
+                # (indicates it's narrative text, not a unit record)
+                if match.start() >= 64:
+                    pre_check = data[match.start()-64:match.start()]
+                    if len(pre_check) >= 27:
+                        type_byte = pre_check[-27]
+                        # If type byte is lowercase letter, it's probably narrative
+                        if 0x61 <= type_byte <= 0x7a:  # lowercase a-z
+                            continue
+                        # If type byte is > 0x80, probably garbage/binary data
+                        if type_byte > 0x80:
+                            continue
+
+                    # Additional sanity check: Count how many bytes in the pre-data look like garbage
+                    # Real unit records have mostly low values and structure
+                    high_bytes = sum(1 for b in pre_check[-32:] if b > 0x7F)
+                    if high_bytes > 15:  # More than half are high bytes = garbage
+                        continue
+
                 # Get surrounding binary context for stats
                 context_start = max(0, match.start() - 32)
                 context_end = min(len(data), match.end() + 32)
@@ -218,6 +249,7 @@ class EnhancedUnitParser:
                     # Unit type is at offset -27 (27 bytes before name)
                     # Strength is a 16-bit value at offset -64 (64 bytes before name)
                     # Coordinates are at offset -58 (X) and -56 (Y)
+                    # Side indicator is at offset -30 and -29 (both bytes)
                     pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
@@ -232,35 +264,35 @@ class EnhancedUnitParser:
                             strength = 0
 
                     # Extract coordinates from offset -58 (X) and -56 (Y)
+                    # Special value 0xFFFF (65535) indicates off-map/reinforcement units
                     if len(pre_data) >= 58:
                         x = struct.unpack('<H', pre_data[-58:-56])[0]
                     if len(pre_data) >= 56:
                         y = struct.unpack('<H', pre_data[-56:-54])[0]
 
+                    # Check for off-map marker (0xFFFF = 65535)
+                    if x == 0xFFFF or y == 0xFFFF:
+                        # This is a reinforcement/off-map unit
+                        x = -1  # Use -1 to indicate off-map
+                        y = -1
                     # Validate coordinates (D-Day map is 125x100)
-                    if x > 125 or y > 100:
+                    elif x > 125 or y > 100:
                         x = 0
                         y = 0
 
-                # Determine side based on naming patterns
-                german_terms = ['Panzer', 'Grenadier', 'Ost', 'FJ', 'Flak', 'Sturm',
-                               'Jager', 'Kampf', 'Schnelle', 'Korps', 'Luftwaffe', 'Festung']
-                is_german = any(term in unit_name for term in german_terms)
+                    # Determine side from binary data at offset -30 and -29
+                    # Allied units: both bytes = 0x00
+                    # Axis units: both bytes = 0x01
+                    if len(pre_data) >= 30:
+                        side_byte_30 = pre_data[-30]
+                        side_byte_29 = pre_data[-29]
 
-                # Check for numbered US divisions/corps
-                us_pattern = r'\d+(st|nd|rd|th)\s+(Infantry|Airborne|Armored|Cavalry)'
-                is_us = bool(re.search(us_pattern, unit_name))
-
-                # VII Corps, VIII Corps style
-                us_corps = bool(re.search(r'(VII|VIII|V|XIX)\s+Corps', unit_name))
-
-                if is_german:
-                    side = 'Axis'
-                elif is_us or us_corps:
-                    side = 'Allied'
-                elif has_military:
-                    # Most military terms without German identifiers are Allied in D-Day scenarios
-                    side = 'Allied'
+                        if side_byte_30 == 0 and side_byte_29 == 0:
+                            side = 'Allied'
+                        elif side_byte_30 == 1 and side_byte_29 == 1:
+                            side = 'Axis'
+                        else:
+                            side = 'Unknown'
 
                 units.append({
                     'index': unit_index,
@@ -798,7 +830,7 @@ class MapViewer(ttk.Frame):
             hex_x = unit.get('x', 0)
             hex_y = unit.get('y', 0)
 
-            # Only draw units with valid coordinates
+            # Only draw units with valid coordinates (skip off-map units with x=-1 or y=-1)
             if hex_x > 0 and hex_y > 0 and hex_x < self.map_width and hex_y < self.map_height:
                 # Determine unit color based on side
                 side = unit.get('side', 'Unknown')
@@ -1030,7 +1062,7 @@ class UnitPropertiesEditor(ttk.Frame):
         ai_header_frame = ttk.Frame(form_frame)
         ai_header_frame.grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
 
-        ai_label = ttk.Label(ai_header_frame, text="AI Behavior (Scriptable)",
+        ai_label = ttk.Label(ai_header_frame, text="AI Behavior Flags (Bit Field)",
                             font=("TkDefaultFont", 9, "bold"))
         ai_label.pack(side=tk.LEFT)
 
@@ -1039,51 +1071,68 @@ class UnitPropertiesEditor(ttk.Frame):
                              command=self._show_behavior_help)
         info_btn.pack(side=tk.LEFT, padx=5)
 
-        # AI Behavior State
-        ttk.Label(form_frame, text="Behavior:").grid(row=8, column=0, sticky=tk.W, pady=3)
-        self.behavior_combo = ttk.Combobox(form_frame, width=28, state='readonly',
-                                          values=[
-                                              'Idle/Ready',
-                                              'Waiting/Defending',
-                                              'Active/Moving',
-                                              'Executing Order',
-                                              'Advance (Offensive)',
-                                              'Defend If Attacked',
-                                              'Retreat If Attacked',
-                                              'Hold At All Costs'
-                                          ])
-        self.behavior_combo.grid(row=8, column=1, sticky=tk.W, pady=3, padx=5)
-        self.behavior_combo.current(0)
-        self.behavior_combo.bind('<<ComboboxSelected>>', self._on_behavior_changed)
-
-        # Behavior Byte (read-only hex display)
-        ttk.Label(form_frame, text="Behavior Byte:").grid(row=9, column=0, sticky=tk.W, pady=3)
+        # Behavior Byte (hex display with live update)
+        ttk.Label(form_frame, text="Behavior Byte:").grid(row=8, column=0, sticky=tk.W, pady=3)
         self.behavior_byte_var = tk.StringVar(value="0x00")
-        self.behavior_byte_entry = ttk.Entry(form_frame, width=10, state='readonly',
-                                             textvariable=self.behavior_byte_var)
-        self.behavior_byte_entry.grid(row=9, column=1, sticky=tk.W, pady=3, padx=5)
+        behavior_display_frame = ttk.Frame(form_frame)
+        behavior_display_frame.grid(row=8, column=1, sticky=tk.W, pady=3, padx=5)
 
-        # Behavior description
-        ttk.Label(form_frame, text="Description:").grid(row=10, column=0, sticky=tk.NW, pady=3)
-        self.behavior_desc_label = ttk.Label(form_frame, text="",
-                                             wraplength=250, justify=tk.LEFT,
-                                             foreground='#555555')
-        self.behavior_desc_label.grid(row=10, column=1, sticky=tk.W, pady=3, padx=5)
+        self.behavior_byte_entry = ttk.Entry(behavior_display_frame, width=10, state='readonly',
+                                             textvariable=self.behavior_byte_var,
+                                             font=("Courier", 10, "bold"))
+        self.behavior_byte_entry.pack(side=tk.LEFT)
 
-        # Initialize behavior descriptions
-        self.behavior_descriptions = {
-            'Idle/Ready': 'Unit is idle and ready for orders. No automatic behavior.',
-            'Waiting/Defending': 'Unit holds position and defends if attacked. Will not advance.',
-            'Active/Moving': 'Unit is currently moving or taking action.',
-            'Executing Order': 'Unit is executing a specific order.',
-            'Advance (Offensive)': 'Unit moves toward objectives aggressively. Offensive stance.',
-            'Defend If Attacked': 'Unit defends when engaged but otherwise holds position.',
-            'Retreat If Attacked': 'Unit falls back when attacked by superior forces.',
-            'Hold At All Costs': 'Unit fights to the death without retreating. Last stand.'
-        }
+        # Binary display
+        self.behavior_binary_var = tk.StringVar(value="0b00000000")
+        ttk.Label(behavior_display_frame, textvariable=self.behavior_binary_var,
+                 font=("Courier", 9), foreground='#666666').pack(side=tk.LEFT, padx=(10, 0))
 
-        # Update description on load
-        self._update_behavior_description()
+        # AI Behavior Flags (8 checkboxes for individual bits)
+        flags_frame = ttk.LabelFrame(form_frame, text="Behavior Flags", padding=5)
+        flags_frame.grid(row=9, column=0, columnspan=2, sticky=tk.EW, pady=5, padx=5)
+
+        # Define behavior bit flags with descriptions
+        self.behavior_flags = [
+            {'bit': 0, 'mask': 0x01, 'name': 'Active/Enabled',
+             'desc': 'Unit is active and can take actions'},
+            {'bit': 1, 'mask': 0x02, 'name': 'Mobile',
+             'desc': 'Unit can move on the map'},
+            {'bit': 2, 'mask': 0x04, 'name': 'Combat Capable',
+             'desc': 'Unit can engage in combat'},
+            {'bit': 3, 'mask': 0x08, 'name': 'Scripted Orders',
+             'desc': 'Unit has special scripted orders'},
+            {'bit': 4, 'mask': 0x10, 'name': 'Defensive Stance',
+             'desc': 'Unit takes defensive stance'},
+            {'bit': 5, 'mask': 0x20, 'name': 'Aggressive/Attack',
+             'desc': 'Unit actively seeks combat'},
+            {'bit': 6, 'mask': 0x40, 'name': 'Reserved/Hold',
+             'desc': 'Unit held in reserve'},
+            {'bit': 7, 'mask': 0x80, 'name': 'High Priority',
+             'desc': 'High-priority/critical unit'},
+        ]
+
+        # Create checkbox variables
+        self.behavior_flag_vars = []
+
+        # Layout checkboxes in 2 columns
+        for i, flag in enumerate(self.behavior_flags):
+            row = i % 4
+            col = i // 4
+
+            var = tk.BooleanVar(value=False)
+            self.behavior_flag_vars.append(var)
+
+            cb = ttk.Checkbutton(flags_frame,
+                                text=f"Bit {flag['bit']}: {flag['name']}",
+                                variable=var,
+                                command=self._on_behavior_flag_changed)
+            cb.grid(row=row, column=col*2, sticky=tk.W, pady=2, padx=5)
+
+            # Add tooltip/description label
+            desc_label = ttk.Label(flags_frame, text=flag['desc'],
+                                  font=("TkDefaultFont", 8),
+                                  foreground='#666666')
+            desc_label.grid(row=row, column=col*2+1, sticky=tk.W, pady=2, padx=(0, 10))
 
         # Buttons
         button_frame = ttk.Frame(self)
@@ -1139,10 +1188,18 @@ class UnitPropertiesEditor(ttk.Frame):
         self.type_entry.delete(0, tk.END)
         self.type_entry.insert(0, f"{type_name} (0x{type_code:02x})")
 
-        # For now, use placeholder positions
-        # In real implementation, parse from PTR4/PTR5
-        self.pos_x_spin.set(0)
-        self.pos_y_spin.set(0)
+        # Set position from unit data
+        x = self.current_unit.get('x', 0)
+        y = self.current_unit.get('y', 0)
+
+        # Handle special cases
+        if x == -1 or y == -1:
+            # Off-map/reinforcement unit
+            x = 0
+            y = 0
+
+        self.pos_x_spin.set(x)
+        self.pos_y_spin.set(y)
 
         # Set strength from unit data
         strength = self.current_unit.get('strength', 0)
@@ -1175,32 +1232,14 @@ class UnitPropertiesEditor(ttk.Frame):
             else:
                 behavior_byte = 0x00
 
-        # Map byte value to behavior name
-        byte_to_behavior = {
-            0x00: 'Idle/Ready',
-            0xF2: 'Waiting/Defending',
-            0x80: 'Active/Moving',
-            0x92: 'Executing Order',
-            0x02: 'Advance (Offensive)',
-            0x10: 'Defend If Attacked',
-            0x82: 'Retreat If Attacked',
-            0x0B: 'Hold At All Costs'
-        }
-
-        behavior_name = byte_to_behavior.get(behavior_byte, 'Idle/Ready')
-
-        # Set behavior combo and update display
-        try:
-            index = self.behavior_combo['values'].index(behavior_name)
-            self.behavior_combo.current(index)
-        except (ValueError, tk.TclError):
-            self.behavior_combo.current(0)
-
         # Update byte display
         self.behavior_byte_var.set(f"0x{behavior_byte:02X}")
+        self.behavior_binary_var.set(f"0b{behavior_byte:08b}")
 
-        # Update description
-        self._update_behavior_description()
+        # Set individual flag checkboxes based on behavior byte
+        for i, flag in enumerate(self.behavior_flags):
+            is_set = bool(behavior_byte & flag['mask'])
+            self.behavior_flag_vars[i].set(is_set)
 
         # Display raw data
         self.raw_text.delete('1.0', tk.END)
@@ -1237,20 +1276,17 @@ class UnitPropertiesEditor(ttk.Frame):
         # Update side
         self.current_unit['side'] = self.side_combo.get()
 
-        # Update behavior byte
-        behavior_name = self.behavior_combo.get()
-        behavior_map = {
-            'Idle/Ready': 0x00,
-            'Waiting/Defending': 0xF2,
-            'Active/Moving': 0x80,
-            'Executing Order': 0x92,
-            'Advance (Offensive)': 0x02,
-            'Defend If Attacked': 0x10,
-            'Retreat If Attacked': 0x82,
-            'Hold At All Costs': 0x0B
-        }
-        behavior_byte = behavior_map.get(behavior_name, 0x00)
+        # Update behavior byte from checkboxes
+        behavior_byte = self._get_behavior_byte_from_flags()
         self.current_unit['behavior_byte'] = behavior_byte
+
+        # Build flag description for user
+        active_flags = []
+        for i, flag in enumerate(self.behavior_flags):
+            if self.behavior_flag_vars[i].get():
+                active_flags.append(f"Bit {flag['bit']}")
+
+        flags_str = ", ".join(active_flags) if active_flags else "None"
 
         # Notify callback
         if self.on_unit_update_callback:
@@ -1262,101 +1298,113 @@ class UnitPropertiesEditor(ttk.Frame):
                            f"- Name: {self.current_unit['name']}\n"
                            f"- Side: {self.current_unit['side']}\n"
                            f"- Strength: {self.current_unit.get('strength', 100)}\n"
-                           f"- Behavior: {behavior_name} (0x{behavior_byte:02X})\n\n"
+                           f"- Behavior: 0x{behavior_byte:02X} (0b{behavior_byte:08b})\n"
+                           f"- Flags: {flags_str}\n\n"
                            f"Note: Changes are saved in memory. Use File > Save to persist to disk.")
 
     def revert_changes(self):
         """Revert changes to current unit"""
         self.display_unit()
 
-    def _on_behavior_changed(self, event):
-        """Handle behavior selection change"""
-        behavior_name = self.behavior_combo.get()
+    def _on_behavior_flag_changed(self):
+        """Handle behavior flag checkbox change"""
+        # Calculate new behavior byte from checkboxes
+        behavior_byte = self._get_behavior_byte_from_flags()
 
-        # Map behavior names to byte values
-        behavior_map = {
-            'Idle/Ready': 0x00,
-            'Waiting/Defending': 0xF2,
-            'Active/Moving': 0x80,
-            'Executing Order': 0x92,
-            'Advance (Offensive)': 0x02,
-            'Defend If Attacked': 0x10,
-            'Retreat If Attacked': 0x82,
-            'Hold At All Costs': 0x0B
-        }
+        # Update displays
+        self.behavior_byte_var.set(f"0x{behavior_byte:02X}")
+        self.behavior_binary_var.set(f"0b{behavior_byte:08b}")
 
-        # Update the byte display
-        byte_value = behavior_map.get(behavior_name, 0x00)
-        self.behavior_byte_var.set(f"0x{byte_value:02X}")
-
-        # Update description
-        self._update_behavior_description()
-
-    def _update_behavior_description(self):
-        """Update the behavior description label"""
-        behavior_name = self.behavior_combo.get()
-        description = self.behavior_descriptions.get(behavior_name, "")
-        self.behavior_desc_label.config(text=description)
+    def _get_behavior_byte_from_flags(self):
+        """Calculate behavior byte value from checkbox states"""
+        behavior_byte = 0x00
+        for i, flag in enumerate(self.behavior_flags):
+            if self.behavior_flag_vars[i].get():
+                behavior_byte |= flag['mask']
+        return behavior_byte
 
     def _show_behavior_help(self):
         """Show detailed help about AI behavior system"""
-        help_text = """AI BEHAVIOR SCRIPTING SYSTEM
+        help_text = """AI BEHAVIOR BIT FIELD SYSTEM
 
-The D-Day game engine uses a binary AI scripting system where each unit has a
-behavior byte (at offset +5 in its 8-byte record) that determines how it acts
-during AI turns.
+The D-Day game engine uses a bit field system where each unit has a behavior
+byte (at offset +5 in its 8-byte record) that controls AI behavior through
+8 independent flags.
 
-BEHAVIOR TYPES:
+IMPORTANT: This is NOT a simple state enumeration! Each bit controls a
+different aspect of unit behavior and can be combined.
 
-• Idle/Ready (0x00)
-  Unit is inactive and awaiting orders. No automatic behavior.
+BEHAVIOR FLAGS:
 
-• Waiting/Defending (0xF2)
-  Unit holds its current position and defends if attacked. Will not advance
-  on its own. Good for defensive positions and garrison duty.
+• Bit 0 (0x01): Active/Enabled
+  Unit is active and can take actions. Without this, unit is inactive.
 
-• Active/Moving (0x80)
-  Unit is currently moving or taking action. This is an execution state
-  that indicates the unit is carrying out orders.
+• Bit 1 (0x02): Mobile
+  Unit can move on the map. Clear this for static defenses.
 
-• Executing Order (0x92)
-  Unit is executing a specific order. Another execution state used during
-  the order processing phase.
+• Bit 2 (0x04): Combat Capable
+  Unit can engage in combat operations.
 
-• Advance (Offensive) (0x02)
-  Unit moves toward assigned objectives aggressively. Offensive stance.
-  Good for units tasked with capturing territory or attacking enemy positions.
+• Bit 3 (0x08): Scripted Orders
+  Unit has special scripted orders or AI behavior.
 
-• Defend If Attacked (0x10)
-  Unit defends when engaged by enemy forces but otherwise holds position.
-  Will not advance unless given specific orders. Good for flexible defense.
+• Bit 4 (0x10): Defensive Stance
+  Unit takes a defensive stance. Gates certain AI processing.
 
-• Retreat If Attacked (0x82)
-  Unit falls back when attacked by superior forces. Conditional withdrawal
-  behavior. Preserves unit strength but gives up territory.
+• Bit 5 (0x20): Aggressive/Attack
+  Unit actively seeks combat and attacks enemy units.
 
-• Hold At All Costs (0x0B)
-  Unit fights to the death without retreating. Last stand behavior.
-  Good for critical defensive positions that must be held.
+• Bit 6 (0x40): Reserved/Hold
+  Unit is held in reserve, not immediately committed.
+
+• Bit 7 (0x80): High Priority
+  High-priority or critical unit marker.
+
+COMMON COMBINATIONS:
+
+• Inactive Unit (0x00)
+  All flags clear - unit is inactive/dead.
+
+• Basic Active Unit (0x07)
+  Bits 0,1,2 - Active, Mobile, Combat capable.
+
+• Defensive Unit (0x15)
+  Bits 0,2,4 - Active, Combat, Defensive stance.
+
+• Aggressive Attacker (0x27)
+  Bits 0,1,2,5 - Active, Mobile, Combat, Aggressive.
+
+• Reserved Force (0x47)
+  Bits 0,1,2,6 - Active, Mobile, Combat, Reserved.
+
+• Scripted Behavior (0x0F)
+  Bits 0-3 - Active, Mobile, Combat, Scripted.
+
+SPECIAL ENGINE VALUES:
+
+The game engine temporarily sets these values during AI processing:
+• 0x80, 0x92, 0xF2 - Temporary AI processing states
+• 0xFF - Template/disabled unit marker
+• 0xFD - Alternative template marker
+
+Do not manually set these unless creating special test scenarios.
 
 HOW IT WORKS:
 
-The game engine reads these behavior bytes during the AI turn execution phase
-(Phase 2-3 in the turn sequence). The behavior determines:
-- When the unit moves
-- Whether it attacks or defends
-- Whether it retreats from combat
-- How aggressively it pursues objectives
+The game engine reads the behavior byte during AI processing. Individual
+bits control different aspects:
+- Bit 4 (0x10) gates whether unit processes AI at all
+- Combination of flags determines unit's tactical behavior
+- Engine may temporarily modify behavior during processing
 
 TECHNICAL DETAILS:
 
-- Behaviors are stored in the PTR6 section of .SCN files
-- Each unit has a behavior byte at offset +5 in its 8-byte record
-- Behavior byte uses bits 3-4 (mask 0x18) to classify behavior type
-- Bit 7 (0x80) indicates if unit is active/moving
-- State transitions happen automatically during turn execution
+- Stored in PTR6 section at unit offset +5
+- Each unit is 8 bytes in PTR6
+- Flags can be combined for complex behaviors
+- Disassembly shows extensive bit testing (line 4307+)
 
-For more information, see: txt/AI_SCRIPTING_SYSTEM_ANALYSIS.md
+For complete analysis: txt/AI_BEHAVIOR_BYTE_ANALYSIS.md
 """
 
         # Create help dialog
@@ -1485,7 +1533,7 @@ class ImprovedScenarioEditor:
 
         # Create main window
         self.root = tk.Tk()
-        self.root.title("D-Day Scenario Editor - Consolidated Edition")
+        self.root.title("D-Day Scenario Editor")
         self.root.geometry("1400x900")
 
         # Configure style
@@ -1580,13 +1628,10 @@ class ImprovedScenarioEditor:
         # Tab 3: Unit Editor (IMPROVED!)
         self._create_unit_editor_tab()
 
-        # Tab 4: Data Viewer (simplified)
-        self._create_data_tab()
-
-        # Tab 5: Scenario Settings (NEW!)
+        # Tab 4: Scenario Settings (NEW!)
         self._create_settings_tab()
 
-        # Tab 6: Terrain Reference (NEW!)
+        # Tab 5: Terrain Reference (NEW!)
         self._create_terrain_reference_tab()
 
     def _create_mission_tab(self):
@@ -1642,37 +1687,16 @@ class ImprovedScenarioEditor:
         paned = ttk.PanedWindow(frame, orient=tk.HORIZONTAL)
         paned.pack(fill=tk.BOTH, expand=True)
 
-        # Left: Unit list
+        # Left: Unit list with tabs by side
         left_frame = ttk.LabelFrame(paned, text="Unit List", padding="5")
         paned.add(left_frame, weight=1)
 
-        columns = ("Index", "Name", "Side", "Position", "Strength", "Type")
-        self.unit_tree = ttk.Treeview(left_frame, columns=columns,
-                                      show='headings', height=20)
+        # Create notebook for tabs
+        self.unit_list_notebook = ttk.Notebook(left_frame)
+        self.unit_list_notebook.pack(fill=tk.BOTH, expand=True)
 
-        self.unit_tree.heading("Index", text="#")
-        self.unit_tree.heading("Name", text="Unit Name")
-        self.unit_tree.heading("Side", text="Side")
-        self.unit_tree.heading("Position", text="Position")
-        self.unit_tree.heading("Strength", text="Str")
-        self.unit_tree.heading("Type", text="Type")
-
-        self.unit_tree.column("Index", width=40)
-        self.unit_tree.column("Name", width=180)
-        self.unit_tree.column("Side", width=60)
-        self.unit_tree.column("Position", width=70)
-        self.unit_tree.column("Strength", width=50)
-        self.unit_tree.column("Type", width=100)
-
-        scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL,
-                                 command=self.unit_tree.yview)
-        self.unit_tree.configure(yscrollcommand=scrollbar.set)
-
-        self.unit_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        # Bind selection event to show unit stats
-        self.unit_tree.bind('<<TreeviewSelect>>', self.on_unit_tree_select)
+        # Dictionary to store treeviews for each side
+        self.unit_trees_by_side = {}
 
         # Right: Properties editor
         right_frame = ttk.Frame(paned)
@@ -1680,18 +1704,6 @@ class ImprovedScenarioEditor:
 
         self.unit_props_editor = UnitPropertiesEditor(right_frame, self.on_unit_updated)
         self.unit_props_editor.pack(fill=tk.BOTH, expand=True)
-
-    def _create_data_tab(self):
-        """Create data viewer tab"""
-        frame = ttk.Frame(self.notebook, padding="10")
-        self.notebook.add(frame, text="Data Viewer")
-
-        ttk.Label(frame, text="Scenario Data Overview",
-                 font=("TkDefaultFont", 10, "bold")).pack(pady=5)
-
-        self.data_text = scrolledtext.ScrolledText(frame, font=("Courier", 10),
-                                                   width=80, height=30)
-        self.data_text.pack(fill=tk.BOTH, expand=True)
 
     def _create_settings_tab(self):
         """Create scenario settings tab"""
@@ -1907,9 +1919,6 @@ class ImprovedScenarioEditor:
         self._load_units_into_tree()
         self.unit_props_editor.load_units(self.units)
 
-        # Load data viewer
-        self._load_data_overview()
-
         # Load settings
         self.settings_editor.load_scenario_data(self.scenario)
 
@@ -1958,66 +1967,88 @@ class ImprovedScenarioEditor:
         self.axis_text.edit_modified(False)
 
     def _load_units_into_tree(self):
-        """Load units into the tree view"""
-        # Clear existing
-        for item in self.unit_tree.get_children():
-            self.unit_tree.delete(item)
+        """Load units into tree views organized by side with tabs"""
+        # Clear existing tabs
+        for tab in self.unit_list_notebook.tabs():
+            self.unit_list_notebook.forget(tab)
+        self.unit_trees_by_side.clear()
 
-        # Add units
+        # Organize units by side
+        units_by_side = {}
         for unit in self.units:
-            strength = unit.get('strength', 0)
-            strength_str = str(strength) if strength > 0 else '-'
-
-            # Get human-readable type name
-            type_code = unit.get('type', 0)
-            type_name = EnhancedUnitParser.get_unit_type_name(type_code)
-
-            # Get position
-            x = unit.get('x', 0)
-            y = unit.get('y', 0)
-            position_str = f"({x},{y})" if x > 0 and y > 0 else '-'
-
-            # Get side
             side = unit.get('side', 'Unknown')
+            if side not in units_by_side:
+                units_by_side[side] = []
+            units_by_side[side].append(unit)
 
-            self.unit_tree.insert("", tk.END, values=(
-                unit.get('index', '?'),
-                unit.get('name', 'Unknown'),
-                side,
-                position_str,
-                strength_str,
-                type_name
-            ))
+        # Create a tab for each side
+        columns = ("Index", "Name", "Position", "Strength", "Type")
 
-    def _load_data_overview(self):
-        """Load data overview"""
-        if not self.scenario:
-            return
+        for side in sorted(units_by_side.keys()):
+            # Create frame for this side's tab
+            tab_frame = ttk.Frame(self.unit_list_notebook)
+            self.unit_list_notebook.add(tab_frame, text=f"{side} ({len(units_by_side[side])})")
 
-        self.data_text.delete('1.0', tk.END)
+            # Create treeview for this side
+            tree = ttk.Treeview(tab_frame, columns=columns,
+                               show='headings', height=20)
 
-        # Basic info
-        self.data_text.insert(tk.END, f"=== Scenario: {self.scenario_file.name} ===\n\n")
-        self.data_text.insert(tk.END, f"File Size: {len(self.scenario.data):,} bytes\n")
-        self.data_text.insert(tk.END, f"Valid: {self.scenario.is_valid}\n\n")
+            tree.heading("Index", text="#")
+            tree.heading("Name", text="Unit Name")
+            tree.heading("Position", text="Position")
+            tree.heading("Strength", text="Strength")
+            tree.heading("Type", text="Type")
 
-        # Sections
-        self.data_text.insert(tk.END, "Data Sections:\n")
-        for name, start, end in self.scenario.section_order:
-            size = end - start
-            self.data_text.insert(tk.END,
-                f"  {name}: 0x{start:06x}-0x{end:06x} ({size:,} bytes)\n")
+            tree.column("Index", width=40)
+            tree.column("Name", width=200)
+            tree.column("Position", width=80)
+            tree.column("Strength", width=60)
+            tree.column("Type", width=120)
 
-        self.data_text.insert(tk.END, f"\nUnits Found: {len(self.units)}\n")
-        self.data_text.insert(tk.END, f"Coordinates: {len(self.coords)}\n")
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(tab_frame, orient=tk.VERTICAL,
+                                     command=tree.yview)
+            tree.configure(yscrollcommand=scrollbar.set)
 
-        # Coordinate summary
-        if self.coords:
-            self.data_text.insert(tk.END, "\n=== Coordinate Data Sample ===\n")
-            for coord in self.coords[:20]:
-                self.data_text.insert(tk.END,
-                    f"  Offset 0x{coord['offset']:04x}: {coord['value']:5d} "
-                    f"({coord['interpretation']})\n")
+            tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            # Bind selection event
+            tree.bind('<<TreeviewSelect>>',
+                     lambda event, s=side: self.on_unit_tree_select(event, s))
+
+            # Store reference
+            self.unit_trees_by_side[side] = {
+                'tree': tree,
+                'units': units_by_side[side]
+            }
+
+            # Populate tree with units for this side
+            for unit in units_by_side[side]:
+                strength = unit.get('strength', 0)
+                strength_str = str(strength) if strength > 0 else '-'
+
+                # Get human-readable type name
+                type_code = unit.get('type', 0)
+                type_name = EnhancedUnitParser.get_unit_type_name(type_code)
+
+                # Get position
+                x = unit.get('x', 0)
+                y = unit.get('y', 0)
+                if x == -1 or y == -1:
+                    position_str = 'Off-map'
+                elif x > 0 or y > 0:
+                    position_str = f"({x},{y})"
+                else:
+                    position_str = '-'
+
+                tree.insert("", tk.END, values=(
+                    unit.get('index', '?'),
+                    unit.get('name', 'Unknown'),
+                    position_str,
+                    strength_str,
+                    type_name
+                ))
 
     def on_unit_updated(self, unit):
         """Callback when unit is updated"""
@@ -2025,15 +2056,21 @@ class ImprovedScenarioEditor:
         self.modified_label.config(text="Modified *", foreground="red")
         self.status_label.config(text="Unit updated - remember to save!")
 
-    def on_unit_tree_select(self, event):
+    def on_unit_tree_select(self, event, side):
         """Handle unit tree selection - show selected unit in properties editor"""
-        selection = self.unit_tree.selection()
+        if side not in self.unit_trees_by_side:
+            return
+
+        tree = self.unit_trees_by_side[side]['tree']
+        units = self.unit_trees_by_side[side]['units']
+
+        selection = tree.selection()
         if not selection:
             return
 
         # Get the selected item
         item = selection[0]
-        values = self.unit_tree.item(item, 'values')
+        values = tree.item(item, 'values')
 
         if not values:
             return
@@ -2042,10 +2079,19 @@ class ImprovedScenarioEditor:
         try:
             unit_index = int(values[0])  # Index is in the first column
 
-            # Update the unit properties editor to show this unit
-            if 0 <= unit_index < len(self.units):
+            # Find this unit in the units list by index
+            selected_unit = None
+            for unit in units:
+                if unit.get('index') == unit_index:
+                    selected_unit = unit
+                    break
+
+            if selected_unit:
+                # Find position in full units list
+                full_unit_index = self.units.index(selected_unit)
+
                 # Update the combo box selection
-                self.unit_props_editor.unit_combo.current(unit_index)
+                self.unit_props_editor.unit_combo.current(full_unit_index)
                 # Trigger the display
                 self.unit_props_editor.on_unit_selected(None)
         except (ValueError, IndexError):

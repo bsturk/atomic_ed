@@ -3,7 +3,7 @@
 Crusader (0x0dac) Scenario Format Parser
 ==========================================
 
-Complete parser for V for Victory: Crusader scenario files.
+Complete parser for World at War: Crusader scenario files.
 Properly handles the unique structure of the Crusader format.
 
 Format Structure:

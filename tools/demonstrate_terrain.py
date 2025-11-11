@@ -7,9 +7,12 @@ This script demonstrates that we've successfully reverse-engineered
 the terrain data format for D-Day scenario files.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from pathlib import Path
 from collections import Counter
-from terrain_reader import extract_terrain_from_file, TERRAIN_TYPES
+from lib.terrain_reader import extract_terrain_from_file, TERRAIN_TYPES
 
 
 def main():
