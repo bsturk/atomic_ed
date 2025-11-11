@@ -34,24 +34,25 @@ class HexTileLoader:
     NUM_TERRAIN_ROWS = 14
 
     # Terrain type to sprite sheet row/column mapping
+    # CORRECTED based on manual + user verification (2025-11-11)
     TERRAIN_MAPPING = {
-        0: (0, 0),   # Grass/Field
-        1: (5, 0),   # Water/Ocean
-        2: (6, 0),   # Beach/Sand
-        3: (2, 0),   # Forest
-        4: (4, 0),   # Town
-        5: (8, 0),   # Road
-        6: (3, 0),   # River
-        7: (9, 0),   # Mountains
-        8: (7, 0),   # Swamp
-        9: (8, 5),   # Bridge
-        10: (10, 0), # Fortification
-        11: (11, 0), # Bocage
-        12: (9, 5),  # Cliff
-        13: (10, 5), # Village
-        14: (12, 0), # Farm
-        15: (3, 5),  # Canal
-        16: (1, 0),  # Unknown
+        0: (1, 0),   # Grass/Field (Clear) - FIX: was (0,0) showing bocage
+        1: (5, 0),   # Water/Ocean - VERIFIED CORRECT
+        2: (6, 0),   # Beach/Sand - VERIFIED CORRECT
+        3: (2, 0),   # Forest - VERIFIED CORRECT
+        4: (4, 0),   # Town - VERIFIED CORRECT
+        5: (10, 0),  # Road - FIX: was (8,0) showing fortifications
+        6: (3, 0),   # River - Assumed correct
+        7: (9, 0),   # Mountains/Fortress - Shows fortress structure
+        8: (11, 0),  # Swamp - FIX: was (7,0), geography shows major terrain (20% of Omaha)
+        9: (10, 5),  # Bridge - FIX: was (8,5), bridge is road variant
+        10: (8, 0),  # Fortification - FIX: was (10,0), shows Atlantic Wall bunkers
+        11: (0, 0),  # Bocage - FIX: was (11,0), manual confirms row 0 = bocage
+        12: (9, 5),  # Cliff - Mountain/fortress variant
+        13: (11, 5), # Village - FIX: was (10,5), geography shows major terrain (19% of Omaha)
+        14: (13, 0), # Farm - FIX: was (12,0), row 13 shows cultivated fields
+        15: (3, 5),  # Canal - River variant
+        16: (1, 0),  # Clear - Rename from "Unknown", shows grass correctly
     }
 
     def __init__(self):
