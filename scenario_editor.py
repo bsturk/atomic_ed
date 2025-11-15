@@ -248,13 +248,12 @@ class EnhancedUnitParser:
                 quality = 0
                 disruption = 0
                 fatigue = 0
-                antitank = 255  # N/A - antitank is determined by unit type from EXE, not scenario file
 
                 if match.start() >= 64:
                     # Look at bytes before the unit name
                     # Unit record structure (64 bytes before name):
                     # Bytes -64 to -62: Unit Instance Index (NOT strength!)
-                    # Byte -60: Part of sequential index (NOT antitank!)
+                    # Byte -60: Part of sequential index
                     # Bytes -58 to -56: X coordinate
                     # Bytes -56 to -54: Y coordinate
                     # Byte -27: Unit type code
@@ -265,7 +264,6 @@ class EnhancedUnitParser:
                     # Byte -6: Disruption
                     # Byte -5: Fatigue
                     # Byte -2: Record marker (0xFF)
-                    # NOTE: Antitank is NOT stored per-unit in scenario; it's from unit type tables in EXE
                     pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
@@ -286,9 +284,6 @@ class EnhancedUnitParser:
                         quality = pre_data[-7]
                         disruption = pre_data[-6]
                         fatigue = pre_data[-5]
-
-                    # Antitank is NOT in the scenario file - it's from unit type tables
-                    # Kept as 255 (N/A) to indicate it's not stored here
 
                     # Extract coordinates from offset -58 (X) and -56 (Y)
                     # Special value 0xFFFF (65535) indicates off-map/reinforcement units
@@ -331,7 +326,6 @@ class EnhancedUnitParser:
                     'quality': quality,
                     'disruption': disruption,
                     'fatigue': fatigue,
-                    'antitank': antitank,
                     'x': x,
                     'y': y,
                     'side': side,
@@ -1102,22 +1096,16 @@ class UnitPropertiesEditor(ttk.Frame):
         self.quality_spin.grid(row=1, column=1, sticky=tk.W, pady=2, padx=5)
         self.quality_spin.set(0)
 
-        # Antitank
-        ttk.Label(stats_frame, text="Antitank:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(10,0))
-        self.antitank_spin = ttk.Spinbox(stats_frame, from_=0, to=20, width=5)
-        self.antitank_spin.grid(row=1, column=3, sticky=tk.W, pady=2, padx=5)
-        self.antitank_spin.set(0)
-
         # Disruption
-        ttk.Label(stats_frame, text="Disruption:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ttk.Label(stats_frame, text="Disruption:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(10,0))
         self.disruption_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
-        self.disruption_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
+        self.disruption_spin.grid(row=1, column=3, sticky=tk.W, pady=2, padx=5)
         self.disruption_spin.set(0)
 
         # Fatigue
-        ttk.Label(stats_frame, text="Fatigue:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        ttk.Label(stats_frame, text="Fatigue:").grid(row=2, column=0, sticky=tk.W, pady=2)
         self.fatigue_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
-        self.fatigue_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
+        self.fatigue_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
         # Separator for AI Scripting section
@@ -1271,7 +1259,6 @@ class UnitPropertiesEditor(ttk.Frame):
         attack_base = self.current_unit.get('attack_base', 0)
         defense_base = self.current_unit.get('defense_base', 0)
         quality = self.current_unit.get('quality', 0)
-        antitank = self.current_unit.get('antitank', 0)
         disruption = self.current_unit.get('disruption', 0)
         fatigue = self.current_unit.get('fatigue', 0)
 
@@ -1287,7 +1274,6 @@ class UnitPropertiesEditor(ttk.Frame):
         set_stat_spinbox(self.attack_spin, attack_base)
         set_stat_spinbox(self.defense_spin, defense_base)
         set_stat_spinbox(self.quality_spin, quality)
-        set_stat_spinbox(self.antitank_spin, antitank)
         set_stat_spinbox(self.disruption_spin, disruption)
         set_stat_spinbox(self.fatigue_spin, fatigue)
 
@@ -1345,8 +1331,7 @@ class UnitPropertiesEditor(ttk.Frame):
             self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
 
         qual_str = "N/A" if quality == 255 else str(quality)
-        at_str = "N/A" if antitank == 255 else str(antitank)
-        self.raw_text.insert(tk.END, f"Quality: {qual_str}, Antitank: {at_str}\n")
+        self.raw_text.insert(tk.END, f"Quality: {qual_str}\n")
 
         dis_str = "N/A" if disruption == 255 else str(disruption)
         fat_str = "N/A" if fatigue == 255 else str(fatigue)
@@ -1376,7 +1361,6 @@ class UnitPropertiesEditor(ttk.Frame):
             self.current_unit['attack_base'] = int(self.attack_spin.get())
             self.current_unit['defense_base'] = int(self.defense_spin.get())
             self.current_unit['quality'] = int(self.quality_spin.get())
-            self.current_unit['antitank'] = int(self.antitank_spin.get())
             self.current_unit['disruption'] = int(self.disruption_spin.get())
             self.current_unit['fatigue'] = int(self.fatigue_spin.get())
         except ValueError:
