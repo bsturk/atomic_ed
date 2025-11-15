@@ -1,0 +1,1 @@
+Locations for units are 0 based hex X and Y
