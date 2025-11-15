@@ -13,7 +13,7 @@ Features:
 - Scenario settings editor (turns, objectives, etc.)
 - Mission text editing (Allied & Axis)
 - Coordinate interpretation and visualization
-- Enhanced unit parsing with type names and strengths
+- Enhanced unit parsing with type names and combat stats
 
 Usage:
     python3 scenario_editor.py [scenario_file.scn]
@@ -237,31 +237,58 @@ class EnhancedUnitParser:
                 context = data[context_start:context_end]
 
                 # Try to extract stats from binary data before the name
-                # Common pattern: bytes at offset -16 to -1 before name
-                strength = 0
+                # Combat stats are in the 64-byte record before the unit name
+                unit_instance_index = 0
                 unit_type = 0
                 x = 0
                 y = 0
                 side = 'Unknown'
+                attack_base = 0
+                defense_base = 0
+                quality = 0
+                disruption = 0
+                fatigue = 0
+                antitank = 0
 
                 if match.start() >= 64:
                     # Look at bytes before the unit name
-                    # Unit type is at offset -27 (27 bytes before name)
-                    # Strength is a 16-bit value at offset -64 (64 bytes before name)
-                    # Coordinates are at offset -58 (X) and -56 (Y)
-                    # Side indicator is at offset -30 and -29 (both bytes)
+                    # Unit record structure (64 bytes before name):
+                    # Bytes -64 to -62: Unit Instance Index (NOT strength!)
+                    # Byte -60: Antitank value
+                    # Bytes -58 to -56: X coordinate
+                    # Bytes -56 to -54: Y coordinate
+                    # Byte -27: Unit type code
+                    # Bytes -30,-29: Side indicator
+                    # Byte -9: Attack base
+                    # Byte -8: Defense base
+                    # Byte -7: Quality
+                    # Byte -6: Disruption
+                    # Byte -5: Fatigue
+                    # Byte -2: Record marker (0xFF)
                     pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
                     if len(pre_data) >= 27:
                         unit_type = pre_data[-27]
 
-                    # Extract strength as 16-bit little-endian value at position -64
+                    # Extract unit instance index as 16-bit LE at position -64
                     if len(pre_data) >= 64:
-                        strength = struct.unpack('<H', pre_data[-64:-62])[0]
-                        # Sanity check - reasonable strength values are 1-500
-                        if strength > 500:
-                            strength = 0
+                        unit_instance_index = struct.unpack('<H', pre_data[-64:-62])[0]
+                        # Sanity check - reasonable index values
+                        if unit_instance_index > 1000:
+                            unit_instance_index = 0
+
+                    # Extract actual combat stats from last 16 bytes
+                    if len(pre_data) >= 9:
+                        attack_base = pre_data[-9]
+                        defense_base = pre_data[-8]
+                        quality = pre_data[-7]
+                        disruption = pre_data[-6]
+                        fatigue = pre_data[-5]
+
+                    # Extract antitank from byte -60
+                    if len(pre_data) >= 60:
+                        antitank = pre_data[-60]
 
                     # Extract coordinates from offset -58 (X) and -56 (Y)
                     # Special value 0xFFFF (65535) indicates off-map/reinforcement units
@@ -298,7 +325,13 @@ class EnhancedUnitParser:
                     'index': unit_index,
                     'name': unit_name,
                     'type': unit_type,
-                    'strength': strength,
+                    'unit_instance_index': unit_instance_index,
+                    'attack_base': attack_base,
+                    'defense_base': defense_base,
+                    'quality': quality,
+                    'disruption': disruption,
+                    'fatigue': fatigue,
+                    'antitank': antitank,
                     'x': x,
                     'y': y,
                     'side': side,
@@ -1041,11 +1074,45 @@ class UnitPropertiesEditor(ttk.Frame):
         self.pos_y_spin = ttk.Spinbox(form_frame, from_=0, to=500, width=10)
         self.pos_y_spin.grid(row=3, column=1, sticky=tk.W, pady=3, padx=5)
 
-        # Strength
-        ttk.Label(form_frame, text="Strength:").grid(row=4, column=0, sticky=tk.W, pady=3)
-        self.strength_spin = ttk.Spinbox(form_frame, from_=0, to=100, width=10)
-        self.strength_spin.grid(row=4, column=1, sticky=tk.W, pady=3, padx=5)
-        self.strength_spin.set(100)
+        # Combat Stats section
+        stats_frame = ttk.LabelFrame(form_frame, text="Combat Stats", padding=5)
+        stats_frame.grid(row=4, column=0, columnspan=2, sticky=tk.EW, pady=5)
+
+        # Attack
+        ttk.Label(stats_frame, text="Attack:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.attack_spin = ttk.Spinbox(stats_frame, from_=0, to=20, width=5)
+        self.attack_spin.grid(row=0, column=1, sticky=tk.W, pady=2, padx=5)
+        self.attack_spin.set(0)
+
+        # Defense
+        ttk.Label(stats_frame, text="Defense:").grid(row=0, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        self.defense_spin = ttk.Spinbox(stats_frame, from_=0, to=20, width=5)
+        self.defense_spin.grid(row=0, column=3, sticky=tk.W, pady=2, padx=5)
+        self.defense_spin.set(0)
+
+        # Quality
+        ttk.Label(stats_frame, text="Quality:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        self.quality_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
+        self.quality_spin.grid(row=1, column=1, sticky=tk.W, pady=2, padx=5)
+        self.quality_spin.set(0)
+
+        # Antitank
+        ttk.Label(stats_frame, text="Antitank:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        self.antitank_spin = ttk.Spinbox(stats_frame, from_=0, to=20, width=5)
+        self.antitank_spin.grid(row=1, column=3, sticky=tk.W, pady=2, padx=5)
+        self.antitank_spin.set(0)
+
+        # Disruption
+        ttk.Label(stats_frame, text="Disruption:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        self.disruption_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
+        self.disruption_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
+        self.disruption_spin.set(0)
+
+        # Fatigue
+        ttk.Label(stats_frame, text="Fatigue:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        self.fatigue_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
+        self.fatigue_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
+        self.fatigue_spin.set(0)
 
         # Side (Allied/Axis)
         ttk.Label(form_frame, text="Side:").grid(row=5, column=0, sticky=tk.W, pady=3)
@@ -1201,12 +1268,20 @@ class UnitPropertiesEditor(ttk.Frame):
         self.pos_x_spin.set(x)
         self.pos_y_spin.set(y)
 
-        # Set strength from unit data
-        strength = self.current_unit.get('strength', 0)
-        if strength > 0:
-            self.strength_spin.set(strength)
-        else:
-            self.strength_spin.set(100)  # Default
+        # Set combat stats from unit data
+        attack_base = self.current_unit.get('attack_base', 0)
+        defense_base = self.current_unit.get('defense_base', 0)
+        quality = self.current_unit.get('quality', 0)
+        antitank = self.current_unit.get('antitank', 0)
+        disruption = self.current_unit.get('disruption', 0)
+        fatigue = self.current_unit.get('fatigue', 0)
+
+        self.attack_spin.set(attack_base)
+        self.defense_spin.set(defense_base)
+        self.quality_spin.set(quality)
+        self.antitank_spin.set(antitank)
+        self.disruption_spin.set(disruption)
+        self.fatigue_spin.set(fatigue)
 
         # Set side from unit data
         side = self.current_unit.get('side', 'Allied')
@@ -1246,7 +1321,13 @@ class UnitPropertiesEditor(ttk.Frame):
         self.raw_text.insert('1.0', f"Section: {self.current_unit.get('section', 'Unknown')}\n")
         self.raw_text.insert('1.0', f"Offset: 0x{self.current_unit.get('offset', 0):06x}\n")
         self.raw_text.insert(tk.END, f"Type: {self.current_unit.get('type', 0)}\n")
-        self.raw_text.insert(tk.END, f"Strength (parsed): {strength}\n")
+        self.raw_text.insert(tk.END, f"Unit Instance Index: {self.current_unit.get('unit_instance_index', 0)}\n")
+        eff_atk = attack_base - fatigue
+        eff_def = defense_base - fatigue
+        self.raw_text.insert(tk.END, f"Attack: {eff_atk} (base={attack_base})\n")
+        self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
+        self.raw_text.insert(tk.END, f"Quality: {quality}, Antitank: {antitank}\n")
+        self.raw_text.insert(tk.END, f"Disruption: {disruption}, Fatigue: {fatigue}\n")
         self.raw_text.insert(tk.END, f"\nRaw hex data (64 bytes):\n")
         raw_data = self.current_unit.get('raw_data', '')
         # Format hex nicely
@@ -1267,9 +1348,14 @@ class UnitPropertiesEditor(ttk.Frame):
         except ValueError:
             pass
 
-        # Update strength
+        # Update combat stats
         try:
-            self.current_unit['strength'] = int(self.strength_spin.get())
+            self.current_unit['attack_base'] = int(self.attack_spin.get())
+            self.current_unit['defense_base'] = int(self.defense_spin.get())
+            self.current_unit['quality'] = int(self.quality_spin.get())
+            self.current_unit['antitank'] = int(self.antitank_spin.get())
+            self.current_unit['disruption'] = int(self.disruption_spin.get())
+            self.current_unit['fatigue'] = int(self.fatigue_spin.get())
         except ValueError:
             pass
 
@@ -1292,12 +1378,15 @@ class UnitPropertiesEditor(ttk.Frame):
         if self.on_unit_update_callback:
             self.on_unit_update_callback(self.current_unit)
 
+        atk = self.current_unit.get('attack_base', 0)
+        defn = self.current_unit.get('defense_base', 0)
+        qual = self.current_unit.get('quality', 0)
         messagebox.showinfo("Success",
                            f"Unit properties updated!\n\n"
                            f"Changes:\n"
                            f"- Name: {self.current_unit['name']}\n"
                            f"- Side: {self.current_unit['side']}\n"
-                           f"- Strength: {self.current_unit.get('strength', 100)}\n"
+                           f"- Attack: {atk}, Defense: {defn}, Quality: {qual}\n"
                            f"- Behavior: 0x{behavior_byte:02X} (0b{behavior_byte:08b})\n"
                            f"- Flags: {flags_str}\n\n"
                            f"Note: Changes are saved in memory. Use File > Save to persist to disk.")
@@ -2071,7 +2160,7 @@ class ImprovedScenarioEditor:
             units_by_side[side].append(unit)
 
         # Create a tab for each side
-        columns = ("Index", "Name", "Position", "Strength", "Type")
+        columns = ("Index", "Name", "Position", "Atk", "Def", "Qual", "Dis", "Fat", "Type")
 
         for side in sorted(units_by_side.keys()):
             # Create frame for this side's tab
@@ -2085,14 +2174,22 @@ class ImprovedScenarioEditor:
             tree.heading("Index", text="#")
             tree.heading("Name", text="Unit Name")
             tree.heading("Position", text="Position")
-            tree.heading("Strength", text="Strength")
+            tree.heading("Atk", text="Atk")
+            tree.heading("Def", text="Def")
+            tree.heading("Qual", text="Qual")
+            tree.heading("Dis", text="Dis")
+            tree.heading("Fat", text="Fat")
             tree.heading("Type", text="Type")
 
             tree.column("Index", width=40)
-            tree.column("Name", width=200)
-            tree.column("Position", width=80)
-            tree.column("Strength", width=60)
-            tree.column("Type", width=120)
+            tree.column("Name", width=160)
+            tree.column("Position", width=70)
+            tree.column("Atk", width=40)
+            tree.column("Def", width=40)
+            tree.column("Qual", width=40)
+            tree.column("Dis", width=40)
+            tree.column("Fat", width=40)
+            tree.column("Type", width=100)
 
             # Scrollbar
             scrollbar = ttk.Scrollbar(tab_frame, orient=tk.VERTICAL,
@@ -2114,8 +2211,23 @@ class ImprovedScenarioEditor:
 
             # Populate tree with units for this side
             for unit in units_by_side[side]:
-                strength = unit.get('strength', 0)
-                strength_str = str(strength) if strength > 0 else '-'
+                # Get actual combat stats
+                attack_base = unit.get('attack_base', 0)
+                defense_base = unit.get('defense_base', 0)
+                quality = unit.get('quality', 0)
+                disruption = unit.get('disruption', 0)
+                fatigue = unit.get('fatigue', 0)
+
+                # Calculate effective stats
+                effective_atk = attack_base - fatigue if attack_base > 0 else 0
+                effective_def = defense_base - fatigue if defense_base > 0 else 0
+
+                # Format stats
+                atk_str = str(effective_atk) if attack_base > 0 else '-'
+                def_str = str(effective_def) if defense_base > 0 else '-'
+                qual_str = str(quality) if quality > 0 else '-'
+                dis_str = str(disruption) if disruption > 0 else '-'
+                fat_str = str(fatigue) if fatigue > 0 else '-'
 
                 # Get human-readable type name
                 type_code = unit.get('type', 0)
@@ -2135,7 +2247,11 @@ class ImprovedScenarioEditor:
                     unit.get('index', '?'),
                     unit.get('name', 'Unknown'),
                     position_str,
-                    strength_str,
+                    atk_str,
+                    def_str,
+                    qual_str,
+                    dis_str,
+                    fat_str,
                     type_name
                 ))
 
@@ -2301,7 +2417,7 @@ MAP VIEWER TAB:
 UNIT EDITOR TAB:
 - View all units in the scenario
 - Select a unit to edit its properties
-- Use the form to modify name, type, position, strength
+- Use the form to modify name, type, position, combat stats
 
 DATA VIEWER TAB:
 - Overview of scenario data structure
