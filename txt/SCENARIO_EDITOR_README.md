@@ -40,6 +40,30 @@ A comprehensive graphical scenario creator and editor for World at War: D-Day sc
 
 ## Additional Tools
 
+### Unit Stats Analyzer (tools/analyze_unit_stats.py)
+Displays complete unit combat statistics from scenario files.
+
+```bash
+python3 tools/analyze_unit_stats.py game/SCENARIO/BRADLEY.SCN
+```
+
+This tool displays:
+- Unit Instance Index (sequential ID per unit)
+- Attack (effective and base values)
+- Defense (effective and base values)
+- Quality
+- Antitank value
+- Disruption level
+- Fatigue level
+
+**Stat Calculation:**
+- Effective Attack = Attack Base - Fatigue
+- Effective Defense = Defense Base - Fatigue
+- Quality and Antitank used directly
+
+See `txt/UNIT_TYPE_MAPPING_COMPLETE.txt` for complete technical documentation
+of the 64-byte unit record structure.
+
 ### Search
 - Search for strings across all data sections
 - Display results with offset, section, and preview
