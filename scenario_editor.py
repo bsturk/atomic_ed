@@ -248,13 +248,13 @@ class EnhancedUnitParser:
                 quality = 0
                 disruption = 0
                 fatigue = 0
-                antitank = 0
+                antitank = 255  # N/A - antitank is determined by unit type from EXE, not scenario file
 
                 if match.start() >= 64:
                     # Look at bytes before the unit name
                     # Unit record structure (64 bytes before name):
                     # Bytes -64 to -62: Unit Instance Index (NOT strength!)
-                    # Byte -60: Antitank value
+                    # Byte -60: Part of sequential index (NOT antitank!)
                     # Bytes -58 to -56: X coordinate
                     # Bytes -56 to -54: Y coordinate
                     # Byte -27: Unit type code
@@ -265,6 +265,7 @@ class EnhancedUnitParser:
                     # Byte -6: Disruption
                     # Byte -5: Fatigue
                     # Byte -2: Record marker (0xFF)
+                    # NOTE: Antitank is NOT stored per-unit in scenario; it's from unit type tables in EXE
                     pre_data = data[match.start()-64:match.start()]
 
                     # Extract unit type from byte at position -27
@@ -286,9 +287,8 @@ class EnhancedUnitParser:
                         disruption = pre_data[-6]
                         fatigue = pre_data[-5]
 
-                    # Extract antitank from byte -60
-                    if len(pre_data) >= 60:
-                        antitank = pre_data[-60]
+                    # Antitank is NOT in the scenario file - it's from unit type tables
+                    # Kept as 255 (N/A) to indicate it's not stored here
 
                     # Extract coordinates from offset -58 (X) and -56 (Y)
                     # Special value 0xFFFF (65535) indicates off-map/reinforcement units
