@@ -147,29 +147,25 @@ Recon               0x5f    6       1.4%
 Engineer            0x12    5       1.2%
 
 ================================================================================
-STRENGTH VALUE ANALYSIS - CORRECTION!
+UNIT INSTANCE INDEX (Bytes -64 to -62)
 ================================================================================
 
-**IMPORTANT CORRECTION (November 2025):**
+The 16-bit little-endian value at offset -64 from unit name is the
+UNIT INSTANCE INDEX - a sequential identifier for each unit in the scenario.
 
-The value at offset -64 from unit name is NOT the unit's combat strength!
-It is actually the UNIT INSTANCE INDEX - a sequential identifier for each
-unit in the scenario.
+This field:
+  - Serves as a unique ID for each unit instance
+  - Is NOT a combat statistic (not strength, health, or power)
+  - Ranges from 0 to ~200+ depending on scenario size
 
-Previous interpretation was INCORRECT:
-  - "Strength is stored as a 16-bit little-endian unsigned integer at offset -64"
-  - This field does NOT represent combat power, health, or strength
-
-CORRECT interpretation:
-  - Offset -64 to -62: Unit Instance Index (sequential ID, 0-based)
-  - The actual combat stats are stored in bytes -9 through -4 before the name
+The actual combat stats are stored in bytes -9 through -4 before the unit name.
 
 ================================================================================
-COMPLETE UNIT RECORD STRUCTURE (64 bytes before unit name) - CORRECTED
+COMPLETE UNIT RECORD STRUCTURE (64 bytes before unit name)
 ================================================================================
 
 This section documents the complete 64-byte unit record that precedes each
-unit name string in the scenario file. This corrects earlier incomplete analysis.
+unit name string in the scenario file.
 
 BYTE OFFSETS (relative to unit name start, negative offset):
 -----------------------------------------------------------------
@@ -223,11 +219,10 @@ User-reported in-game stats:
   dis 5
   fat 3
 
-Scenario Editor (OLD - INCORRECT):
-  Shows "strength = 19" ← This is WRONG! Not a combat stat!
+Unit Instance Index: 19 (sequential ID, not a combat stat)
 
 Binary data at offset 0x24D4 (64 bytes before "1-26-1   " string):
-  Byte -64 to -62: 13 00 = 19    ← Unit Instance Index (NOT strength!)
+  Byte -64 to -62: 13 00 = 19    ← Unit Instance Index
   Byte -60: 06 = 6               ← Antitank value ✓ MATCHES
   Byte -58 to -57: 04 00 = 4     ← X coordinate
   Byte -56 to -55: 08 00 = 8     ← Y coordinate

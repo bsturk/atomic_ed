@@ -40,20 +40,15 @@ A comprehensive graphical scenario creator and editor for World at War: D-Day sc
 
 ## Additional Tools
 
-### Unit Stats Analyzer (NEW - tools/analyze_unit_stats.py)
-**IMPORTANT**: The scenario editor's "strength" field is INCORRECT!
+### Unit Stats Analyzer (tools/analyze_unit_stats.py)
+Displays complete unit combat statistics from scenario files.
 
-The value displayed as "strength" in the Unit Editor is actually the **Unit Instance Index**,
-not a combat statistic. For example, if a unit shows "strength = 19", that 19 is just
-an ID number, not its combat power.
-
-To view actual combat stats, use the new analyzer tool:
 ```bash
 python3 tools/analyze_unit_stats.py game/SCENARIO/BRADLEY.SCN
 ```
 
-This tool correctly displays:
-- Unit Instance Index (the "strength" misnomer)
+This tool displays:
+- Unit Instance Index (sequential ID per unit)
 - Attack (effective and base values)
 - Defense (effective and base values)
 - Quality
