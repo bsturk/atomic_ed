@@ -1504,9 +1504,98 @@ class ScenarioSettingsEditor(ttk.Frame):
 
     def load_scenario_data(self, scenario):
         """Load scenario data into the form"""
-        # Placeholder - would parse from scenario data
+        # Load scenario name
         self.name_entry.delete(0, tk.END)
         self.name_entry.insert(0, scenario.filename.stem if scenario else "Unknown")
+
+        # Load turn count - it's stored at word[3] (offset +6) in a parameter array
+        # The array location varies per scenario, so we search for it
+        if scenario and scenario.data:
+            turn_count = self._find_turn_count(scenario)
+            if turn_count:
+                self.turn_spin.delete(0, tk.END)
+                self.turn_spin.insert(0, str(turn_count))
+
+    def _find_turn_count(self, scenario):
+        """Find turn count in scenario data
+
+        Based on analysis documented in txt/TURN_COUNT_FORMAT.md:
+        - Turn count is ALWAYS at word[3] (offset +6) within a parameter array
+        - Array location varies per scenario but can be found by searching
+        - Turn count range: 1-255
+        - Surrounding words (word[0-2]) are typically < 1000
+        """
+        # Common turn count array base offsets (array_start, not turn offset)
+        # These are the most likely locations to find the parameter array
+        common_array_bases = [
+            0x0246,  # BRADLEY, COUNTER
+            0x02EA,  # COBRA
+            0x1462,  # STLO (in PTR5 section)
+            0x1F7A,  # UTAH
+            0x1976,  # OMAHA
+            0x2220,  # CAMPAIGN
+        ]
+
+        # First, check common offsets (fast path)
+        for array_base in common_array_bases:
+            if array_base + 8 < len(scenario.data):
+                turn_offset = array_base + 6  # word[3]
+                turn_candidate = struct.unpack('<H', scenario.data[turn_offset:turn_offset + 2])[0]
+
+                # Validate: turn count should be reasonable
+                if 1 <= turn_candidate <= 255:
+                    # Double-check by validating word[0-2] are also reasonable
+                    word0 = struct.unpack('<H', scenario.data[array_base:array_base + 2])[0]
+                    word1 = struct.unpack('<H', scenario.data[array_base + 2:array_base + 4])[0]
+                    word2 = struct.unpack('<H', scenario.data[array_base + 4:array_base + 6])[0]
+
+                    if all(0 <= w <= 1000 for w in [word0, word1, word2]):
+                        return turn_candidate
+
+        # If not found at common locations, search the PRE_PTR5 area and PTR5 section
+        # PRE_PTR5: from 0x60 to first section pointer
+        # PTR5: might contain the array if PTR6 comes first
+        ptr5_offset = scenario.pointers.get('PTR5', len(scenario.data))
+        ptr6_offset = scenario.pointers.get('PTR6', len(scenario.data))
+        first_section_offset = min(ptr5_offset, ptr6_offset)
+
+        # Search PRE_PTR5 area
+        for array_base in range(0x60, first_section_offset - 8, 2):
+            if array_base + 8 >= len(scenario.data):
+                break
+
+            turn_offset = array_base + 6
+            turn_candidate = struct.unpack('<H', scenario.data[turn_offset:turn_offset + 2])[0]
+
+            if 1 <= turn_candidate <= 255:
+                # Validate surrounding words
+                word0 = struct.unpack('<H', scenario.data[array_base:array_base + 2])[0]
+                word1 = struct.unpack('<H', scenario.data[array_base + 2:array_base + 4])[0]
+                word2 = struct.unpack('<H', scenario.data[array_base + 4:array_base + 6])[0]
+
+                if all(0 <= w <= 1000 for w in [word0, word1, word2]):
+                    return turn_candidate
+
+        # Search PTR5 section if PTR6 comes first (like STLO.SCN)
+        if ptr6_offset < ptr5_offset:
+            ptr5_end = ptr5_offset + min(4096, len(scenario.data) - ptr5_offset)
+            for array_base in range(ptr5_offset, ptr5_end - 8, 2):
+                if array_base + 8 >= len(scenario.data):
+                    break
+
+                turn_offset = array_base + 6
+                turn_candidate = struct.unpack('<H', scenario.data[turn_offset:turn_offset + 2])[0]
+
+                if 1 <= turn_candidate <= 255:
+                    word0 = struct.unpack('<H', scenario.data[array_base:array_base + 2])[0]
+                    word1 = struct.unpack('<H', scenario.data[array_base + 2:array_base + 4])[0]
+                    word2 = struct.unpack('<H', scenario.data[array_base + 4:array_base + 6])[0]
+
+                    if all(0 <= w <= 1000 for w in [word0, word1, word2]):
+                        return turn_candidate
+
+        # Default to 20 if not found (should not happen with valid scenarios)
+        return 20
 
     def apply_settings(self):
         """Apply settings to scenario"""
@@ -1609,10 +1698,10 @@ class ImprovedScenarioEditor:
 
         ttk.Button(toolbar, text="Validate", command=self.validate_scenario).pack(side=tk.LEFT, padx=2)
 
-        # File info
-        self.file_label = ttk.Label(toolbar, text="No file loaded",
-                                    font=("TkDefaultFont", 9, "bold"))
-        self.file_label.pack(side=tk.LEFT, padx=20)
+        self.file_label = ttk.Label( toolbar, text = '!! NO SCENARIO FILE LOADED !!',
+                                     font = ( "TkDefaultFont", 9, "bold" ) )
+
+        self.file_label.pack( side = tk.LEFT, padx = 20 )
 
     def _create_main_ui(self):
         """Create main UI with notebook"""
