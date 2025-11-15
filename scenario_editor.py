@@ -1275,12 +1275,21 @@ class UnitPropertiesEditor(ttk.Frame):
         disruption = self.current_unit.get('disruption', 0)
         fatigue = self.current_unit.get('fatigue', 0)
 
-        self.attack_spin.set(attack_base)
-        self.defense_spin.set(defense_base)
-        self.quality_spin.set(quality)
-        self.antitank_spin.set(antitank)
-        self.disruption_spin.set(disruption)
-        self.fatigue_spin.set(fatigue)
+        # Helper to set spinbox or disable if value is 255 (N/A)
+        def set_stat_spinbox(spinbox, value):
+            if value == 255:
+                spinbox.set("N/A")
+                spinbox.configure(state='disabled')
+            else:
+                spinbox.configure(state='normal')
+                spinbox.set(value)
+
+        set_stat_spinbox(self.attack_spin, attack_base)
+        set_stat_spinbox(self.defense_spin, defense_base)
+        set_stat_spinbox(self.quality_spin, quality)
+        set_stat_spinbox(self.antitank_spin, antitank)
+        set_stat_spinbox(self.disruption_spin, disruption)
+        set_stat_spinbox(self.fatigue_spin, fatigue)
 
         # Set side from unit data
         side = self.current_unit.get('side', 'Allied')
@@ -1321,12 +1330,27 @@ class UnitPropertiesEditor(ttk.Frame):
         self.raw_text.insert('1.0', f"Offset: 0x{self.current_unit.get('offset', 0):06x}\n")
         self.raw_text.insert(tk.END, f"Type: {self.current_unit.get('type', 0)}\n")
         self.raw_text.insert(tk.END, f"Unit Instance Index: {self.current_unit.get('unit_instance_index', 0)}\n")
-        eff_atk = attack_base - fatigue
-        eff_def = defense_base - fatigue
-        self.raw_text.insert(tk.END, f"Attack: {eff_atk} (base={attack_base})\n")
-        self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
-        self.raw_text.insert(tk.END, f"Quality: {quality}, Antitank: {antitank}\n")
-        self.raw_text.insert(tk.END, f"Disruption: {disruption}, Fatigue: {fatigue}\n")
+
+        # Handle 255 (N/A) values in display
+        if attack_base == 255 or fatigue == 255:
+            self.raw_text.insert(tk.END, f"Attack: N/A\n")
+        else:
+            eff_atk = attack_base - fatigue
+            self.raw_text.insert(tk.END, f"Attack: {eff_atk} (base={attack_base})\n")
+
+        if defense_base == 255 or fatigue == 255:
+            self.raw_text.insert(tk.END, f"Defense: N/A\n")
+        else:
+            eff_def = defense_base - fatigue
+            self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
+
+        qual_str = "N/A" if quality == 255 else str(quality)
+        at_str = "N/A" if antitank == 255 else str(antitank)
+        self.raw_text.insert(tk.END, f"Quality: {qual_str}, Antitank: {at_str}\n")
+
+        dis_str = "N/A" if disruption == 255 else str(disruption)
+        fat_str = "N/A" if fatigue == 255 else str(fatigue)
+        self.raw_text.insert(tk.END, f"Disruption: {dis_str}, Fatigue: {fat_str}\n")
         self.raw_text.insert(tk.END, f"\nRaw hex data (64 bytes):\n")
         raw_data = self.current_unit.get('raw_data', '')
         # Format hex nicely
@@ -2217,16 +2241,31 @@ class ImprovedScenarioEditor:
                 disruption = unit.get('disruption', 0)
                 fatigue = unit.get('fatigue', 0)
 
-                # Calculate effective stats
-                effective_atk = attack_base - fatigue if attack_base > 0 else 0
-                effective_def = defense_base - fatigue if defense_base > 0 else 0
+                # Calculate effective stats (handle 255 = N/A)
+                if attack_base == 255 or fatigue == 255:
+                    effective_atk = 0
+                    atk_str = 'N/A'
+                elif attack_base > 0:
+                    effective_atk = attack_base - fatigue
+                    atk_str = str(effective_atk)
+                else:
+                    effective_atk = 0
+                    atk_str = '-'
 
-                # Format stats
-                atk_str = str(effective_atk) if attack_base > 0 else '-'
-                def_str = str(effective_def) if defense_base > 0 else '-'
-                qual_str = str(quality) if quality > 0 else '-'
-                dis_str = str(disruption) if disruption > 0 else '-'
-                fat_str = str(fatigue) if fatigue > 0 else '-'
+                if defense_base == 255 or fatigue == 255:
+                    effective_def = 0
+                    def_str = 'N/A'
+                elif defense_base > 0:
+                    effective_def = defense_base - fatigue
+                    def_str = str(effective_def)
+                else:
+                    effective_def = 0
+                    def_str = '-'
+
+                # Format stats (handle 255 = N/A)
+                qual_str = 'N/A' if quality == 255 else (str(quality) if quality > 0 else '-')
+                dis_str = 'N/A' if disruption == 255 else (str(disruption) if disruption > 0 else '-')
+                fat_str = 'N/A' if fatigue == 255 else (str(fatigue) if fatigue > 0 else '-')
 
                 # Get human-readable type name
                 type_code = unit.get('type', 0)
