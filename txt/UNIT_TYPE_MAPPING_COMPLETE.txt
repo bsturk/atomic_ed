@@ -147,32 +147,119 @@ Recon               0x5f    6       1.4%
 Engineer            0x12    5       1.2%
 
 ================================================================================
-STRENGTH VALUE ANALYSIS
+STRENGTH VALUE ANALYSIS - CORRECTION!
 ================================================================================
 
-Strength is stored as a 16-bit little-endian unsigned integer at offset -64
-from the unit name. Observed values and typical ranges:
+**IMPORTANT CORRECTION (November 2025):**
 
-Unit Type               Typical Strength Range    Notes
+The value at offset -64 from unit name is NOT the unit's combat strength!
+It is actually the UNIT INSTANCE INDEX - a sequential identifier for each
+unit in the scenario.
+
+Previous interpretation was INCORRECT:
+  - "Strength is stored as a 16-bit little-endian unsigned integer at offset -64"
+  - This field does NOT represent combat power, health, or strength
+
+CORRECT interpretation:
+  - Offset -64 to -62: Unit Instance Index (sequential ID, 0-based)
+  - The actual combat stats are stored in bytes -9 through -4 before the name
+
+================================================================================
+COMPLETE UNIT RECORD STRUCTURE (64 bytes before unit name) - CORRECTED
+================================================================================
+
+This section documents the complete 64-byte unit record that precedes each
+unit name string in the scenario file. This corrects earlier incomplete analysis.
+
+BYTE OFFSETS (relative to unit name start, negative offset):
 -----------------------------------------------------------------
-Infantry-Bn             15-30                     Battalion strength
-Airborne-Bn             15-30                     Similar to infantry
-Tank-Bn                 60-80                     Higher combat value
-Panzer-Bn               60-80                     Heavy armor
-Artillery               90-130                    Firepower value
-Arty-Group              90-130                    Multiple batteries
-Corps                   30-50                     HQ modifier
-Division                30-50                     HQ modifier
-Regiment                20-40                     HQ modifier
-SS-Bn                   20-35                     Elite infantry
-Glider-Bn               15-25                     Light infantry
-Engineer                10-20                     Support value
-Recon                   5-15                      Scouting value
+Offset    Size   Type      Field Name            Description
+-----------------------------------------------------------------
+-64,-63   2      uint16    Unit Instance Index   Sequential ID (NOT strength!)
+-62,-61   2      uint16    Unknown               Possibly parent unit/group
+-60       1      byte      Antitank Value        Current AT stat
+-59       1      byte      AT Modifier           Unknown modifier
+-58,-57   2      uint16    X Coordinate          Map X position
+-56,-55   2      uint16    Y Coordinate          Map Y position
+-54,-53   2      uint16    Unknown               Possibly original X
+-52,-51   2      uint16    Unknown               Possibly original Y
+-50,-49   2      uint16    Off-Map Flags         0xFFFF = off-map/reinforcement
+-48 to -17  32   bytes     Unknown               Various flags and data
+-16 to -10  7    bytes     Padding               Usually zeros
+-9        1      byte      Attack Base           Current attack value
+-8        1      byte      Defense Base          Current defense value
+-7        1      byte      Quality               Unit quality (1-10)
+-6        1      byte      Disruption            Current disruption level
+-5        1      byte      Fatigue               Current fatigue level
+-4        1      byte      Unknown               Possibly armor or another stat
+-3        1      byte      Unknown               Usually 0
+-2        1      byte      Record Marker         Always 0xFF
+-1        1      byte      Terminator            Usually 0
 
-Zero Strength Units:
-- Approximately 10% of units have strength = 0
-- These are typically headquarters, placeholder, or off-map units
-- May represent reinforcements or special event-triggered units
+COMBAT STAT CALCULATION:
+  Effective Attack  = Attack Base (byte -9) - Fatigue (byte -5)
+  Effective Defense = Defense Base (byte -8) - Fatigue (byte -5)
+  Quality and Antitank are used directly without modification
+
+GAME DISPLAY FORMAT:
+  The game displays stats as "X (Y)" where:
+  X = Current/Effective value (calculated from scenario data)
+  Y = Original base value from Unit TYPE definition in game EXE
+
+Example: "attack 5 (7)" means:
+  - Effective attack = 5 (from scenario: base 8 - fatigue 3 = 5)
+  - Original unit type base attack = 7 (from EXE lookup table)
+
+================================================================================
+WORKED EXAMPLE: 1-26-1 Unit in BRADLEY.SCN
+================================================================================
+
+User-reported in-game stats:
+  attack 5 (7)
+  defense 5 (7)
+  quality 8 (8)
+  armor 0 (0)
+  antitank 6 (4)
+  dis 5
+  fat 3
+
+Scenario Editor (OLD - INCORRECT):
+  Shows "strength = 19" ← This is WRONG! Not a combat stat!
+
+Binary data at offset 0x24D4 (64 bytes before "1-26-1   " string):
+  Byte -64 to -62: 13 00 = 19    ← Unit Instance Index (NOT strength!)
+  Byte -60: 06 = 6               ← Antitank value ✓ MATCHES
+  Byte -58 to -57: 04 00 = 4     ← X coordinate
+  Byte -56 to -55: 08 00 = 8     ← Y coordinate
+  Byte -9: 08 = 8                ← Attack base value
+  Byte -8: 08 = 8                ← Defense base value
+  Byte -7: 08 = 8                ← Quality ✓ MATCHES
+  Byte -6: 05 = 5                ← Disruption ✓ MATCHES
+  Byte -5: 03 = 3                ← Fatigue ✓ MATCHES
+
+Calculated effective stats:
+  Attack: 8 - 3 = 5 ✓ MATCHES user's "attack 5"
+  Defense: 8 - 3 = 5 ✓ MATCHES user's "defense 5"
+
+The (7) in parens comes from:
+  Game EXE lookup table at seg000:0D12 for Infantry type
+  Infantry type has base attack=7, base defense=7
+  Scenario modifies these to 8,8 for this specific unit
+  Then fatigue reduces effective values to 5,5
+
+================================================================================
+UNIT INSTANCE INDEX VALUES (Previously "Strength")
+================================================================================
+
+This field is a sequential identifier assigned to units during scenario
+creation. Patterns observed:
+
+Infantry Units (Allied):      19, 79, 129, etc.
+Armored Units:                73, 121, etc.
+Off-Map/Reinforcement Units:  0 (common for reserves)
+
+These values have NO combat significance and should NOT be displayed to users
+as "strength" in any scenario editor.
 
 ================================================================================
 TECHNICAL IMPLEMENTATION
