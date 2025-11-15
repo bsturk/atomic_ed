@@ -95,6 +95,69 @@ class EnhancedUnitParser:
         0x5e: 'Static-Regt',    # Static regiment (coastal defense)
     }
 
+    # Antitank values by unit type (based on military capabilities)
+    # Scale: 0-12 where higher = better anti-tank capability
+    UNIT_TYPE_ANTITANK = {
+        # Infantry Types - moderate AT capability (bazookas, PIATs, etc.)
+        0x00: 4,  # Infantry-Bn
+        0x01: 6,  # Airborne-Bn (elite with better AT weapons)
+        0x02: 4,  # Infantry-Bn
+        0x04: 5,  # SS-Bn (elite German infantry)
+        0x08: 5,  # Glider-Bn (similar to regular infantry)
+        0x0b: 5,  # SS-Regiment
+        0x0f: 4,  # FJ-Co (company level)
+        0x1d: 3,  # Static-Bn (limited equipment)
+        0x27: 8,  # Panzer-Co (armor unit)
+        0x32: 6,  # Heavy-Co (SS/Panzergrenadier)
+        0x35: 10, # Panzer-Bn (armor battalion)
+        0x38: 5,  # FJ-Heavy
+        0x41: 7,  # PzGren-Bn (armored infantry with AT capability)
+        0x62: 5,  # FJ-Heavy
+
+        # Armor Types - excellent AT capability
+        0x0d: 11, # Panzer-Heavy (heavy tanks)
+        0x28: 10, # Tank-Bn (Allied)
+        0x29: 10, # Tank-Bn variant
+        0x2a: 9,  # Tank-Co
+        0x60: 11, # Combat-Cmd-A (combined arms)
+        0x61: 11, # Combat-Cmd-B
+
+        # Artillery Types - limited direct AT capability
+        0x18: 2,  # Artillery
+        0x24: 1,  # Arty-Group (off-map)
+        0x25: 1,  # Arty-Group variant
+        0x43: 2,  # Artillery battalion
+
+        # Support Types
+        0x1b: 3,  # Engineer
+        0x16: 2,  # Eng-Co
+        0x34: 9,  # Assault-Gun (StuG - excellent AT platform)
+        0x10: 1,  # Flak-Regt (anti-aircraft)
+        0x36: 2,  # AAA/Heavy
+        0x40: 3,  # Cavalry
+        0x5f: 3,  # Recon
+
+        # Air Units
+        0x26: 0,  # Luftwaffe (no ground AT)
+
+        # Command Levels - minimal combat capability
+        0x07: 2,  # Division-HQ
+        0x11: 1,  # Corps
+        0x12: 1,  # Korps
+        0x13: 2,  # Division
+        0x14: 2,  # Static-Div
+        0x15: 3,  # Regiment
+        0x17: 2,  # Company
+        0x1c: 1,  # Static-HQ
+        0x2b: 1,  # Army-HQ
+        0x5e: 2,  # Static-Regt
+    }
+
+    @staticmethod
+    def get_antitank_for_type(type_code):
+        """Get antitank value for a unit type code"""
+        return EnhancedUnitParser.UNIT_TYPE_ANTITANK.get(type_code, 4)  # Default: 4 (infantry-level)
+
     @staticmethod
     def get_unit_type_name(type_code):
         """Convert unit type code to human-readable name"""
@@ -326,6 +389,7 @@ class EnhancedUnitParser:
                     'quality': quality,
                     'disruption': disruption,
                     'fatigue': fatigue,
+                    'antitank': EnhancedUnitParser.get_antitank_for_type(unit_type),
                     'x': x,
                     'y': y,
                     'side': side,
@@ -1108,6 +1172,11 @@ class UnitPropertiesEditor(ttk.Frame):
         self.fatigue_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
+        # Antitank (read-only, determined by unit type)
+        ttk.Label(stats_frame, text="Antitank:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        self.antitank_label = ttk.Label(stats_frame, text="0", width=5)
+        self.antitank_label.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
+
         # Separator for AI Scripting section
         ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=5, column=0, columnspan=4,
                                                               sticky=tk.EW, pady=10)
@@ -1277,6 +1346,10 @@ class UnitPropertiesEditor(ttk.Frame):
         set_stat_spinbox(self.disruption_spin, disruption)
         set_stat_spinbox(self.fatigue_spin, fatigue)
 
+        # Set antitank (read-only, determined by unit type)
+        antitank = self.current_unit.get('antitank', 4)
+        self.antitank_label.configure(text=str(antitank))
+
         # Set side from unit data
         side = self.current_unit.get('side', 'Allied')
         if side == 'Axis':
@@ -1331,7 +1404,7 @@ class UnitPropertiesEditor(ttk.Frame):
             self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
 
         qual_str = "N/A" if quality == 255 else str(quality)
-        self.raw_text.insert(tk.END, f"Quality: {qual_str}\n")
+        self.raw_text.insert(tk.END, f"Quality: {qual_str}, Antitank: {antitank} (by type)\n")
 
         dis_str = "N/A" if disruption == 255 else str(disruption)
         fat_str = "N/A" if fatigue == 255 else str(fatigue)
