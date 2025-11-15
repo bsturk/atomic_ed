@@ -1059,10 +1059,16 @@ class UnitPropertiesEditor(ttk.Frame):
         self.name_entry = ttk.Entry(form_frame, width=30)
         self.name_entry.grid(row=0, column=1, sticky=tk.W, pady=3, padx=5)
 
-        # Type
+        # Type and Side on same row
         ttk.Label(form_frame, text="Type:").grid(row=1, column=0, sticky=tk.W, pady=3)
-        self.type_entry = ttk.Entry(form_frame, width=30)
+        self.type_entry = ttk.Entry(form_frame, width=20)
         self.type_entry.grid(row=1, column=1, sticky=tk.W, pady=3, padx=5)
+
+        ttk.Label(form_frame, text="Side:").grid(row=1, column=2, sticky=tk.W, pady=3, padx=(10,0))
+        self.side_combo = ttk.Combobox(form_frame, width=10, state='readonly',
+                                       values=['Allied', 'Axis'])
+        self.side_combo.grid(row=1, column=3, sticky=tk.W, pady=3, padx=5)
+        self.side_combo.current(0)
 
         # Position X
         ttk.Label(form_frame, text="Position X:").grid(row=2, column=0, sticky=tk.W, pady=3)
@@ -1076,7 +1082,7 @@ class UnitPropertiesEditor(ttk.Frame):
 
         # Combat Stats section
         stats_frame = ttk.LabelFrame(form_frame, text="Combat Stats", padding=5)
-        stats_frame.grid(row=4, column=0, columnspan=2, sticky=tk.EW, pady=5)
+        stats_frame.grid(row=4, column=0, columnspan=4, sticky=tk.EW, pady=5)
 
         # Attack
         ttk.Label(stats_frame, text="Attack:").grid(row=0, column=0, sticky=tk.W, pady=2)
@@ -1114,20 +1120,13 @@ class UnitPropertiesEditor(ttk.Frame):
         self.fatigue_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
-        # Side (Allied/Axis)
-        ttk.Label(form_frame, text="Side:").grid(row=5, column=0, sticky=tk.W, pady=3)
-        self.side_combo = ttk.Combobox(form_frame, width=15, state='readonly',
-                                       values=['Allied', 'Axis'])
-        self.side_combo.grid(row=5, column=1, sticky=tk.W, pady=3, padx=5)
-        self.side_combo.current(0)
-
         # Separator for AI Scripting section
-        ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=6, column=0, columnspan=2,
+        ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=5, column=0, columnspan=4,
                                                               sticky=tk.EW, pady=10)
 
         # AI Behavior section label with info
         ai_header_frame = ttk.Frame(form_frame)
-        ai_header_frame.grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
+        ai_header_frame.grid(row=6, column=0, columnspan=4, sticky=tk.W, pady=(0, 5))
 
         ai_label = ttk.Label(ai_header_frame, text="AI Behavior Flags (Bit Field)",
                             font=("TkDefaultFont", 9, "bold"))
@@ -1139,10 +1138,10 @@ class UnitPropertiesEditor(ttk.Frame):
         info_btn.pack(side=tk.LEFT, padx=5)
 
         # Behavior Byte (hex display with live update)
-        ttk.Label(form_frame, text="Behavior Byte:").grid(row=8, column=0, sticky=tk.W, pady=3)
+        ttk.Label(form_frame, text="Behavior Byte:").grid(row=7, column=0, sticky=tk.W, pady=3)
         self.behavior_byte_var = tk.StringVar(value="0x00")
         behavior_display_frame = ttk.Frame(form_frame)
-        behavior_display_frame.grid(row=8, column=1, sticky=tk.W, pady=3, padx=5)
+        behavior_display_frame.grid(row=7, column=1, sticky=tk.W, pady=3, padx=5)
 
         self.behavior_byte_entry = ttk.Entry(behavior_display_frame, width=10, state='readonly',
                                              textvariable=self.behavior_byte_var,
@@ -1156,7 +1155,7 @@ class UnitPropertiesEditor(ttk.Frame):
 
         # AI Behavior Flags (8 checkboxes for individual bits)
         flags_frame = ttk.LabelFrame(form_frame, text="Behavior Flags", padding=5)
-        flags_frame.grid(row=9, column=0, columnspan=2, sticky=tk.EW, pady=5, padx=5)
+        flags_frame.grid(row=8, column=0, columnspan=4, sticky=tk.EW, pady=5, padx=5)
 
         # Define behavior bit flags with descriptions
         self.behavior_flags = [
