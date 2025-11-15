@@ -95,10 +95,33 @@ class EnhancedUnitParser:
         0x5e: 'Static-Regt',    # Static regiment (coastal defense)
     }
 
+    # Antitank capability lookup table extracted from INVADE.EXE offset 0x023388
+    # Indexed by unit type code (0x00-0x63)
+    # Values range from 0 (no antitank) to 15 (maximum antitank capability)
+    ANTITANK_TABLE = [
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types  0- 9
+         0,  0,  0, 14, 14,  0,  0,  0,  0,  0,  # Types 10-19
+         0,  0,  0,  0,  0,  2,  2,  0,  2,  0,  # Types 20-29
+         0,  0,  0,  8,  2,  0,  0,  0,  0,  8,  # Types 30-39
+        15,  0, 10,  0,  0,  0,  1,  1,  0,  1,  # Types 40-49
+         1,  0,  5,  2,  0,  1,  0,  0,  1,  0,  # Types 50-59
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 60-69
+         0,  0,  0,  6,  1,  1,  1,  1,  0,  0,  # Types 70-79
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 80-89
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 90-99
+    ]
+
     @staticmethod
     def get_unit_type_name(type_code):
         """Convert unit type code to human-readable name"""
         return EnhancedUnitParser.UNIT_TYPE_NAMES.get(type_code, f'Type-{type_code:02x}')
+
+    @staticmethod
+    def get_antitank_capability(type_code):
+        """Get antitank capability value for a unit type from EXE lookup table"""
+        if 0 <= type_code < len(EnhancedUnitParser.ANTITANK_TABLE):
+            return EnhancedUnitParser.ANTITANK_TABLE[type_code]
+        return 0  # Default to 0 for unknown types
 
     @staticmethod
     def parse_units_from_scenario(scenario):
@@ -1333,6 +1356,11 @@ class UnitPropertiesEditor(ttk.Frame):
         qual_str = "N/A" if quality == 255 else str(quality)
         self.raw_text.insert(tk.END, f"Quality: {qual_str}\n")
 
+        # Display antitank capability from EXE lookup table (based on unit type)
+        unit_type = self.current_unit.get('type', 0)
+        antitank = EnhancedUnitParser.get_antitank_capability(unit_type)
+        self.raw_text.insert(tk.END, f"Antitank: {antitank} (from unit type)\n")
+
         dis_str = "N/A" if disruption == 255 else str(disruption)
         fat_str = "N/A" if fatigue == 255 else str(fatigue)
         self.raw_text.insert(tk.END, f"Disruption: {dis_str}, Fatigue: {fat_str}\n")
@@ -2167,7 +2195,7 @@ class ImprovedScenarioEditor:
             units_by_side[side].append(unit)
 
         # Create a tab for each side
-        columns = ("Index", "Name", "Position", "Atk", "Def", "Qual", "Dis", "Fat", "Type")
+        columns = ("Index", "Name", "Position", "Atk", "Def", "Qual", "AT", "Dis", "Fat", "Type")
 
         for side in sorted(units_by_side.keys()):
             # Create frame for this side's tab
@@ -2184,6 +2212,7 @@ class ImprovedScenarioEditor:
             tree.heading("Atk", text="Atk")
             tree.heading("Def", text="Def")
             tree.heading("Qual", text="Qual")
+            tree.heading("AT", text="AT")
             tree.heading("Dis", text="Dis")
             tree.heading("Fat", text="Fat")
             tree.heading("Type", text="Type")
@@ -2194,6 +2223,7 @@ class ImprovedScenarioEditor:
             tree.column("Atk", width=40)
             tree.column("Def", width=40)
             tree.column("Qual", width=40)
+            tree.column("AT", width=35)
             tree.column("Dis", width=40)
             tree.column("Fat", width=40)
             tree.column("Type", width=100)
@@ -2255,6 +2285,10 @@ class ImprovedScenarioEditor:
                 type_code = unit.get('type', 0)
                 type_name = EnhancedUnitParser.get_unit_type_name(type_code)
 
+                # Get antitank capability from EXE lookup table
+                antitank = EnhancedUnitParser.get_antitank_capability(type_code)
+                at_str = str(antitank) if antitank > 0 else '-'
+
                 # Get position
                 x = unit.get('x', 0)
                 y = unit.get('y', 0)
@@ -2272,6 +2306,7 @@ class ImprovedScenarioEditor:
                     atk_str,
                     def_str,
                     qual_str,
+                    at_str,
                     dis_str,
                     fat_str,
                     type_name
