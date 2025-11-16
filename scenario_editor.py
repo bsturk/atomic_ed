@@ -1179,23 +1179,24 @@ class UnitPropertiesEditor(ttk.Frame):
         flags_frame.grid(row=8, column=0, columnspan=4, sticky=tk.EW, pady=5, padx=5)
 
         # Define behavior bit flags with descriptions
+        # Based on analysis of actual scenario data at offset -20 in unit record
         self.behavior_flags = [
-            {'bit': 0, 'mask': 0x01, 'name': 'Active/Enabled',
-             'desc': 'Unit is active and can take actions'},
-            {'bit': 1, 'mask': 0x02, 'name': 'Mobile',
-             'desc': 'Unit can move on the map'},
-            {'bit': 2, 'mask': 0x04, 'name': 'Combat Capable',
-             'desc': 'Unit can engage in combat'},
-            {'bit': 3, 'mask': 0x08, 'name': 'Scripted Orders',
-             'desc': 'Unit has special scripted orders'},
-            {'bit': 4, 'mask': 0x10, 'name': 'Defensive Stance',
-             'desc': 'Unit takes defensive stance'},
-            {'bit': 5, 'mask': 0x20, 'name': 'Aggressive/Attack',
-             'desc': 'Unit actively seeks combat'},
-            {'bit': 6, 'mask': 0x40, 'name': 'Reserved/Hold',
-             'desc': 'Unit held in reserve'},
-            {'bit': 7, 'mask': 0x80, 'name': 'High Priority',
-             'desc': 'High-priority/critical unit'},
+            {'bit': 0, 'mask': 0x01, 'name': 'Active',
+             'desc': 'Unit is active and operational'},
+            {'bit': 1, 'mask': 0x02, 'name': 'Independent',
+             'desc': 'Unit can act independently (not attached)'},
+            {'bit': 2, 'mask': 0x04, 'name': 'Bit 2',
+             'desc': 'Unknown - rarely used'},
+            {'bit': 3, 'mask': 0x08, 'name': 'Bit 3',
+             'desc': 'Unknown - rarely used'},
+            {'bit': 4, 'mask': 0x10, 'name': 'Bit 4',
+             'desc': 'Unknown'},
+            {'bit': 5, 'mask': 0x20, 'name': 'Bit 5',
+             'desc': 'Unknown'},
+            {'bit': 6, 'mask': 0x40, 'name': 'Bit 6',
+             'desc': 'Unknown'},
+            {'bit': 7, 'mask': 0x80, 'name': 'Bit 7',
+             'desc': 'Unknown'},
         ]
 
         # Create checkbox variables
@@ -1333,17 +1334,17 @@ class UnitPropertiesEditor(ttk.Frame):
             self.side_combo.current(0)
 
         # Set AI behavior from unit data
-        # Try to extract behavior byte from raw data (at offset +5 in 8-byte record)
+        # Behavior byte is at offset -20 in the 64-byte unit record
         behavior_byte = self.current_unit.get('behavior_byte', None)
 
         # If not directly stored, try to extract from raw_data
         if behavior_byte is None:
             raw_data = self.current_unit.get('raw_data', '')
-            if raw_data and len(raw_data) >= 10:  # Need at least 5 bytes (10 hex chars)
+            if raw_data and len(raw_data) >= 90:  # Need at least 45 bytes (90 hex chars)
                 try:
-                    # Behavior byte is at offset +5 in the unit record
-                    # In hex string, that's position 10 (2 chars per byte)
-                    behavior_byte = int(raw_data[10:12], 16)
+                    # Behavior byte is at offset -20 in the 64-byte unit record
+                    # That's byte 44 (64-20=44), which is hex string position 88 (44*2=88)
+                    behavior_byte = int(raw_data[88:90], 16)
                 except (ValueError, IndexError):
                     behavior_byte = 0x00
             else:
