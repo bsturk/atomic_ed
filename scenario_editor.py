@@ -1131,11 +1131,15 @@ class UnitPropertiesEditor(ttk.Frame):
         self.fatigue_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
-        # Antitank (read-only, derived from unit type)
-        ttk.Label(stats_frame, text="Antitank:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        # Antitank (read-only, derived from unit type) - only shown when value > 0
+        self.antitank_label = ttk.Label(stats_frame, text="Antitank:")
+        self.antitank_label.grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
         self.antitank_spin = ttk.Spinbox(stats_frame, from_=0, to=15, width=5, state='readonly')
         self.antitank_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
         self.antitank_spin.set(0)
+        # Initially hide the antitank fields (will show when unit has AT > 0)
+        self.antitank_label.grid_remove()
+        self.antitank_spin.grid_remove()
 
         # Separator for AI Scripting section
         ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=5, column=0, columnspan=4,
@@ -1307,12 +1311,20 @@ class UnitPropertiesEditor(ttk.Frame):
         set_stat_spinbox(self.fatigue_spin, fatigue)
 
         # Set antitank (read-only, derived from unit type)
+        # Only show if unit has antitank capability (value > 0)
         unit_type = self.current_unit.get('type', 0)
         antitank = EnhancedUnitParser.get_antitank_capability(unit_type)
-        # Temporarily enable to set value, then restore readonly state
-        self.antitank_spin.configure(state='normal')
-        self.antitank_spin.set(antitank)
-        self.antitank_spin.configure(state='readonly')
+        if antitank > 0:
+            # Show the antitank field and set value
+            self.antitank_label.grid()
+            self.antitank_spin.grid()
+            self.antitank_spin.configure(state='normal')
+            self.antitank_spin.set(antitank)
+            self.antitank_spin.configure(state='readonly')
+        else:
+            # Hide the antitank field for units without AT capability
+            self.antitank_label.grid_remove()
+            self.antitank_spin.grid_remove()
 
         # Set side from unit data
         side = self.current_unit.get('side', 'Allied')
