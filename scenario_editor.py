@@ -1180,23 +1180,27 @@ class UnitPropertiesEditor(ttk.Frame):
 
         # Define behavior bit flags with descriptions
         # Based on analysis of actual scenario data at offset -20 in unit record
+        # NOTE: These flag meanings are UNVERIFIED guesses based on data patterns.
+        # The disassembly (disasm.txt) only contains DOS4G loader code, not actual
+        # game logic. Without game code analysis, we cannot confirm what these bits mean.
+        # Values observed: 0x03 (common), 0x01, 0x00, 0xff
         self.behavior_flags = [
-            {'bit': 0, 'mask': 0x01, 'name': 'Active',
-             'desc': 'Unit is active and operational'},
-            {'bit': 1, 'mask': 0x02, 'name': 'Independent',
-             'desc': 'Unit can act independently (not attached)'},
-            {'bit': 2, 'mask': 0x04, 'name': 'Bit 2',
-             'desc': 'Unknown - rarely used'},
-            {'bit': 3, 'mask': 0x08, 'name': 'Bit 3',
-             'desc': 'Unknown - rarely used'},
-            {'bit': 4, 'mask': 0x10, 'name': 'Bit 4',
+            {'bit': 0, 'mask': 0x01, 'name': 'Flag 0',
+             'desc': 'Unknown (set in most units, possibly "exists" or "active")'},
+            {'bit': 1, 'mask': 0x02, 'name': 'Flag 1',
+             'desc': 'Unknown (often set with Flag 0, purpose unclear)'},
+            {'bit': 2, 'mask': 0x04, 'name': 'Flag 2',
+             'desc': 'Unknown - rarely observed'},
+            {'bit': 3, 'mask': 0x08, 'name': 'Flag 3',
+             'desc': 'Unknown - rarely observed'},
+            {'bit': 4, 'mask': 0x10, 'name': 'Flag 4',
              'desc': 'Unknown'},
-            {'bit': 5, 'mask': 0x20, 'name': 'Bit 5',
+            {'bit': 5, 'mask': 0x20, 'name': 'Flag 5',
              'desc': 'Unknown'},
-            {'bit': 6, 'mask': 0x40, 'name': 'Bit 6',
+            {'bit': 6, 'mask': 0x40, 'name': 'Flag 6',
              'desc': 'Unknown'},
-            {'bit': 7, 'mask': 0x80, 'name': 'Bit 7',
-             'desc': 'Unknown'},
+            {'bit': 7, 'mask': 0x80, 'name': 'Flag 7',
+             'desc': 'Unknown (set when all bits = 0xff)'},
         ]
 
         # Create checkbox variables
