@@ -52,17 +52,23 @@ This tool displays:
 - Attack (effective and base values)
 - Defense (effective and base values)
 - Quality
-- Antitank value
+- Antitank capability (from EXE lookup table, based on unit type)
 - Disruption level
 - Fatigue level
 
 **Stat Calculation:**
 - Effective Attack = Attack Base - Fatigue
 - Effective Defense = Defense Base - Fatigue
-- Quality and Antitank used directly
+- Quality used directly from scenario file
+- Antitank derived from unit type via lookup table at INVADE.EXE offset 0x023388
+
+**Important Note:**
+Antitank capability is NOT stored in scenario files. It is determined by unit type
+code using a lookup table embedded in the game executable (INVADE.EXE at offset
+0x023388). Values range from 0 (infantry, no AT) to 15 (heavy tank battalions).
 
 See `txt/UNIT_TYPE_MAPPING_COMPLETE.txt` for complete technical documentation
-of the 64-byte unit record structure.
+of the 64-byte unit record structure and the antitank lookup table.
 
 ### Search
 - Search for strings across all data sections

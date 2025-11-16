@@ -412,6 +412,78 @@ File Locations:
 - Source code: dday_scenario_*.py
 
 ================================================================================
+ANTITANK CAPABILITY LOOKUP TABLE (INVADE.EXE)
+================================================================================
+
+Discovered: November 2025
+Location: INVADE.EXE offset 0x023388 (in protected mode section)
+Size: 100 bytes (one byte per unit type code 0x00-0x63)
+Value Range: 0-15 (0 = no antitank, 15 = maximum antitank capability)
+
+This table maps unit type codes to their antitank combat effectiveness.
+Values are NOT stored in scenario files - they are derived from unit type
+via this lookup table in the game executable.
+
+ANTITANK VALUES BY UNIT TYPE:
+-----------------------------------------------------------------
+Type    Code    Name                Antitank    Description
+-----------------------------------------------------------------
+0x00    0       Infantry-Bn         0           No antitank
+0x01    1       Airborne-Bn         0           No antitank
+0x04    4       SS-Bn               0           No antitank
+0x08    8       Glider-Bn           0           No antitank
+0x0d    13      Panzer-Heavy        14          Heavy armor (Tiger)
+0x0e    14      Unknown             14          Heavy armor
+0x19    25      Unknown             2           Light AT capability
+0x1a    26      Unknown             2           Light AT capability
+0x1c    28      Unknown             2           Light AT capability
+0x21    33      Unknown             8           Medium AT capability
+0x22    34      Unknown             2           Light AT capability
+0x27    39      Panzer-Co           8           Medium armor company
+0x28    40      Tank-Bn             15          Maximum (heavy tanks)
+0x2a    42      Tank-Co             10          Tank company
+0x2e    46      Unknown             1           Minimal AT
+0x2f    47      Unknown             1           Minimal AT
+0x31    49      Unknown             1           Minimal AT
+0x32    50      Unknown             1           Minimal AT
+0x34    52      Assault-Gun         5           StuG assault guns
+0x35    53      Panzer-Bn           2           Light Panzer Bn
+0x37    55      Unknown             1           Minimal AT
+0x3a    58      Unknown             1           Minimal AT
+0x49    73      Unknown             6           Medium AT capability
+0x4a    74      Unknown             1           Minimal AT
+0x4b    75      Unknown             1           Minimal AT
+0x4c    76      Unknown             1           Minimal AT
+0x4d    77      Unknown             1           Minimal AT
+
+COMPLETE BINARY DATA (offset 0x023388):
+-----------------------------------------------------------------
+Types  0- 9:  0  0  0  0  0  0  0  0  0  0
+Types 10-19:  0  0  0 14 14  0  0  0  0  0
+Types 20-29:  0  0  0  0  0  2  2  0  2  0
+Types 30-39:  0  0  0  8  2  0  0  0  0  8
+Types 40-49: 15  0 10  0  0  0  1  1  0  1
+Types 50-59:  1  0  5  2  0  1  0  0  1  0
+Types 60-69:  0  0  0  0  0  0  0  0  0  0
+Types 70-79:  0  0  0  6  1  1  1  1  0  0
+Types 80-89:  0  0  0  0  0  0  0  0  0  0
+Types 90-99:  0  0  0  0  0  0  0  0  0  0
+
+KEY FINDINGS:
+-----------------------------------------------------------------
+1. Infantry types (0x00-0x0b) have AT=0 - no antitank capability
+2. Tank-Bn (0x28) has AT=15 - maximum effectiveness against armor
+3. Panzer-Heavy (0x0d, 0x0e) have AT=14 - heavy armor units
+4. Tank-Co (0x2a) has AT=10 - tank company
+5. Assault-Gun (0x34) has AT=5 - StuG/self-propelled guns
+6. Panzer-Co (0x27) has AT=8 - medium armor
+7. Most support/command units have AT=0-2
+
+This allows the scenario editor to display accurate antitank values
+for each unit based on their type code, matching the game's internal
+combat calculations.
+
+================================================================================
 CONCLUSION
 ================================================================================
 

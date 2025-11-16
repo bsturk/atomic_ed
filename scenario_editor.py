@@ -95,10 +95,33 @@ class EnhancedUnitParser:
         0x5e: 'Static-Regt',    # Static regiment (coastal defense)
     }
 
+    # Antitank capability lookup table extracted from INVADE.EXE offset 0x023388
+    # Indexed by unit type code (0x00-0x63)
+    # Values range from 0 (no antitank) to 15 (maximum antitank capability)
+    ANTITANK_TABLE = [
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types  0- 9
+         0,  0,  0, 14, 14,  0,  0,  0,  0,  0,  # Types 10-19
+         0,  0,  0,  0,  0,  2,  2,  0,  2,  0,  # Types 20-29
+         0,  0,  0,  8,  2,  0,  0,  0,  0,  8,  # Types 30-39
+        15,  0, 10,  0,  0,  0,  1,  1,  0,  1,  # Types 40-49
+         1,  0,  5,  2,  0,  1,  0,  0,  1,  0,  # Types 50-59
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 60-69
+         0,  0,  0,  6,  1,  1,  1,  1,  0,  0,  # Types 70-79
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 80-89
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  # Types 90-99
+    ]
+
     @staticmethod
     def get_unit_type_name(type_code):
         """Convert unit type code to human-readable name"""
         return EnhancedUnitParser.UNIT_TYPE_NAMES.get(type_code, f'Type-{type_code:02x}')
+
+    @staticmethod
+    def get_antitank_capability(type_code):
+        """Get antitank capability value for a unit type from EXE lookup table"""
+        if 0 <= type_code < len(EnhancedUnitParser.ANTITANK_TABLE):
+            return EnhancedUnitParser.ANTITANK_TABLE[type_code]
+        return 0  # Default to 0 for unknown types
 
     @staticmethod
     def parse_units_from_scenario(scenario):
@@ -248,13 +271,12 @@ class EnhancedUnitParser:
                 quality = 0
                 disruption = 0
                 fatigue = 0
-                antitank = 0
 
                 if match.start() >= 64:
                     # Look at bytes before the unit name
                     # Unit record structure (64 bytes before name):
                     # Bytes -64 to -62: Unit Instance Index (NOT strength!)
-                    # Byte -60: Antitank value
+                    # Byte -60: Part of sequential index
                     # Bytes -58 to -56: X coordinate
                     # Bytes -56 to -54: Y coordinate
                     # Byte -27: Unit type code
@@ -285,10 +307,6 @@ class EnhancedUnitParser:
                         quality = pre_data[-7]
                         disruption = pre_data[-6]
                         fatigue = pre_data[-5]
-
-                    # Extract antitank from byte -60
-                    if len(pre_data) >= 60:
-                        antitank = pre_data[-60]
 
                     # Extract coordinates from offset -58 (X) and -56 (Y)
                     # Special value 0xFFFF (65535) indicates off-map/reinforcement units
@@ -331,7 +349,6 @@ class EnhancedUnitParser:
                     'quality': quality,
                     'disruption': disruption,
                     'fatigue': fatigue,
-                    'antitank': antitank,
                     'x': x,
                     'y': y,
                     'side': side,
@@ -1102,22 +1119,16 @@ class UnitPropertiesEditor(ttk.Frame):
         self.quality_spin.grid(row=1, column=1, sticky=tk.W, pady=2, padx=5)
         self.quality_spin.set(0)
 
-        # Antitank
-        ttk.Label(stats_frame, text="Antitank:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(10,0))
-        self.antitank_spin = ttk.Spinbox(stats_frame, from_=0, to=20, width=5)
-        self.antitank_spin.grid(row=1, column=3, sticky=tk.W, pady=2, padx=5)
-        self.antitank_spin.set(0)
-
         # Disruption
-        ttk.Label(stats_frame, text="Disruption:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ttk.Label(stats_frame, text="Disruption:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(10,0))
         self.disruption_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
-        self.disruption_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
+        self.disruption_spin.grid(row=1, column=3, sticky=tk.W, pady=2, padx=5)
         self.disruption_spin.set(0)
 
         # Fatigue
-        ttk.Label(stats_frame, text="Fatigue:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        ttk.Label(stats_frame, text="Fatigue:").grid(row=2, column=0, sticky=tk.W, pady=2)
         self.fatigue_spin = ttk.Spinbox(stats_frame, from_=0, to=10, width=5)
-        self.fatigue_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
+        self.fatigue_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
         # Separator for AI Scripting section
@@ -1271,7 +1282,6 @@ class UnitPropertiesEditor(ttk.Frame):
         attack_base = self.current_unit.get('attack_base', 0)
         defense_base = self.current_unit.get('defense_base', 0)
         quality = self.current_unit.get('quality', 0)
-        antitank = self.current_unit.get('antitank', 0)
         disruption = self.current_unit.get('disruption', 0)
         fatigue = self.current_unit.get('fatigue', 0)
 
@@ -1287,7 +1297,6 @@ class UnitPropertiesEditor(ttk.Frame):
         set_stat_spinbox(self.attack_spin, attack_base)
         set_stat_spinbox(self.defense_spin, defense_base)
         set_stat_spinbox(self.quality_spin, quality)
-        set_stat_spinbox(self.antitank_spin, antitank)
         set_stat_spinbox(self.disruption_spin, disruption)
         set_stat_spinbox(self.fatigue_spin, fatigue)
 
@@ -1345,8 +1354,12 @@ class UnitPropertiesEditor(ttk.Frame):
             self.raw_text.insert(tk.END, f"Defense: {eff_def} (base={defense_base})\n")
 
         qual_str = "N/A" if quality == 255 else str(quality)
-        at_str = "N/A" if antitank == 255 else str(antitank)
-        self.raw_text.insert(tk.END, f"Quality: {qual_str}, Antitank: {at_str}\n")
+        self.raw_text.insert(tk.END, f"Quality: {qual_str}\n")
+
+        # Display antitank capability from EXE lookup table (based on unit type)
+        unit_type = self.current_unit.get('type', 0)
+        antitank = EnhancedUnitParser.get_antitank_capability(unit_type)
+        self.raw_text.insert(tk.END, f"Antitank: {antitank} (from unit type)\n")
 
         dis_str = "N/A" if disruption == 255 else str(disruption)
         fat_str = "N/A" if fatigue == 255 else str(fatigue)
@@ -1376,7 +1389,6 @@ class UnitPropertiesEditor(ttk.Frame):
             self.current_unit['attack_base'] = int(self.attack_spin.get())
             self.current_unit['defense_base'] = int(self.defense_spin.get())
             self.current_unit['quality'] = int(self.quality_spin.get())
-            self.current_unit['antitank'] = int(self.antitank_spin.get())
             self.current_unit['disruption'] = int(self.disruption_spin.get())
             self.current_unit['fatigue'] = int(self.fatigue_spin.get())
         except ValueError:
@@ -2183,7 +2195,7 @@ class ImprovedScenarioEditor:
             units_by_side[side].append(unit)
 
         # Create a tab for each side
-        columns = ("Index", "Name", "Position", "Atk", "Def", "Qual", "Dis", "Fat", "Type")
+        columns = ("Index", "Name", "Position", "Atk", "Def", "Qual", "AT", "Dis", "Fat", "Type")
 
         for side in sorted(units_by_side.keys()):
             # Create frame for this side's tab
@@ -2200,6 +2212,7 @@ class ImprovedScenarioEditor:
             tree.heading("Atk", text="Atk")
             tree.heading("Def", text="Def")
             tree.heading("Qual", text="Qual")
+            tree.heading("AT", text="AT")
             tree.heading("Dis", text="Dis")
             tree.heading("Fat", text="Fat")
             tree.heading("Type", text="Type")
@@ -2210,6 +2223,7 @@ class ImprovedScenarioEditor:
             tree.column("Atk", width=40)
             tree.column("Def", width=40)
             tree.column("Qual", width=40)
+            tree.column("AT", width=35)
             tree.column("Dis", width=40)
             tree.column("Fat", width=40)
             tree.column("Type", width=100)
@@ -2271,6 +2285,10 @@ class ImprovedScenarioEditor:
                 type_code = unit.get('type', 0)
                 type_name = EnhancedUnitParser.get_unit_type_name(type_code)
 
+                # Get antitank capability from EXE lookup table
+                antitank = EnhancedUnitParser.get_antitank_capability(type_code)
+                at_str = str(antitank) if antitank > 0 else '-'
+
                 # Get position
                 x = unit.get('x', 0)
                 y = unit.get('y', 0)
@@ -2288,6 +2306,7 @@ class ImprovedScenarioEditor:
                     atk_str,
                     def_str,
                     qual_str,
+                    at_str,
                     dis_str,
                     fat_str,
                     type_name
