@@ -1131,6 +1131,12 @@ class UnitPropertiesEditor(ttk.Frame):
         self.fatigue_spin.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
         self.fatigue_spin.set(0)
 
+        # Antitank (read-only, derived from unit type)
+        ttk.Label(stats_frame, text="Antitank:").grid(row=2, column=2, sticky=tk.W, pady=2, padx=(10,0))
+        self.antitank_spin = ttk.Spinbox(stats_frame, from_=0, to=15, width=5, state='readonly')
+        self.antitank_spin.grid(row=2, column=3, sticky=tk.W, pady=2, padx=5)
+        self.antitank_spin.set(0)
+
         # Separator for AI Scripting section
         ttk.Separator(form_frame, orient=tk.HORIZONTAL).grid(row=5, column=0, columnspan=4,
                                                               sticky=tk.EW, pady=10)
@@ -1299,6 +1305,14 @@ class UnitPropertiesEditor(ttk.Frame):
         set_stat_spinbox(self.quality_spin, quality)
         set_stat_spinbox(self.disruption_spin, disruption)
         set_stat_spinbox(self.fatigue_spin, fatigue)
+
+        # Set antitank (read-only, derived from unit type)
+        unit_type = self.current_unit.get('type', 0)
+        antitank = EnhancedUnitParser.get_antitank_capability(unit_type)
+        # Temporarily enable to set value, then restore readonly state
+        self.antitank_spin.configure(state='normal')
+        self.antitank_spin.set(antitank)
+        self.antitank_spin.configure(state='readonly')
 
         # Set side from unit data
         side = self.current_unit.get('side', 'Allied')
