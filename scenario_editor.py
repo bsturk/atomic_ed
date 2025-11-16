@@ -1088,12 +1088,12 @@ class UnitPropertiesEditor(ttk.Frame):
         self.side_combo.current(0)
 
         # Position X
-        ttk.Label(form_frame, text="Position X:").grid(row=2, column=0, sticky=tk.W, pady=3)
+        ttk.Label(form_frame, text="Hex Location X:").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.pos_x_spin = ttk.Spinbox(form_frame, from_=0, to=500, width=10)
         self.pos_x_spin.grid(row=2, column=1, sticky=tk.W, pady=3, padx=5)
 
         # Position Y
-        ttk.Label(form_frame, text="Position Y:").grid(row=3, column=0, sticky=tk.W, pady=3)
+        ttk.Label(form_frame, text="Hex Location Y:").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.pos_y_spin = ttk.Spinbox(form_frame, from_=0, to=500, width=10)
         self.pos_y_spin.grid(row=3, column=1, sticky=tk.W, pady=3, padx=5)
 
@@ -1272,7 +1272,7 @@ class UnitPropertiesEditor(ttk.Frame):
         type_code = self.current_unit.get('type', 0)
         type_name = EnhancedUnitParser.get_unit_type_name(type_code)
         self.type_entry.delete(0, tk.END)
-        self.type_entry.insert(0, f"{type_name} (0x{type_code:02x})")
+        self.type_entry.insert(0, type_name)
 
         # Set position from unit data
         x = self.current_unit.get('x', 0)
@@ -1586,6 +1586,7 @@ class ScenarioSettingsEditor(ttk.Frame):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.weather_options = self._load_weather_options()
 
         title = ttk.Label(self, text="Scenario Settings",
                          font=("TkDefaultFont", 10, "bold"))
@@ -1620,7 +1621,7 @@ class ScenarioSettingsEditor(ttk.Frame):
         row += 1
         ttk.Label(form_frame, text="Weather:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.weather_combo = ttk.Combobox(form_frame, width=15, state='readonly',
-                                         values=['Clear', 'Cloudy', 'Rain', 'Storm'])
+                                         values=self.weather_options)
         self.weather_combo.grid(row=row, column=1, sticky=tk.W, pady=5, padx=5)
         self.weather_combo.current(0)
 
@@ -1757,6 +1758,73 @@ class ScenarioSettingsEditor(ttk.Frame):
         self.turn_spin.set(20)
         self.difficulty_combo.current(1)
         self.weather_combo.current(0)
+
+    @staticmethod
+    def _load_weather_options():
+        """Extract weather names from the original PCWATW resource file"""
+        resource_path = Path(__file__).resolve().parent / 'game' / 'DATA' / 'PCWATW.REZ'
+        options = []
+
+        try:
+            data = resource_path.read_bytes()
+        except Exception as exc:
+            raise RuntimeError(f"Unable to load weather resources from {resource_path}: {exc}") from exc
+
+        # Weather entries live in a descriptor block that begins with the Clear entry
+        marker = b'\x00\x00\x00\x00R\x00\x05\x0e'
+        start = data.find(marker)
+        if start == -1:
+            # Fallback: try to anchor directly to the visible string
+            clear_idx = data.find(b'Clear Weather')
+            if clear_idx == -1:
+                raise RuntimeError("Unable to locate weather descriptor block in PCWATW.REZ")
+            start = max(clear_idx - 4, 0)
+
+        offset = start
+        while len(options) < 5 and offset < len(data):
+            # Entries are separated by null padding - skip it
+            while offset < len(data) and data[offset] == 0:
+                offset += 1
+
+            if offset + 4 >= len(data):
+                raise RuntimeError("Weather descriptor block truncated in PCWATW.REZ")
+
+            offset += 4  # Skip the 4-byte descriptor header before the string
+            name_start = offset
+
+            # Grab ASCII characters until the descriptor switches to formatting control codes
+            while offset < len(data) and 32 <= data[offset] <= 126:
+                offset += 1
+
+            if name_start >= offset:
+                break
+
+            raw_name = data[name_start:offset].decode('ascii', errors='ignore')
+            normalized = ScenarioSettingsEditor._normalize_weather_name(raw_name)
+            if normalized:
+                options.append(normalized)
+
+            next_block = data.find(b'\x00\x00\x00\x00', offset)
+            if next_block == -1:
+                break
+            offset = next_block
+
+        if len(options) < 5:
+            raise RuntimeError(f"Incomplete weather table extracted ({len(options)} entries)")
+        return options
+
+    @staticmethod
+    def _normalize_weather_name(name):
+        """Strip punctuation/qualifiers from the raw string"""
+        clean = name.strip()
+
+        while clean and not clean[-1].isalnum():
+            clean = clean[:-1].rstrip()
+
+        if clean.endswith("Weather"):
+            clean = clean[:-7].rstrip()
+
+        return clean
 
 
 class ImprovedScenarioEditor:
