@@ -1242,8 +1242,7 @@ class UnitPropertiesEditor(ttk.Frame):
         """Load units into the selector"""
         self.units = units
 
-        unit_names = [f"{u.get('index', i)}: {u.get('name', 'Unknown')}"
-                     for i, u in enumerate(units)]
+        unit_names = [u.get('name', 'Unknown') for u in units]
         self.unit_combo['values'] = unit_names
 
         if units:
