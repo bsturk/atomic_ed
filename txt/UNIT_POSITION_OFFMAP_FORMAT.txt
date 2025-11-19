@@ -217,12 +217,39 @@ GAME MECHANICS IMPLICATIONS
 ================================================================================
 
 Reinforcement System:
-  - Off-map units are not available at scenario start
-  - They likely arrive based on:
+ - Off-map units are not available at scenario start
+ - They likely arrive based on:
     * Turn number (scheduled arrival)
     * Scenario conditions/triggers
     * Random events
     * Player decisions
+
+Engine reference (disasm.txt @ seg002:5362):
+  - The game explicitly checks `cmp word ptr es:[bx], 0FFFFh` before placing
+    a unit. When the sentinel is seen it jumps into a reinforcement routine
+    that dereferences ds:11ECh (likely the PTR6 schedule table). We still
+    need to map that table back to individual units, so the editor currently
+    labels these as "Off-map" without exposing the true arrival turn/hex.
+
+UPDATE (Feb 2025):
+  - Word[-63] (16-bit value immediately after the unit index) acts as a
+    reinforcement **wave ID**. For the BRADLEY example the Allied waves are
+    numbered 28‑52 (367th → 28, 370th → 29, … IV‑FA5 → 52).
+  - PTR6 contains 10-word records (see PTR6_AI_PARAMETERS_FORMAT.md) where
+    the third word equals this wave ID and the next four words store the
+    entry hex twice. Placeholder entries have all-zero coordinates plus the
+    0xFFFF terminator; active entries include actual hexes (e.g. wave 28
+    entry at PTR6+0x4AE2 shows hex (4,10)).
+  - For Allied waves 19‑27 the first PTR6 entry always encodes (6,0) (see
+    offsets 0x2A9E, 0x2B4A, 0x2BF6, …). Later Allied waves (28‑52) omit
+    that record and rely on the engine’s default beach entry; we therefore
+    treat all Allied reinforcements as entering at hex (6,0) until the
+    ds:11EC linked list in `sub_6EBF` is fully decoded.
+  - Arrival **turn** values are still elusive – they are not inside the
+    64-byte unit record. Likely stored in the PTR6 wave script that begins
+    near the same offsets (disasm seg002:53E0+). Further work is needed to
+    correlate `script_id` (the 4th word in each PTR6 entry) with actual turn
+    numbers from the engine.
 
 Strategic Considerations:
   - Players must plan for enemy reinforcements
