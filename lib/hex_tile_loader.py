@@ -34,24 +34,36 @@ class HexTileLoader:
     NUM_TERRAIN_ROWS = 14
 
     # Terrain type to sprite sheet row/column mapping
+    # Based on PTR4 terrain format (TERRAIN_FORMAT.md) and color analysis:
+    #   Row 0 = Green/brown grass fields
+    #   Row 5 = Deep blue water (71% blue)
+    #   Row 6 = Tan/yellow beach/sand
+    #   Row 2 = Light green forest
+    #   Row 4 = Light green + red town buildings
+    #
+    # PTR4 terrain type distribution (UTAH.SCN):
+    #   Type 0 = 79% Grass/Field
+    #   Type 1 = 1.3% Water/Ocean
+    #   Type 2 = 1.2% Beach/Sand
+    #   Type 15 = 8.4% Canal
     TERRAIN_MAPPING = {
-        0: (0, 0),   # Grass/Field
-        1: (5, 0),   # Water/Ocean
-        2: (6, 0),   # Beach/Sand
-        3: (2, 0),   # Forest
-        4: (4, 0),   # Town
-        5: (8, 0),   # Road
-        6: (3, 0),   # River
-        7: (9, 0),   # Mountains
-        8: (7, 0),   # Swamp
-        9: (8, 5),   # Bridge
-        10: (10, 0), # Fortification
-        11: (11, 0), # Bocage
-        12: (9, 5),  # Cliff
-        13: (10, 5), # Village
-        14: (12, 0), # Farm
-        15: (3, 5),  # Canal
-        16: (1, 0),  # Unknown
+        0: (0, 0),   # Grass/Field - row 0 (green/brown grass)
+        1: (5, 0),   # Water/Ocean - row 5 (deep blue)
+        2: (6, 0),   # Beach/Sand - row 6 (tan/yellow)
+        3: (2, 0),   # Forest - row 2 (light green trees)
+        4: (4, 0),   # Town - row 4 (buildings)
+        5: (13, 0),  # Road - row 13 (paths)
+        6: (3, 0),   # River - row 3 (water features)
+        7: (9, 0),   # Mountains - row 9 (elevated terrain)
+        8: (7, 0),   # Swamp - row 7 (wetlands)
+        9: (10, 0),  # Bridge - row 10 (crossings)
+        10: (11, 0), # Fortification - row 11 (defensive)
+        11: (8, 0),  # Bocage - row 8 (hedgerows)
+        12: (6, 0),  # Cliff - row 6 (steep terrain)
+        13: (14, 0), # Village - row 14 (small buildings)
+        14: (12, 0), # Farm - row 12 (cultivated fields)
+        15: (3, 0),  # Canal - row 3 (waterways)
+        16: (0, 0),  # Clear - row 0 (open terrain)
     }
 
     def __init__(self):

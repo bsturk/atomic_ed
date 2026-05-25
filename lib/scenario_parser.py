@@ -105,13 +105,23 @@ class DdayScenario:
             self.counts.append(value)
 
     @property
-    def map_height(self) -> int:
-        """Map height in hexes (Count 11 at offset 0x2c) - rows (vertical)"""
+    def map_width(self) -> int:
+        """Map width in hexes (columns/X axis) - Count 11 at offset 0x2c
+
+        The map is 125 columns × 100 rows (wider than tall).
+        Header count[10]=125 is the column count (width).
+        This matches the PTR4 terrain storage format.
+        """
         return self.counts[10] if len(self.counts) > 10 else 125
 
     @property
-    def map_width(self) -> int:
-        """Map width in hexes (Count 12 at offset 0x30) - columns (horizontal)"""
+    def map_height(self) -> int:
+        """Map height in hexes (rows/Y axis) - Count 12 at offset 0x30
+
+        The map is 125 columns × 100 rows.
+        Header count[11]=100 is the row count (height).
+        This matches the PTR4 terrain storage format.
+        """
         return self.counts[11] if len(self.counts) > 11 else 100
     
     def _parse_pointers(self):
@@ -200,8 +210,8 @@ class DdayScenario:
             "Count 8  (unknown)",
             "Count 9  (objectives?)",
             "Count 10 (unknown)",
-            "Count 11 (MAP HEIGHT in hexes - rows/vertical)",
-            "Count 12 (MAP WIDTH in hexes - columns/horizontal)",
+            "Count 11 (MAP WIDTH in hexes - columns/X axis)",
+            "Count 12 (MAP HEIGHT in hexes - rows/Y axis)",
         ]
         
         for i, (count, label) in enumerate(zip(self.counts, count_labels)):
@@ -348,6 +358,81 @@ class DdayScenario:
             # Write data sections in ACTUAL file order (not assumed order!)
             for name, _, _ in self.section_order:
                 f.write(self.sections[name])
+
+    def patch_in_place(self, patches: list, output_file: str = None, create_backup: bool = True):
+        """
+        Apply patches to specific file offsets without rewriting entire file.
+
+        This is the preferred method for saving modifications as it only changes
+        the bytes that were actually modified.
+
+        Args:
+            patches: List of (offset, bytes) tuples to apply
+            output_file: Output filename (defaults to original file)
+            create_backup: If True, creates a .bak backup before modifying
+
+        Raises:
+            ValueError: If scenario is invalid or patches are out of bounds
+        """
+        import shutil
+
+        if not self.is_valid:
+            raise ValueError("Cannot patch invalid scenario")
+
+        if output_file is None:
+            output_file = str(self.filename)
+
+        # Validate all patches before applying any
+        for offset, new_bytes in patches:
+            if offset < 0:
+                raise ValueError(f"Patch offset {offset} is negative")
+            if offset + len(new_bytes) > len(self.data):
+                raise ValueError(
+                    f"Patch at offset {offset} with size {len(new_bytes)} "
+                    f"exceeds file size {len(self.data)}"
+                )
+
+        # Create backup if requested and modifying original file
+        if create_backup and output_file == str(self.filename):
+            backup_path = str(self.filename) + '.bak'
+            shutil.copy2(str(self.filename), backup_path)
+
+        # Create mutable copy of file data
+        data = bytearray(self.data)
+
+        # Apply each patch
+        for offset, new_bytes in patches:
+            if isinstance(new_bytes, int):
+                new_bytes = bytes([new_bytes])
+            data[offset:offset + len(new_bytes)] = new_bytes
+
+        # Write patched data
+        with open(output_file, 'wb') as f:
+            f.write(data)
+
+        # Update internal data if we modified the original file
+        if output_file == str(self.filename):
+            self.data = bytes(data)
+
+        return len(patches)
+
+    def get_byte(self, offset: int) -> int:
+        """Get a single byte at the given offset"""
+        if offset < 0 or offset >= len(self.data):
+            raise ValueError(f"Offset {offset} out of bounds")
+        return self.data[offset]
+
+    def get_word(self, offset: int) -> int:
+        """Get a 16-bit little-endian word at the given offset"""
+        if offset < 0 or offset + 2 > len(self.data):
+            raise ValueError(f"Offset {offset} out of bounds for word read")
+        return struct.unpack('<H', self.data[offset:offset+2])[0]
+
+    def get_dword(self, offset: int) -> int:
+        """Get a 32-bit little-endian dword at the given offset"""
+        if offset < 0 or offset + 4 > len(self.data):
+            raise ValueError(f"Offset {offset} out of bounds for dword read")
+        return struct.unpack('<I', self.data[offset:offset+4])[0]
 
 
 def main():

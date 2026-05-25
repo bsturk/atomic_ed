@@ -33,6 +33,11 @@ from PIL import Image, ImageTk
 from lib.scenario_parser import DdayScenario
 from lib.terrain_reader import extract_terrain_from_scenario
 from lib.hex_tile_loader import load_hex_tiles, HexTileLoader
+from lib.reinforcement_parser import (
+    parse_reinforcements, ReinforcementSchedule, ReinforcementEntry,
+    get_reinforcement_display_data, link_units_to_waves
+)
+from lib.modification_tracker import ModificationTracker, ModificationType
 
 
 class EnhancedUnitParser:
@@ -408,8 +413,9 @@ class MapViewer(ttk.Frame):
     """Interactive hex map viewer for D-Day scenarios"""
 
     # Default map constants (will be overridden by scenario data)
-    DEFAULT_MAP_WIDTH = 100   # hexes (columns)
-    DEFAULT_MAP_HEIGHT = 125  # hexes (rows) - longer dimension is vertical
+    # Map is 125 columns (X) × 100 rows (Y) - wider than tall
+    DEFAULT_MAP_WIDTH = 125   # hexes (columns/X axis)
+    DEFAULT_MAP_HEIGHT = 100  # hexes (rows/Y axis)
     HEX_SIZE = 12     # initial hex radius in pixels
 
     def __init__(self, parent):
@@ -625,15 +631,19 @@ class MapViewer(ttk.Frame):
             if base_img is None:
                 return None
 
-        # Calculate scaled size (hex tiles are 32×36 pixels actual content)
-        # Scale proportionally to the hex size
-        scale_factor = size / 12.0
-        new_width = int(32 * scale_factor)
-        new_height = int(36 * scale_factor)
+        # Calculate scaled size to match hex geometry
+        # Original hex tiles are 32×36 pixels
+        # For flat-top hexes: width = sqrt(3) * radius, height = 2 * radius
+        # The horizontal spacing between hex centers is sqrt(3) * hex_size
+        # Scale tiles to fit within this spacing
+        horiz_spacing = size * math.sqrt(3)
+        vert_spacing = size * 2.0
 
-        # Ensure minimum size
-        new_width = max(4, new_width)
-        new_height = max(4, new_height)
+        # Scale to fit hex bounds (use horizontal spacing as primary constraint)
+        # Use ceiling to avoid sub-pixel gaps between tiles
+        scale_factor = horiz_spacing / 32.0
+        new_width = max(4, math.ceil(32 * scale_factor))
+        new_height = max(4, math.ceil(36 * scale_factor))
 
         # Scale the image
         try:
@@ -668,8 +678,12 @@ class MapViewer(ttk.Frame):
 
     def _on_mouse_move(self, event):
         """Show hex coordinates under mouse"""
-        # Convert screen to hex coordinates
-        hex_x, hex_y = self.pixel_to_hex(event.x, event.y)
+        # Convert widget coordinates to canvas coordinates (accounts for scroll)
+        canvas_x = self.canvas.canvasx(event.x)
+        canvas_y = self.canvas.canvasy(event.y)
+
+        # Convert canvas coordinates to hex coordinates
+        hex_x, hex_y = self.pixel_to_hex(canvas_x, canvas_y)
 
         if 0 <= hex_x < self.map_width and 0 <= hex_y < self.map_height:
             terrain_data = self.terrain.get((hex_x, hex_y), (0, 0))
@@ -686,11 +700,16 @@ class MapViewer(ttk.Frame):
             self.status_label.config(text="Outside map bounds")
 
     def _on_mousewheel(self, event):
-        """Zoom with mouse wheel"""
+        """Zoom with mouse wheel, centered on cursor position"""
+        # Convert widget coordinates to canvas coordinates (accounts for scroll)
+        cursor_x = self.canvas.canvasx(event.x)
+        cursor_y = self.canvas.canvasy(event.y)
+
+        # Zoom centered on cursor
         if event.delta > 0:
-            self.zoom_in()
+            self._zoom_at_point(cursor_x, cursor_y, zoom_in=True)
         else:
-            self.zoom_out()
+            self._zoom_at_point(cursor_x, cursor_y, zoom_in=False)
 
     def _on_canvas_configure(self, event):
         """Handle canvas resize/configure event"""
@@ -728,10 +747,12 @@ class MapViewer(ttk.Frame):
         return hex_x, hex_y
 
     def draw_hexagon(self, center_x, center_y, size, fill='white', outline='black'):
-        """Draw a single hexagon"""
+        """Draw a single flat-top hexagon (flat edge at top/bottom)"""
+        # For flat-top hex: vertices at 0°, 60°, 120°, 180°, 240°, 300°
+        # Width = sqrt(3) * size, Height = 2 * size
         points = []
         for i in range(6):
-            angle = math.pi / 3 * i - math.pi / 6
+            angle = math.pi / 3 * i  # Start at 0° (rightmost vertex)
             px = center_x + size * math.cos(angle)
             py = center_y + size * math.sin(angle)
             points.extend([px, py])
@@ -755,15 +776,24 @@ class MapViewer(ttk.Frame):
 
         # Extract REAL terrain data from scenario file!
         if scenario and scenario.is_valid:
-            self.terrain = extract_terrain_from_scenario(scenario)
-            terrain_source = "REAL terrain data from scenario file"
+            # Pass scenario directory as fallback for small scenarios without embedded terrain
+            import os
+            scenario_dir = os.path.dirname(str(scenario.filename))
+            self.terrain = extract_terrain_from_scenario(scenario, fallback_scenario_dir=scenario_dir)
+
+            if self.terrain:
+                terrain_source = "REAL terrain data from scenario file"
+            else:
+                # No terrain available even with fallback
+                self.terrain = self._generate_fallback_terrain()
+                terrain_source = "generated terrain (no embedded terrain found)"
         else:
             # Fallback to generated terrain if scenario not available
             self.terrain = self._generate_fallback_terrain()
             terrain_source = "generated terrain (fallback)"
 
-        # Count units with valid positions
-        units_with_pos = sum(1 for u in self.units if u.get('x', 0) > 0 and u.get('y', 0) > 0)
+        # Count units with valid positions (x=-1, y=-1 means off-map)
+        units_with_pos = sum(1 for u in self.units if u.get('x', 0) >= 0 and u.get('y', 0) >= 0)
 
         self.status_label.config(
             text=f"Loaded {len(self.units)} units ({units_with_pos} with positions) | {terrain_source}")
@@ -861,9 +891,12 @@ class MapViewer(ttk.Frame):
         self.show_grid = self.grid_var.get()
         self.show_coords = self.coords_var.get()
 
-        # Update info
+        # Update info - show zoom and hex dimensions
         zoom_pct = int(self.hex_size / self.HEX_SIZE * 100)
-        self.info_label.config(text=f"Zoom: {zoom_pct}% | Hexes: {self.map_width}×{self.map_height}")
+        hex_width = int(self.hex_size * math.sqrt(3))
+        hex_height = int(self.hex_size * 2)
+        self.info_label.config(
+            text=f"Zoom: {zoom_pct}% | Hex: {hex_width}×{hex_height}px | Map: {self.map_width}×{self.map_height}")
 
         # Draw only visible hexes for performance
         visible_hexes = self._get_visible_hexes()
@@ -881,7 +914,7 @@ class MapViewer(ttk.Frame):
             hex_y = unit.get('y', 0)
 
             # Only draw units with valid coordinates (skip off-map units with x=-1 or y=-1)
-            if hex_x > 0 and hex_y > 0 and hex_x < self.map_width and hex_y < self.map_height:
+            if hex_x >= 0 and hex_y >= 0 and hex_x < self.map_width and hex_y < self.map_height:
                 # Determine unit color based on side
                 side = unit.get('side', 'Unknown')
                 unit_type = unit.get('type', 0)
@@ -910,16 +943,23 @@ class MapViewer(ttk.Frame):
         self._update_scroll_region()
 
     def _get_visible_hexes(self):
-        """Get range of visible hexes"""
+        """Get range of visible hexes based on canvas viewport"""
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
 
-        # Add padding
+        # Add padding for partially visible hexes
         padding = 5
 
-        min_x, min_y = self.pixel_to_hex(-self.offset_x, -self.offset_y)
-        max_x, max_y = self.pixel_to_hex(canvas_width - self.offset_x,
-                                         canvas_height - self.offset_y)
+        # Convert widget corners to canvas coordinates (accounts for scroll)
+        # canvasx/canvasy converts widget position to canvas coordinate space
+        visible_x1 = self.canvas.canvasx(0)
+        visible_y1 = self.canvas.canvasy(0)
+        visible_x2 = self.canvas.canvasx(canvas_width)
+        visible_y2 = self.canvas.canvasy(canvas_height)
+
+        # pixel_to_hex expects canvas coordinates
+        min_x, min_y = self.pixel_to_hex(visible_x1, visible_y1)
+        max_x, max_y = self.pixel_to_hex(visible_x2, visible_y2)
 
         return {
             'min_x': max(0, min_x - padding),
@@ -1019,22 +1059,82 @@ class MapViewer(ttk.Frame):
         return f'#{r:02x}{g:02x}{b:02x}'
 
     def _update_scroll_region(self):
-        """Update canvas scroll region"""
-        # Calculate map bounds
-        max_x = self.map_width * self.hex_size * math.sqrt(3) + self.offset_x + 100
-        max_y = self.map_height * self.hex_size * 1.5 + self.offset_y + 100
+        """Update canvas scroll region
 
-        self.canvas.config(scrollregion=(0, 0, max_x, max_y))
+        Scroll region extends into negative coordinates if needed (when offset
+        is negative after zooming in). Scroll is positioned so that canvas
+        coordinate 0 appears at widget coordinate 0.
+        """
+        map_pixel_width = self.map_width * self.hex_size * math.sqrt(3)
+        map_pixel_height = self.map_height * self.hex_size * 1.5
+
+        # Content bounds depend on offset (which can be negative)
+        content_min_x = min(0, self.offset_x - 100)
+        content_min_y = min(0, self.offset_y - 100)
+        content_max_x = max(self.canvas.winfo_width() + 100,
+                          self.offset_x + map_pixel_width + 100)
+        content_max_y = max(self.canvas.winfo_height() + 100,
+                          self.offset_y + map_pixel_height + 100)
+
+        self.canvas.config(scrollregion=(content_min_x, content_min_y,
+                                         content_max_x, content_max_y))
+
+        # Position scroll so canvas coord 0 is at widget coord 0
+        # This maintains widget_coord = canvas_coord relationship
+        scroll_width = content_max_x - content_min_x
+        scroll_height = content_max_y - content_min_y
+
+        if scroll_width > 0:
+            # Fraction to scroll so that canvas x=0 is at widget x=0
+            x_frac = (0 - content_min_x) / scroll_width
+            self.canvas.xview_moveto(x_frac)
+
+        if scroll_height > 0:
+            y_frac = (0 - content_min_y) / scroll_height
+            self.canvas.yview_moveto(y_frac)
+
+    def _zoom_at_point(self, screen_x, screen_y, zoom_in=True):
+        """Zoom centered on a specific screen point"""
+        # Get world coordinates (position relative to map origin, without offset)
+        # This preserves full precision unlike integer hex coordinates
+        world_x = screen_x - self.offset_x
+        world_y = screen_y - self.offset_y
+
+        # Calculate new hex size
+        old_size = self.hex_size
+        zoom_factor = 1.25 if zoom_in else 0.8
+
+        new_size = self.hex_size * zoom_factor
+        new_size = max(3, min(60, new_size))
+
+        if abs(new_size - old_size) < 0.1:
+            return
+
+        # Calculate scale ratio
+        scale = new_size / old_size
+        self.hex_size = new_size
+
+        # Scale the world coordinates proportionally
+        new_world_x = world_x * scale
+        new_world_y = world_y * scale
+
+        # Adjust offset so the same world point stays at the same screen position
+        self.offset_x = screen_x - new_world_x
+        self.offset_y = screen_y - new_world_y
+
+        self.redraw()
 
     def zoom_in(self):
-        """Zoom in"""
-        self.hex_size = min(50, int(self.hex_size * 1.2))
-        self.redraw()
+        """Zoom in centered on canvas center"""
+        canvas_center_x = self.canvas.winfo_width() / 2
+        canvas_center_y = self.canvas.winfo_height() / 2
+        self._zoom_at_point(canvas_center_x, canvas_center_y, zoom_in=True)
 
     def zoom_out(self):
-        """Zoom out"""
-        self.hex_size = max(4, int(self.hex_size / 1.2))
-        self.redraw()
+        """Zoom out centered on canvas center"""
+        canvas_center_x = self.canvas.winfo_width() / 2
+        canvas_center_y = self.canvas.winfo_height() / 2
+        self._zoom_at_point(canvas_center_x, canvas_center_y, zoom_in=False)
 
     def reset_view(self):
         """Reset view to default"""
@@ -1096,6 +1196,30 @@ class UnitPropertiesEditor(ttk.Frame):
         ttk.Label(form_frame, text="Hex Location Y:").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.pos_y_spin = ttk.Spinbox(form_frame, from_=0, to=500, width=10)
         self.pos_y_spin.grid(row=3, column=1, sticky=tk.W, pady=3, padx=5)
+
+        # Reinforcement info frame (shown only for off-map units)
+        self.reinf_frame = ttk.LabelFrame(form_frame, text="Reinforcement Info", padding=5)
+        self.reinf_frame.grid(row=3, column=2, columnspan=2, rowspan=2, sticky=tk.NSEW, padx=10, pady=3)
+
+        ttk.Label(self.reinf_frame, text="Status:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.reinf_status_label = ttk.Label(self.reinf_frame, text="Off-Map",
+                                           font=("TkDefaultFont", 9, "bold"), foreground='#0066CC')
+        self.reinf_status_label.grid(row=0, column=1, sticky=tk.W, pady=2, padx=5)
+
+        ttk.Label(self.reinf_frame, text="Entry Turn:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        self.reinf_turn_label = ttk.Label(self.reinf_frame, text="?")
+        self.reinf_turn_label.grid(row=1, column=1, sticky=tk.W, pady=2, padx=5)
+
+        ttk.Label(self.reinf_frame, text="Entry Hex:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        self.reinf_hex_label = ttk.Label(self.reinf_frame, text="?")
+        self.reinf_hex_label.grid(row=2, column=1, sticky=tk.W, pady=2, padx=5)
+
+        ttk.Label(self.reinf_frame, text="Wave ID:").grid(row=3, column=0, sticky=tk.W, pady=2)
+        self.reinf_wave_label = ttk.Label(self.reinf_frame, text="?")
+        self.reinf_wave_label.grid(row=3, column=1, sticky=tk.W, pady=2, padx=5)
+
+        # Initially hide the reinforcement frame
+        self.reinf_frame.grid_remove()
 
         # Combat Stats section
         stats_frame = ttk.LabelFrame(form_frame, text="Combat Stats", padding=5)
@@ -1278,11 +1402,31 @@ class UnitPropertiesEditor(ttk.Frame):
         x = self.current_unit.get('x', 0)
         y = self.current_unit.get('y', 0)
 
-        # Handle special cases
+        # Handle off-map/reinforcement units
         if x == -1 or y == -1:
-            # Off-map/reinforcement unit
+            # Show reinforcement info frame
+            self.reinf_frame.grid()
+            self.reinf_status_label.config(text="Off-Map (Reinforcement)")
+
+            # Try to get reinforcement details if available
+            wave_id = self.current_unit.get('wave_id', None)
+            entry_turn = self.current_unit.get('entry_turn', None)
+            entry_x = self.current_unit.get('entry_x', None)
+            entry_y = self.current_unit.get('entry_y', None)
+
+            self.reinf_wave_label.config(text=str(wave_id) if wave_id else "?")
+            self.reinf_turn_label.config(text=str(entry_turn) if entry_turn else "?")
+            if entry_x is not None and entry_y is not None:
+                self.reinf_hex_label.config(text=f"({entry_x}, {entry_y})")
+            else:
+                self.reinf_hex_label.config(text="?")
+
+            # Set position to 0 for display
             x = 0
             y = 0
+        else:
+            # Hide reinforcement info frame for on-map units
+            self.reinf_frame.grid_remove()
 
         self.pos_x_spin.set(x)
         self.pos_y_spin.set(y)
@@ -1581,6 +1725,357 @@ For complete analysis: txt/AI_BEHAVIOR_BYTE_ANALYSIS.md
         close_btn.pack(pady=10)
 
 
+class ReinforcementEditor(ttk.Frame):
+    """Editor for reinforcement waves and timing"""
+
+    def __init__(self, parent, on_update_callback=None):
+        super().__init__(parent)
+        self.on_update_callback = on_update_callback
+        self.scenario = None
+        self.schedule = None
+        self.units = []
+        self.current_wave = None
+
+        self._create_ui()
+
+    def _create_ui(self):
+        """Create the reinforcement editor UI"""
+        # Title
+        title = ttk.Label(self, text="Reinforcement Schedule Editor",
+                         font=("TkDefaultFont", 10, "bold"))
+        title.pack(pady=10)
+
+        # Main paned window
+        paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
+        paned.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # Left panel: Wave list
+        left_frame = ttk.LabelFrame(paned, text="Reinforcement Waves", padding=5)
+        paned.add(left_frame, weight=1)
+
+        # Wave TreeView
+        columns = ('wave_id', 'turn', 'entry_hex', 'units')
+        self.wave_tree = ttk.Treeview(left_frame, columns=columns, show='headings', height=15)
+
+        self.wave_tree.heading('wave_id', text='Wave')
+        self.wave_tree.heading('turn', text='Turn')
+        self.wave_tree.heading('entry_hex', text='Entry Hex')
+        self.wave_tree.heading('units', text='Units')
+
+        self.wave_tree.column('wave_id', width=60, anchor='center')
+        self.wave_tree.column('turn', width=60, anchor='center')
+        self.wave_tree.column('entry_hex', width=100, anchor='center')
+        self.wave_tree.column('units', width=60, anchor='center')
+
+        # Scrollbar
+        wave_scroll = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.wave_tree.yview)
+        self.wave_tree.configure(yscrollcommand=wave_scroll.set)
+
+        self.wave_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        wave_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.wave_tree.bind('<<TreeviewSelect>>', self._on_wave_selected)
+
+        # Right panel: Wave properties
+        right_frame = ttk.LabelFrame(paned, text="Wave Properties", padding=10)
+        paned.add(right_frame, weight=1)
+
+        # Wave ID (read-only)
+        ttk.Label(right_frame, text="Wave ID:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.wave_id_var = tk.StringVar(value="-")
+        ttk.Label(right_frame, textvariable=self.wave_id_var,
+                 font=("TkDefaultFont", 10, "bold")).grid(row=0, column=1, sticky=tk.W, pady=5)
+
+        # Entry Turn
+        ttk.Label(right_frame, text="Entry Turn:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.turn_spin = ttk.Spinbox(right_frame, from_=1, to=255, width=10)
+        self.turn_spin.grid(row=1, column=1, sticky=tk.W, pady=5)
+        self.turn_spin.set(1)
+
+        # Entry Hex X
+        ttk.Label(right_frame, text="Entry Hex X:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.entry_x_spin = ttk.Spinbox(right_frame, from_=0, to=125, width=10)
+        self.entry_x_spin.grid(row=2, column=1, sticky=tk.W, pady=5)
+        self.entry_x_spin.set(0)
+
+        # Entry Hex Y
+        ttk.Label(right_frame, text="Entry Hex Y:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        self.entry_y_spin = ttk.Spinbox(right_frame, from_=0, to=125, width=10)
+        self.entry_y_spin.grid(row=3, column=1, sticky=tk.W, pady=5)
+        self.entry_y_spin.set(0)
+
+        # Script ID
+        ttk.Label(right_frame, text="Script ID:").grid(row=4, column=0, sticky=tk.W, pady=5)
+        self.script_spin = ttk.Spinbox(right_frame, from_=0, to=255, width=10)
+        self.script_spin.grid(row=4, column=1, sticky=tk.W, pady=5)
+        self.script_spin.set(0)
+
+        # Separator
+        ttk.Separator(right_frame, orient=tk.HORIZONTAL).grid(
+            row=5, column=0, columnspan=2, sticky=tk.EW, pady=10)
+
+        # Units in wave
+        ttk.Label(right_frame, text="Units in Wave:",
+                 font=("TkDefaultFont", 9, "bold")).grid(row=6, column=0, columnspan=2, sticky=tk.W)
+
+        self.units_listbox = tk.Listbox(right_frame, height=8, width=35)
+        self.units_listbox.grid(row=7, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
+
+        units_scroll = ttk.Scrollbar(right_frame, orient=tk.VERTICAL, command=self.units_listbox.yview)
+        self.units_listbox.configure(yscrollcommand=units_scroll.set)
+        units_scroll.grid(row=7, column=2, sticky=tk.NS, pady=5)
+
+        # Buttons
+        btn_frame = ttk.Frame(right_frame)
+        btn_frame.grid(row=8, column=0, columnspan=2, pady=10)
+
+        ttk.Button(btn_frame, text="Apply Changes",
+                  command=self._apply_changes).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Revert",
+                  command=self._revert_changes).pack(side=tk.LEFT, padx=5)
+
+        # Bottom buttons for add/delete
+        bottom_frame = ttk.Frame(self)
+        bottom_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        ttk.Button(bottom_frame, text="Add Wave",
+                  command=self._add_wave).pack(side=tk.LEFT, padx=5)
+        ttk.Button(bottom_frame, text="Delete Wave",
+                  command=self._delete_wave).pack(side=tk.LEFT, padx=5)
+
+        # Info label
+        self.info_label = ttk.Label(bottom_frame, text="")
+        self.info_label.pack(side=tk.RIGHT, padx=10)
+
+    def load_data(self, scenario, units):
+        """Load reinforcement data from scenario"""
+        self.scenario = scenario
+        self.units = units
+
+        if not scenario or not scenario.is_valid:
+            self.schedule = None
+            self._clear_display()
+            return
+
+        # Parse reinforcements
+        self.schedule = parse_reinforcements(scenario)
+        link_units_to_waves(units, self.schedule)
+
+        # Update info label
+        self.info_label.config(
+            text=f"Turn count: {self.schedule.turn_count} | "
+                 f"Waves: {len(self.schedule.entries)}"
+        )
+
+        # Populate wave tree
+        self._populate_wave_tree()
+
+    def _populate_wave_tree(self):
+        """Populate the wave tree with reinforcement data"""
+        # Clear existing items
+        for item in self.wave_tree.get_children():
+            self.wave_tree.delete(item)
+
+        if not self.schedule:
+            return
+
+        # Add waves
+        for wave_data in self.schedule.get_all_waves():
+            wave_id = wave_data['wave_id']
+            turn = wave_data['entry_turn'] or '?'
+            entry_x = wave_data['entry_x']
+            entry_y = wave_data['entry_y']
+
+            if entry_x is not None and entry_y is not None:
+                entry_hex = f"({entry_x}, {entry_y})"
+            else:
+                entry_hex = "?"
+
+            unit_count = wave_data['unit_count']
+
+            self.wave_tree.insert('', tk.END, iid=str(wave_id), values=(
+                wave_id, turn, entry_hex, unit_count
+            ))
+
+    def _on_wave_selected(self, event):
+        """Handle wave selection"""
+        selection = self.wave_tree.selection()
+        if not selection:
+            return
+
+        wave_id = int(selection[0])
+        self.current_wave = wave_id
+        self._display_wave(wave_id)
+
+    def _display_wave(self, wave_id):
+        """Display wave properties in editor"""
+        if not self.schedule:
+            return
+
+        entry = self.schedule.entries.get(wave_id)
+        turn_pair = self.schedule.schedule.get(wave_id)
+
+        # Wave ID
+        self.wave_id_var.set(str(wave_id))
+
+        # Turn
+        if turn_pair:
+            self.turn_spin.set(turn_pair.turn)
+        else:
+            self.turn_spin.set(1)
+
+        # Entry coordinates
+        if entry:
+            self.entry_x_spin.set(entry.entry_x)
+            self.entry_y_spin.set(entry.entry_y)
+            self.script_spin.set(entry.script_id)
+        else:
+            self.entry_x_spin.set(0)
+            self.entry_y_spin.set(0)
+            self.script_spin.set(0)
+
+        # Units in wave
+        self.units_listbox.delete(0, tk.END)
+        if entry:
+            for unit_idx in entry.unit_indices:
+                for unit in self.units:
+                    if unit.get('index') == unit_idx:
+                        self.units_listbox.insert(tk.END, unit.get('name', f'Unit {unit_idx}'))
+                        break
+
+    def _apply_changes(self):
+        """Apply changes to current wave"""
+        if self.current_wave is None or not self.schedule:
+            return
+
+        wave_id = self.current_wave
+
+        try:
+            new_turn = int(self.turn_spin.get())
+            new_x = int(self.entry_x_spin.get())
+            new_y = int(self.entry_y_spin.get())
+            new_script = int(self.script_spin.get())
+        except ValueError:
+            messagebox.showerror("Error", "Invalid numeric value")
+            return
+
+        # Update entry if it exists
+        entry = self.schedule.entries.get(wave_id)
+        if entry:
+            entry.entry_x = new_x
+            entry.entry_y = new_y
+            entry.script_id = new_script
+
+        # Update turn schedule
+        turn_pair = self.schedule.schedule.get(wave_id)
+        if turn_pair:
+            turn_pair.turn = new_turn
+
+        # Refresh display
+        self._populate_wave_tree()
+
+        # Notify callback
+        if self.on_update_callback:
+            self.on_update_callback()
+
+        messagebox.showinfo("Applied", f"Changes to wave {wave_id} applied.\n\nNote: Use Save to write to file.")
+
+    def _revert_changes(self):
+        """Revert changes to current wave"""
+        if self.current_wave is not None:
+            self._display_wave(self.current_wave)
+
+    def _add_wave(self):
+        """Add a new reinforcement wave"""
+        if not self.schedule:
+            messagebox.showwarning("Warning", "No scenario loaded")
+            return
+
+        # Find next available wave ID
+        existing_ids = set(self.schedule.entries.keys())
+        new_id = 1
+        while new_id in existing_ids:
+            new_id += 1
+
+        # Create new entry
+        new_entry = ReinforcementEntry(
+            offset=0,  # Will be calculated on save
+            ptr6_offset=0,
+            wave_id=new_id,
+            script_id=0,
+            entry_x=50,  # Default entry point
+            entry_y=50,
+        )
+        self.schedule.entries[new_id] = new_entry
+
+        # Refresh display
+        self._populate_wave_tree()
+
+        # Select the new wave
+        self.wave_tree.selection_set(str(new_id))
+        self._display_wave(new_id)
+
+        messagebox.showinfo("Added", f"Created wave {new_id}.\n\nSet entry turn, hex, and save.")
+
+    def _delete_wave(self):
+        """Delete selected wave"""
+        if self.current_wave is None or not self.schedule:
+            return
+
+        wave_id = self.current_wave
+
+        # Confirm
+        entry = self.schedule.entries.get(wave_id)
+        unit_count = len(entry.unit_indices) if entry else 0
+
+        if unit_count > 0:
+            result = messagebox.askyesno(
+                "Confirm Delete",
+                f"Wave {wave_id} has {unit_count} units assigned.\n\n"
+                f"Delete this wave? Units will become orphaned."
+            )
+        else:
+            result = messagebox.askyesno(
+                "Confirm Delete",
+                f"Delete wave {wave_id}?"
+            )
+
+        if not result:
+            return
+
+        # Remove from schedule
+        if wave_id in self.schedule.entries:
+            del self.schedule.entries[wave_id]
+        if wave_id in self.schedule.schedule:
+            del self.schedule.schedule[wave_id]
+
+        self.current_wave = None
+        self._clear_display()
+        self._populate_wave_tree()
+
+        if self.on_update_callback:
+            self.on_update_callback()
+
+    def _clear_display(self):
+        """Clear the wave properties display"""
+        self.wave_id_var.set("-")
+        self.turn_spin.set(1)
+        self.entry_x_spin.set(0)
+        self.entry_y_spin.set(0)
+        self.script_spin.set(0)
+        self.units_listbox.delete(0, tk.END)
+
+    def get_modifications(self, tracker: ModificationTracker):
+        """Get all reinforcement modifications for saving"""
+        if not self.schedule or not self.scenario:
+            return
+
+        # This would be called by the main editor to gather modifications
+        # For now, we track in-memory changes; full implementation needs
+        # original values comparison
+        pass
+
+
 class ScenarioSettingsEditor(ttk.Frame):
     """Editor for scenario-level settings"""
 
@@ -1836,6 +2331,7 @@ class ImprovedScenarioEditor:
         self.modified = False
         self.units = []
         self.coords = []
+        self.mod_tracker = ModificationTracker()  # Track modifications for patch-in-place saving
 
         # Create main window
         self.root = tk.Tk()
@@ -1934,10 +2430,13 @@ class ImprovedScenarioEditor:
         # Tab 3: Unit Editor (IMPROVED!)
         self._create_unit_editor_tab()
 
-        # Tab 4: Scenario Settings (NEW!)
+        # Tab 4: Reinforcements (NEW!)
+        self._create_reinforcements_tab()
+
+        # Tab 5: Scenario Settings (NEW!)
         self._create_settings_tab()
 
-        # Tab 5: Terrain Reference (NEW!)
+        # Tab 6: Terrain Reference (NEW!)
         self._create_terrain_reference_tab()
 
     def _create_mission_tab(self):
@@ -2010,6 +2509,19 @@ class ImprovedScenarioEditor:
 
         self.unit_props_editor = UnitPropertiesEditor(right_frame, self.on_unit_updated)
         self.unit_props_editor.pack(fill=tk.BOTH, expand=True)
+
+    def _create_reinforcements_tab(self):
+        """Create reinforcements editor tab"""
+        frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(frame, text="Reinforcements")
+
+        self.reinforcement_editor = ReinforcementEditor(frame, self._on_reinforcement_updated)
+        self.reinforcement_editor.pack(fill=tk.BOTH, expand=True)
+
+    def _on_reinforcement_updated(self):
+        """Called when reinforcement data is modified"""
+        self.modified = True
+        self.modified_label.config(text="Modified *", foreground="red")
 
     def _create_settings_tab(self):
         """Create scenario settings tab"""
@@ -2208,6 +2720,10 @@ class ImprovedScenarioEditor:
         if not self.scenario:
             return
 
+        # Clear modification tracker for new scenario
+        self.mod_tracker.clear()
+        self.mod_tracker.set_scenario_size(len(self.scenario.data))
+
         # Parse units from scenario (searches PTR4 and PTR6)
         self.units = EnhancedUnitParser.parse_units_from_scenario(self.scenario)
 
@@ -2224,6 +2740,9 @@ class ImprovedScenarioEditor:
         # Load unit editor
         self._load_units_into_tree()
         self.unit_props_editor.load_units(self.units)
+
+        # Load reinforcement editor
+        self.reinforcement_editor.load_data(self.scenario, self.units)
 
         # Load settings
         self.settings_editor.load_scenario_data(self.scenario)
@@ -2474,16 +2993,46 @@ class ImprovedScenarioEditor:
                                "unit data structure and updating all related sections.")
 
     def save_scenario(self):
-        """Save scenario"""
+        """Save scenario using patch-in-place method"""
         if not self.scenario or not self.scenario_file:
             messagebox.showwarning("Warning", "No scenario loaded!")
             return
 
-        # For now, only mission text is saved
-        messagebox.showinfo("Save",
-                           "Currently only mission briefing changes are saved.\n\n"
-                           "Full save functionality with all improvements will be\n"
-                           "available once the format is completely understood.")
+        # Check if there are any modifications to save
+        if not self.mod_tracker.has_changes() and not self.modified:
+            messagebox.showinfo("Save", "No changes to save.")
+            return
+
+        # Show summary of pending changes
+        summary = self.mod_tracker.get_summary()
+        if self.mod_tracker.has_changes():
+            confirm = messagebox.askyesno(
+                "Confirm Save",
+                f"Save changes to {self.scenario_file.name}?\n\n{summary}\n\n"
+                f"A backup (.bak) will be created."
+            )
+            if not confirm:
+                return
+
+        try:
+            # Get patches from tracker
+            patches = self.mod_tracker.get_patches()
+
+            if patches:
+                # Apply patches using patch-in-place
+                count = self.scenario.patch_in_place(patches, create_backup=True)
+                self.mod_tracker.clear()
+                self.modified = False
+                self.modified_label.config(text="", foreground="black")
+                messagebox.showinfo("Saved", f"Successfully saved {count} modifications to {self.scenario_file.name}")
+            else:
+                # No patches but modified flag set - just clear the flag
+                self.modified = False
+                self.modified_label.config(text="", foreground="black")
+                messagebox.showinfo("Save", "No binary changes to write.")
+
+        except Exception as e:
+            messagebox.showerror("Save Error", f"Failed to save scenario:\n{e}")
 
     def save_scenario_as(self):
         """Save scenario as new file"""
