@@ -2,9 +2,10 @@
 import json
 import struct
 
-from lib.binary_patch import digest, write_patch
-from lib.dday_patch import PATCHES
-from lib.le_executable import CODE
+from .ips import digest, write_patch
+from .le import CODE
+from .music import build as build_music
+from .paths import PATCHES
 
 # Native RepairFromMoveOut advances Calendar before resolving these missions.
 # Each instruction intentionally reads clouds[current - start - 1]. Growing
@@ -36,4 +37,10 @@ def build_air_weather_patch(source):
     write_patch(PATCHES, 'dday-air-weather', source, result, version=1,
                 requires='dday-music version 2', edits=edits,
                 cloud_offset=0x32c, previous_turn_displacement=0x32b)
+    return result
+
+
+def build():
+    result = build_air_weather_patch(build_music())
+    print(f'Built independently reversible air-weather repair: {len(result)}-byte executable')
     return result

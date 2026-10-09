@@ -39,7 +39,7 @@ from lib.terrain_reader import (
 )
 from lib.hex_tile_loader import HexTileLoader
 from lib.game_art import unit_counter, support_unit_icon
-from lib.game_resources import GAME_ROOT
+from lib.game_resources import GAME_ROOT, game_path
 from lib.unit_reader import (
     read_units, unit_status, prepare_unit_changes, unit_arrival_label, arrival_time_from_form,
     unit_order_label, HQ_AUTOMATION_FIELDS,
@@ -141,7 +141,8 @@ class MapViewer(ttk.Frame):
     # Default map constants (will be overridden by scenario data)
     DEFAULT_MAP_WIDTH = 125   # hexes (columns/X axis)
     DEFAULT_MAP_HEIGHT = 100  # hexes (rows/Y axis)
-    HEX_SIZE = 12     # initial hex radius in pixels
+    HEX_SIZE = 12     # reference hex radius for the 100% zoom label
+    VIEW_PADDING = 12
 
     def __init__(self, parent, on_terrain_edit=None, on_unit_place=None, on_undo=None, on_feature_edit=None,
                  on_map_tool=None):
@@ -194,7 +195,8 @@ class MapViewer(ttk.Frame):
             messagebox.showerror(
                 "Critical Error: Hex Tiles Not Available",
                 f"{e}\n\nThe scenario editor cannot function without hex tile images.\n"
-                f"Please ensure game/waw/dday/DATA/PCWATW.REZ is available.\n\n"
+                f"Please ensure DATA/PCWATW.REZ is available under\n"
+                f"{GAME_ROOT / 'dday'} or {GAME_ROOT / 'dday/orig'}.\n\n"
                 f"The application will now exit."
             )
             # Force exit
@@ -620,6 +622,8 @@ class MapViewer(ttk.Frame):
     def redraw(self):
         """Redraw the entire map"""
         if self._center_pending and self.canvas.winfo_width() > 1 and self.canvas.winfo_height() > 1:
+            if self._center_on_resize:
+                self.hex_size = self._fit_hex_size()
             self._center_view()
         # Establish bounds before culling tiles, without resetting the viewport.
         self._update_scroll_region()
@@ -847,6 +851,15 @@ class MapViewer(ttk.Frame):
             self.offset_y + max(0, self.map_height - 1) * self.hex_size * 1.5 + self.hex_size,
         )
 
+    def _fit_hex_size(self):
+        """Largest hex radius that keeps the entire staggered grid in view."""
+        width = math.sqrt(3) * (self.map_width + (0.5 if self.map_height > 1 else 0))
+        height = max(0, self.map_height - 1) * 1.5 + 2
+        return min(
+            max(1, self.canvas.winfo_width() - 2 * self.VIEW_PADDING) / width,
+            max(1, self.canvas.winfo_height() - 2 * self.VIEW_PADDING) / height,
+        )
+
     def _update_scroll_region(self, view_origin=None):
         """Keep the whole map reachable while preserving the current viewport.
 
@@ -864,9 +877,9 @@ class MapViewer(ttk.Frame):
         else:
             view_x, view_y = view_origin
         left, top, right, bottom = self._map_pixel_bounds()
-        padding = 30
-        left = math.floor(min(0, left - padding, view_x))
-        top = math.floor(min(0, top - padding, view_y))
+        padding = self.VIEW_PADDING
+        left = math.floor(min(left - padding, view_x))
+        top = math.floor(min(top - padding, view_y))
         right = math.ceil(max(right + padding, view_x + canvas_width))
         bottom = math.ceil(max(bottom + padding, view_y + canvas_height))
         self.canvas.config(scrollregion=(left, top, right, bottom))
@@ -888,9 +901,12 @@ class MapViewer(ttk.Frame):
         zoom_factor = 1.25 if zoom_in else 0.8
 
         new_size = self.hex_size * zoom_factor
-        new_size = max(3, min(60, new_size))
+        # Fitting a very large/small map can go beyond the usual zoom limits.
+        # Keep that fitted scale reachable and never reverse a zoom's direction.
+        fit_size = self._fit_hex_size()
+        new_size = max(min(3, fit_size, old_size), min(max(60, fit_size, old_size), new_size))
 
-        if abs(new_size - old_size) < 0.1:
+        if math.isclose(new_size, old_size):
             return
 
         # Calculate scale ratio
@@ -926,8 +942,7 @@ class MapViewer(ttk.Frame):
         self._zoom_at_point(*self._visible_map_center(), zoom_in=False)
 
     def reset_view(self):
-        """Restore the default zoom and center the map in the viewport."""
-        self.hex_size = self.HEX_SIZE
+        """Fit the whole map to the viewport and restore automatic fitting."""
         self.offset_x = 50
         self.offset_y = 50
         self._center_pending = True
@@ -937,8 +952,8 @@ class MapViewer(ttk.Frame):
     def _center_view(self):
         left, top, right, bottom = self._map_pixel_bounds()
         self._update_scroll_region((
-            (left + right - self.canvas.winfo_width()) / 2,
-            (top + bottom - self.canvas.winfo_height()) / 2,
+            round((left + right - self.canvas.winfo_width()) / 2),
+            round((top + bottom - self.canvas.winfo_height()) / 2),
         ))
         self._center_pending = False
 
@@ -2243,7 +2258,7 @@ class ImprovedScenarioEditor:
         if filename is None:
             filename = filedialog.askopenfilename(
                 title="Open Scenario — D-Day, Stalingrad, Crusader or V for Victory",
-                initialdir=str(GAME_ROOT / 'dday/SCENARIO' if (GAME_ROOT / 'dday/SCENARIO').is_dir()
+                initialdir=str(game_path('dday', 'SCENARIO') if game_path('dday', 'SCENARIO').is_dir()
                                else GAME_ROOT / 'SCENARIO'),
                 filetypes=[("Scenario Files", "*.SCN"), ("All Files", "*.*")]
             )

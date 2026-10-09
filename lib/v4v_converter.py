@@ -13,7 +13,7 @@ import struct
 from PIL import Image
 
 from lib.game_art import load_bitmap
-from lib.game_resources import GAME_ROOT, game_resources
+from lib.game_resources import game_path, game_resources
 from lib.terrain_artwork import TerrainStamp
 from lib.terrain_reader import TERRAIN_TYPES
 from lib.unit_roster import UnitRoster, put_short, short
@@ -53,7 +53,7 @@ def fixed(data, offset):
 @lru_cache(maxsize=1)
 def templates():
     entries = []
-    for path in sorted((GAME_ROOT / 'dday/SCENARIO').glob('*.SCN')):
+    for path in sorted(game_path('dday', 'SCENARIO').glob('*.SCN')):
         roster = UnitRoster(path.read_bytes())
         for side, records in enumerate(roster.records):
             for record in records:
@@ -134,7 +134,7 @@ def convert_art(source):
 
 def convert_scenario(path):
     source = VictoryScenario.read(path)
-    roster = UnitRoster((GAME_ROOT / 'dday/SCENARIO/BRADLEY.SCN').read_bytes())
+    roster = UnitRoster(game_path('dday', 'SCENARIO', 'BRADLEY.SCN').read_bytes())
     b, h = roster.blocks, roster.header
     report = {'version': 4, 'source': str(source.path), 'title': source.title,
               'theater': source.theater, 'source_sha256': hashlib.sha256(source.path.read_bytes()).hexdigest(),

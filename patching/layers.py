@@ -1,8 +1,9 @@
 """Select independently reversible D-Day patch layers by verified fingerprint."""
 import json
 
-from lib.binary_patch import apply_component, digest
-from lib.dday_patch import PATCHES, apply_engine_patch, patch_manifest
+from .ips import apply_component, digest
+from .engine import apply_engine_patch, patch_manifest
+from .paths import PATCHES
 
 COMPONENTS = ('engine', 'code-space', 'scenario-library', 'presentation', 'custom-artwork', 'advanced-orders', 'support-artwork', 'game-profiles', 'terrain-rules', 'nested-events', 'startup-selection', 'music', 'air-weather', 'library', 'all')
 

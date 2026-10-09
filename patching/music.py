@@ -5,9 +5,10 @@ import struct
 import subprocess
 import tempfile
 
-from lib.binary_patch import digest, write_patch
-from lib.dday_patch import PATCHES
-from lib.le_executable import CODE
+from .ips import apply_component, digest, write_patch
+from .engine import apply_engine_patch
+from .le import CODE
+from .paths import PATCHES, original_executable
 
 ORIGIN = 0xbc000
 ENTRY_NAMES = ('MusicSync', 'MusicMenu', 'MusicToggle', 'MusicShutdown', 'MusicTick',
@@ -51,4 +52,15 @@ def build_music_patch(source):
                 requires='dday-startup-selection version 1',entries=entries,hooks=hooks,
                 code_length=len(code),code_offset=ORIGIN,
                 music_file='DATA/MUSIC/V4V.OPL',settings_file='DATA/MUSIC/MUSIC.CFG',tick_rate=100,native_timer_rate=140,callback_result=0)
+    return result
+
+
+def build():
+    data = apply_engine_patch(original_executable().read_bytes())
+    for component in ('code-space','scenario-library','presentation','custom-artwork',
+                      'advanced-orders','support-artwork','game-profiles','terrain-rules',
+                      'nested-events','startup-selection'):
+        data = apply_component(data,PATCHES,'dday-'+component)
+    result = build_music_patch(data)
+    print(f'Built independently reversible music layer: {len(result)}-byte executable')
     return result

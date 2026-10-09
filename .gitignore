@@ -14,6 +14,10 @@
 /lib/reinforcement_parser.py
 /lib/shared_game.py
 
+!/patching/
+/patching/*
+!/patching/*.py
+
 # Maintained patch, library-generation, and sound-setup commands only.
 !/tools/
 /tools/*
@@ -71,7 +75,6 @@
 /assets/app/*
 !/assets/app/icon.png
 !/assets/app/icon.ico
-!/assets/app/README.md
 !/assets/music/
 /assets/music/*
 !/assets/music/README.md

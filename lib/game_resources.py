@@ -56,17 +56,29 @@ def read_resources(data):
     return resources
 
 
-@lru_cache(maxsize=3)
-def game_resources(game='dday'):
+def game_path(game, *parts):
+    """Find installed files directly under the game folder or its orig backup.
+
+    Prefer the direct installation when both layouts contain the requested path.
+    Return its expected path when neither exists so callers retain normal file
+    errors and can use the same resolver for optional files and directories.
+    """
     if game not in GAME_NAMES:
         raise ValueError(f'Unknown game: {game}')
-    path = GAME_ROOT / game / 'DATA' / 'PCWATW.REZ'
+    direct = (GAME_ROOT / game).joinpath(*parts)
+    original = (GAME_ROOT / game / 'orig').joinpath(*parts)
+    return original if not direct.exists() and original.exists() else direct
+
+
+@lru_cache(maxsize=3)
+def game_resources(game='dday'):
+    path = game_path(game, 'DATA', 'PCWATW.REZ')
     return read_resources(path.read_bytes())
 
 
 def available_games():
     return tuple(game for game in GAME_NAMES
-                 if (GAME_ROOT / game / 'DATA' / 'PCWATW.REZ').is_file())
+                 if game_path(game, 'DATA', 'PCWATW.REZ').is_file())
 
 
 def add_resources(data, additions):

@@ -331,6 +331,6 @@ def patch_presentation(resources, assignments):
 
 
 def startup_resources(assignments):
-    from lib.game_resources import GAME_ROOT
-    original = (GAME_ROOT/'dday/DATA/PCWATW.REZ').read_bytes()
+    from lib.game_resources import game_path
+    original = game_path('dday', 'DATA', 'PCWATW.REZ').read_bytes()
     return patch_presentation(original, {k: v for k, v in assignments.items() if slot_for(k).kind == 'splash'})

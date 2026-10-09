@@ -7,7 +7,7 @@ import sys
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from lib.game_resources import GAME_ROOT, game_resources
+from lib.game_resources import GAME_ROOT, game_path, game_resources
 from lib.game_art import decode_bitmap, load_bitmap
 from lib.unit_roster import UnitRoster, short
 from lib.unit_library import LIBRARY
@@ -60,7 +60,7 @@ def build():
             count+=1
         print(game,scenario,count)
     for game in ('dday','stalingrad','operation_crusader'):
-        for path in sorted((GAME_ROOT/game/'SCENARIO').glob('*.SCN')):
+        for path in sorted(game_path(game, 'SCENARIO').glob('*.SCN')):
             rows = native_entries(UnitRoster(path.read_bytes())) if game=='dday' else old_roster(path,game)
             add(game,path.stem,rows)
     for path in sorted((GAME_ROOT.parent/'v4v').rglob('*.SCN')):

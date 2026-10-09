@@ -1,54 +1,51 @@
 # Ready-to-play scenarios
 
-Prepared from all staged originals using the current converters:
-**10 Stalingrad + 6 Operation Crusader + 27 V for Victory = 43 scenarios**.
-The folder names match the renamed editing folders: `STALINGR`, `CRUSADER`,
-and `V4V`. This pack contains DOS-ready SCN/REZ/AI sets; the separate
-`scenarios/converted` documents contain editor JSON artwork and cannot be
-staged directly by a DOS batch file.
-
-This is the index of the locally generated pack. SCN/REZ/AI files are excluded
-from the source repository. Build exports from your own installations with
-`scenario_converter.py --dos`, or use an already prepared pack.
+The prepared collection contains **43 converted scenarios**: 10 from Stalingrad,
+6 from Operation Crusader, and 27 from V for Victory. Play them with patched
+D-Day or use them as starting points for editing. SELECT also offers the seven
+native D-Day scenarios.
 
 ## Install and select
 
-Copy this pack's `SCENARIO` folder into your playing copy of D-Day, merging
-with its existing folder. Copy [SELECT.BAT](../game/waw/dday/SELECT.BAT)
-from `game/waw/dday` beside the playing copy's `INVADE.EXE`. The batch file
-is maintained only with the game; this scenario pack contains no launcher copy.
-The resulting layout is:
+1. Install `INVADE-PATCHED.EXE` as `INVADE.EXE` in your playing copy of D-Day.
+2. Copy `STALINGR`, `CRUSADER` and `V4V` from `scenarios/dos/SCENARIO` into its
+   `SCENARIO` folder.
+3. Copy [SELECT.BAT](../game/waw/dday/SELECT.BAT) beside `INVADE.EXE`.
+4. Run **SELECT**, choose a game and battle, then choose **Begin New Game**.
+
+The resulting layout looks like this:
 
 ```text
-INVADE.EXE              (your patched binary)
+INVADE.EXE
 SELECT.BAT
-DATA\PCWATW.REZ         (D-Day's original base artwork)
-SCENARIO\STALINGR\CAMPAIGN.SCN / .REZ / .AI
-SCENARIO\STALINGR\CLASH.SCN / .REZ / .AI
-SCENARIO\CRUSADER\CAMPAIGN.SCN / .REZ / .AI
-SCENARIO\V4V\VLFORT.SCN / .REZ / .AI
-...and the other scenarios listed below
+DATA/PCWATW.REZ
+SCENARIO/BRADLEY.SCN
+SCENARIO/STALINGR/CLASH.SCN
+SCENARIO/STALINGR/CLASH.REZ
+SCENARIO/STALINGR/CLASH.AI
+SCENARIO/CRUSADER/CAMPAIGN.SCN
+SCENARIO/CRUSADER/CAMPAIGN.REZ
+SCENARIO/CRUSADER/CAMPAIGN.AI
+SCENARIO/V4V/VLFORT.SCN
+SCENARIO/V4V/VLFORT.REZ
+SCENARIO/V4V/VLFORT.AI
 ```
 
-From the game directory, run **`SELECT`**. Choose a game, then a battle;
-V4V has a battleset submenu. **4. D-Day** lists the seven native scenarios,
-which use the files already in the main `SCENARIO` folder and need no staging.
-For a conversion, the batch copies the selected SCN/REZ/AI trio into that folder.
-It then launches **`INVADE`** with that battle already selected. Choose
-**Begin New Game**; the **Scenarios** panel shows the selected title and page.
-Exiting the game returns to the batch menu; choose **0** there to quit.
+SELECT copies the chosen converted scenario and its companions into the main
+`SCENARIO` folder, then launches the game with that battle selected. Stalingrad
+uses `ST` destination names and Crusader uses `OC`, so their campaigns coexist
+with D-Day's. The tables below show the names.
 
-Use the current `game/waw/dday/INVADE-PATCHED.EXE` as `INVADE.EXE`: automatic
-selection needs its new `startup-selection` patch. When upgrading, replace both
-`SELECT.BAT` and the executable. The batch writes a temporary `WAWSTART.TXT`
-with the selected filename and removes it after the game exits. Missing or
-invalid requested files stop startup, preventing an unintended fallback to
-Bradley. Native Bradley itself remains unchanged and separately playable.
+**4. D-Day** offers the seven native scenarios. Exiting the game returns to the
+menu; choose **0** to quit. DOSBox-X provides the menu's `CHOICE` command and
+ANSI display support. On MS-DOS, use `CHOICE.COM` and load `ANSI.SYS` for color.
 
-The menu needs MS-DOS 6.22's `CHOICE.COM` on PATH or DOSBox-X's built-in CHOICE.
-No Python, editor or additional helper executable is needed. You can also
-bypass the menu with uppercase directory and source names, without `.SCN`.
-This argument form only stages/checks files and does not launch the game:
+Keep staged SCN/REZ/AI files available when resuming saves. Selecting a battle
+again restores its packaged files, so keep customized exports under their own
+unique names. Use the DOS pack for SELECT; keep `scenarios/converted` and its
+`assets` folders for further editing.
+
+For direct staging, use uppercase folder and source names without `.SCN`:
 
 ```dos
 SELECT STALINGR CLASH
@@ -57,26 +54,19 @@ SELECT V4V VLFORT
 SELECT DDAY BRADLEY
 ```
 
-Staging uses `ST` filenames for Stalingrad and `OC` for Crusader. Thus both
-campaigns coexist with D-Day's `CAMPAIGN.SCN`. Previously staged scenarios
-remain available, including their companions needed for saved games. Selecting
-the same battle again replaces its staged trio with the packaged copy.
-The batch file checks for all three source files before copying, retains the
-subfolder sources, and leaves native scenarios, saves, and `DATA/PCWATW.REZ`
-alone. If copying fails, it reports the failure; correct the problem and select
-that battle again before playing it.
+These argument forms prepare or check the files and return to DOS. Run
+`INVADE` afterward and select the battle in its Scenarios panel.
 
-These remain adaptations to D-Day's engine, with current source-game profiles
-and matching terrain, chits and previews. See [WaW conversion coverage](WAW_CONVERSION.md),
-[V4V conversion coverage](V4V_CONVERSION.md), and
-[general installation instructions](../game/waw/README.md).
+Converted battles use D-Day's engine with their assigned game profiles. See
+[WaW conversion](WAW_CONVERSION.md), [V4V conversion](V4V_CONVERSION.md), and
+[installation](../game/waw/README.md) for the relevant settings and adaptations.
 
 ## Scenario index
 
 ### D-Day (7 native scenarios)
 
-These remain in the main `SCENARIO` folder of your game copy and use its base
-artwork; no extra exports or copies are needed.
+D-Day scenarios use the files in the game's main `SCENARIO` folder and its
+base artwork.
 
 | Filename | Scenario |
 | --- | --- |
@@ -168,38 +158,14 @@ Some Stalingrad originals share titles; their filenames distinguish them.
 
 ## Rebuilding exports (optional)
 
-The converter can recreate the exported sets in a new, flat output folder:
+To make a fresh set from your original game installations, run from the project
+folder with the editor's Python dependencies installed:
 
 ```sh
-python3 scenario_converter.py game --dos -d /tmp/waw-dos/SCENARIO
+python3 scenario_converter.py game --dos -d my-dos-scenarios
 ```
 
-Run from the repository root with the editor's Python dependencies installed.
-Existing output files are never overwritten. The flat CLI output can be copied
-directly to the game's main SCENARIO folder and selected in the game without
-using the batch file. To use SELECT, arrange the rebuilt files into the three
-subfolders above using the source names in the index. Keep all three companion
-basenames together. The prepared pack already has this layout.
-
-## Validation
-
-All 43 exported sets passed map/roster/weather, resource, profile, metadata and
-orders checks. The actual patched x86 scenario-selector code selected all 50
-entries (43 conversions plus seven native D-Day scenarios) with matching
-resources, orders and rule values in the test harness. These checks do not
-replace gameplay playtesting of every scenario.
-
-`SELECT.BAT` was tested in DOSBox-X: all 43 selections copied byte-identical
-SCN/REZ/AI sets (including empty AI files), both campaigns coexisted, and the
-seven native scenarios, base artwork and existing save remained unchanged.
-Repeat selection, missing-companion rejection, invalid input, interactive
-Stalingrad/V4V selection, back/quit, and temporary-file cleanup were checked.
-
-The D-Day submenu was checked for all seven entries, launch/return behavior,
-missing-native-file handling, and preservation of installed scenarios. A DOS
-test executable recorded launches for those checks; a separate DOSBox-X run
-confirmed that selecting D-Day starts the actual patched game's splash screen.
-Argument-based checks still return without launching the game. The startup
-selection patch was then checked in DOSBox-X using the actual game: choosing
-VLFORT selected **Fortress in the Snow**, and Begin New Game loaded Velikiye Luki
-on December 20, 1942. Exiting returned to SELECT and removed its temporary hint.
+Choose a new output folder. The command creates a flat collection with unique
+filenames, ready to copy into the game's main `SCENARIO` folder and select in
+the game. To use SELECT, arrange the files into the subfolders above using the
+source filenames in the index. Keep each SCN, REZ and AI under the same basename.

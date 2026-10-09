@@ -16,7 +16,7 @@ import tempfile
 from PIL import Image
 
 from lib.game_art import load_bitmap
-from lib.game_resources import GAME_ROOT, read_resources
+from lib.game_resources import game_path, read_resources
 from lib.terrain_catalog import DDAY_TERRAIN_BY_CODE
 
 
@@ -237,7 +237,7 @@ def export_terrain_pack(destination, scenario_name, data, assignments):
         raise ValueError('Invalid scenario filename')
     if len(data) < 0x1234 or int.from_bytes(data[:4], 'little') != 0x1230:
         raise ValueError('Only D-Day scenarios can be exported; earlier scenario formats need conversion.')
-    original = (GAME_ROOT / 'dday' / 'DATA' / 'PCWATW.REZ').read_bytes()
+    original = game_path('dday', 'DATA', 'PCWATW.REZ').read_bytes()
     resource_data = build_terrain_resources(original, assignments)
     with tempfile.TemporaryDirectory(prefix='.waw-export-', dir=destination.parent) as tmp:
         pack = Path(tmp) / 'pack'

@@ -11,7 +11,7 @@ import math
 from pathlib import Path
 import struct
 
-from lib.game_resources import GAME_ROOT, GAME_NAMES, game_resources
+from lib.game_resources import game_path, GAME_NAMES, game_resources
 from lib.game_art import decode_bitmap, load_bitmap
 from lib.terrain_artwork import TerrainStamp
 from lib.terrain_catalog import artwork_catalog
@@ -386,7 +386,7 @@ def _supply(source, roster, report):
 
 def convert_scenario(path):
     source = WawScenario.read(path)
-    roster = UnitRoster((GAME_ROOT/'dday/SCENARIO/BRADLEY.SCN').read_bytes())
+    roster = UnitRoster(game_path('dday', 'SCENARIO', 'BRADLEY.SCN').read_bytes())
     b, h, old = roster.blocks, roster.header, source.blocks
     report = dict(version=1, source=str(source.path), source_game=source.game, title=source.title,
                   source_sha256=hashlib.sha256(source.data).hexdigest(), adaptations=[],

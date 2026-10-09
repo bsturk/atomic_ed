@@ -83,6 +83,9 @@ game/waw/dday/SCENARIO/BRADLEY.SCN   (and the other scenarios)
 game/waw/dday/orig/INVADE.EXE
 ```
 
+If you keep the entire original game in `game/waw/dday/orig`, the editor also
+finds its `DATA` and `SCENARIO` folders there automatically.
+
 Then, from the project folder:
 
 ```sh
@@ -102,7 +105,7 @@ keep its accompanying `assets` folder with it.
 
 For the earlier games, put their installations in `game/waw/stalingrad`,
 `game/waw/operation_crusader`, or `game/v4v`. Keep their original data files
-together. The [artwork library guide](txt/SCENARIO_EDITOR_README.md#unit-and-terrain-libraries)
+together. The [artwork library guide](txt/SCENARIO_EDITOR_README.md#artwork-and-libraries)
 explains how to make their terrain and units available for your own scenarios.
 
 ## What the D-Day patches add
@@ -114,10 +117,6 @@ The patched game lets you:
 - Use each scenario's own terrain, unit artwork, flags, and portraits.
 - Play with custom AI plans, triggered events, victory settings, and terrain rules.
 - Enjoy optional V for Victory background music.
-
-It also includes fixes for weather-related errors during reconnaissance and
-air supply. The patches can be applied or reversed individually if needed;
-see the [patch guide](game/waw/patches/README.md) for those options.
 
 ## Playing your scenario
 

@@ -1,9 +1,7 @@
 """Apply the D-Day weather/victory/AI patch to its exact supported binary."""
 import hashlib
 import json
-from pathlib import Path
-
-PATCHES = Path(__file__).resolve().parents[1] / 'game/waw/patches'
+from .paths import PATCHES
 
 
 def patch_manifest():

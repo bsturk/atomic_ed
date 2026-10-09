@@ -7,7 +7,7 @@ VicLoc+0xc/+0xe; the dwords at +0/+4 are accumulated scores, not point values.
 from datetime import date, timedelta
 import struct
 
-from lib.game_resources import GAME_ROOT
+from lib.game_resources import game_path
 from lib.unit_roster import UnitRoster, short, put_short
 from lib.weather_reader import EXTENDED_SIZE, NATIVE_DATES
 
@@ -242,7 +242,7 @@ def new_scenario(width=30, height=24, terrain=1, start_date='1944-06-12', turns=
     end = start + turns - 1
     last = EPOCH + timedelta(days=end//6)
     days = end//6 - start//6 + 1
-    roster = UnitRoster((GAME_ROOT / 'dday/SCENARIO/BRADLEY.SCN').read_bytes())
+    roster = UnitRoster(game_path('dday', 'SCENARIO', 'BRADLEY.SCN').read_bytes())
     b, h = roster.blocks, roster.header
     struct.pack_into('<2i', h, 0x44, start, end)
     h[0x4c:0x54] = bytes(8)

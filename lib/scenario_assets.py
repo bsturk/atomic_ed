@@ -42,7 +42,7 @@ def scenario_title(path):
 def export_for_dos(data, target, assignments, *, counters, title=None, presentation=None, document=None):
     """Write the SCN, matching REZ and AI orders for manual installation."""
     from lib.battle_plans import export_plans
-    from lib.game_resources import GAME_ROOT
+    from lib.game_resources import game_path
     from lib.terrain_artwork import build_terrain_resources
     from lib.counter_artwork import patch_counters
     from lib.unit_roster import UnitRoster
@@ -63,7 +63,7 @@ def export_for_dos(data, target, assignments, *, counters, title=None, presentat
     roster = UnitRoster(data)
     engine_slot(data)
     validate_weather(roster.blocks['weather'])
-    original = (GAME_ROOT / 'dday/DATA/PCWATW.REZ').read_bytes()
+    original = game_path('dday', 'DATA', 'PCWATW.REZ').read_bytes()
     resources = patch_counters(build_terrain_resources(original, assignments), counters)
     title = title or target.stem
     resources = build_overviews(resources, data, assignments, title)
