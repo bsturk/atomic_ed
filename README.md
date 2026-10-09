@@ -45,8 +45,8 @@ unit counters use the game’s artwork.*
 
 ## Games and scenarios
 
-You can work with **50 battles** across these games: seven original D-Day
-scenarios and 43 earlier-game scenarios that can be converted for D-Day.
+The collection includes **50 battles**: seven original D-Day scenarios and
+**43 earlier-game scenarios already converted for D-Day**.
 
 | Game / battleset | Scenarios | Examples |
 | --- | ---: | --- |
@@ -58,9 +58,11 @@ scenarios and 43 earlier-game scenarios that can be converted for D-Day.
 | V for Victory: Market Garden | 7 converted | A Bridge Too Far, Screaming Eagles, Hell’s Highway |
 | V for Victory: Gold–Juno–Sword | 7 converted | Off the Beaches, To Caen!, Attack of the 12th SS |
 
-Open an earlier game's `.SCN` file in the editor and it will convert it for you.
-Use **Save As** to keep an editable copy, or **Export for DOS** to get it ready
-to play. See the [full scenario list](txt/SCENARIO_PACK.md) for every battle.
+The converted scenarios are ready to play with the patched game, or you can use
+them as a starting point for your own battles. Open one in the editor, make your
+changes, and use **Export for DOS** when you're ready to play. You can also
+import original earlier-game `.SCN` files for editing. See the
+[full scenario list](txt/SCENARIO_PACK.md) for every battle.
 
 Converted scenarios run under D-Day's rules, so their behavior and balance can
 differ from the original games. The [conversion guides](#more-help) explain the
