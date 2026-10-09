@@ -1,0 +1,115 @@
+{
+  "name": "dday-support-artwork",
+  "source_sha256": "26023e77482cacbad5d431d537609252a17c0c294822bf85653fc467c577f0c7",
+  "patched_sha256": "b5bc1230f810246d70c8a1cbbe1e22fff9d36561347a1081191073cfcd5812ea",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "a3566c8116f005714faafd05c197cae444873c8241a8047f3ea3e23c838b613f",
+  "undo_sha256": "8e5beda3bb200b942bafcb12d878e7025a9c14fd52be95a9e5ff615a1e0dccfb",
+  "version": 1,
+  "requires": "dday-advanced-orders version 1",
+  "entries": {
+    "InitialPreview": 734728,
+    "SelectRow": 734819,
+    "InitSecondary": 734676,
+    "DrawLabel": 734569,
+    "GetResource": 736202,
+    "LoadIdentity": 736424,
+    "SaveIdentity": 736740,
+    "OpenOrders": 736836,
+    "Count": 739516,
+    "Selected": 739520,
+    "Page": 739524,
+    "Active": 739532,
+    "Records": 744704,
+    "Identifiers": 744448,
+    "RefreshRows": 734416,
+    "Scan": 733936,
+    "NativeRead": 736955,
+    "NativeResource": 736977,
+    "NativeSecondary": 736966,
+    "End": 761088,
+    "LeaderPortrait": 736988,
+    "AdvancedOrders": 738184,
+    "EventsInitialize": 737571,
+    "EventsRestore": 737729,
+    "EventState": 738820,
+    "EventsConditions": 737953,
+    "MoreAirSupport": 733397,
+    "InitialPlaneCategory": 733300,
+    "InitialShipCategory": 733353
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 332998,
+      "target": "MoreAirSupport",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 380561,
+      "target": "InitialPlaneCategory",
+      "before": "e837faffff"
+    },
+    {
+      "address": 380600,
+      "target": "InitialShipCategory",
+      "before": "e82aadffff"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 27904,
+  "picture_resources": [
+    131
+  ],
+  "cached_picture_buffer": 13
+}

@@ -1,0 +1,595 @@
+{
+  "name": "dday-weather-400",
+  "version": 4,
+  "source_sha256": "d28ef2b0e8eea2f5b6bb7eb1e002d3621c770f7d94e9add7480caf14ca8df2ba",
+  "patched_sha256": "9a220a34598a46d3fad3dba0a6724aaa77b827ddedbed908f2c17dd55e791b8b",
+  "title_table_offset": 1109469,
+  "title_table": "427261646c65792773204e696768746d61726500000000000000535320436f756e74657261747461636b000000000000000000005374204c6f0000000000000000000000000000000000000000004f7065726174696f6e20436f627261000000000000000000000055746168204265616368000000000000000000000000000000004f6d616861204265616368000000000000000000000000000000416d657269636120496e76616465732100000000000000000000",
+  "ips_sha256": "e6c12aa6c2bf14aab99ccfddc90e540063bdcd5a7bba7b36b36adfa68704da4e",
+  "undo_sha256": "f0a10453a85424d27cb732dd0203439544a2e2d332f281120267bb7f486c74bd",
+  "cave_code_offset": 732064,
+  "cave_length": 1120,
+  "entries": {
+    "RWWeather": 732097,
+    "SetCalUTs": 732422,
+    "ValidateWeather": 732475,
+    "SwapWeather": 732570,
+    "AuthoredAI": 732705
+  },
+  "weather_size": 1222,
+  "capacity": 400,
+  "victory_size": 1648,
+  "victory_capacity": 400,
+  "edits": [
+    {
+      "offset": 168296,
+      "before": "a02b0b00",
+      "after": "00300b00",
+      "reason": "Extend code object within its existing final page"
+    },
+    {
+      "offset": 402714,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 407308,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 443387,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 443790,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 444351,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 444384,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 444436,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 444645,
+      "before": "19030000",
+      "after": "bd040000",
+      "reason": "Weather field +319 -> +4bd"
+    },
+    {
+      "offset": 455033,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 484523,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 503236,
+      "before": "5356575589e581ec04000000ff7514e8cbf9ffff83c4048b451483c00450e8bcf9ffff83c4048b451483c00850e8adf9ffff83c4048b451483c00c50e89ef9ffff83c4048b451483c01050e88ff9ffff83c4048b451483c01450e880f9ffff83c404c745fc00000000817dfc040100007c07eb1dff45fcebf08b45fc01c08b551483c21801d050e81ef9ffff83c404ebe389ec5d5f5e5bc35356575589e581ec14000000c745f0020000006945f0200200008945f8c745ec0000000066837d18000f85800000000fbf451450e8eafaffff83c4048945fc8b45fc3b45f87414b80100000050b8b616000050e813d5ffff83c408ff75f8b8577d000050e8a3d7ffff83c408ff75f80fbf451450ff35577d0000e81bf9ffff83c40ceb298b45f43b45f07c07eb1fff45f4ebf16945f4200200008b15577d000001d050e8c0feffff83c404ebe1eb6b0fbf451450ff75f8e8bdfaffff83c408ff75f80fbf451450ff35577d0000e83bf9ffff83c40ceb438b45f43b45f07c07eb1aff45f4ebf16945f4200200000345ec50e872feffff83c404ebe6ff75f80fbf451450ff75ece802f9ffff83c40c8d45ec50e8b3d6ffff83c40489ec5d5f5e5bc3",
+      "after": "5356575589e583ec04e8000000005b81eb7e7702002e8bbb677802000fbf751466837d18000f853a01000056e88afbffff83c4048945fc3d40040000740b3d700600000f8541010000687006000057e850d8ffff83c408578b3f31c0b99c010000fcf3ab5fff75fc56ff37e8c2f9ffff83c40c817dfc700600000f8403010000eb1b90909090909090909090909090909090909090909090e963ffffff8b178db23c0400008dba54050000b988000000fdf3a5fc8dba2002000031c0b946000000f3abe9bb000000909090909090909090909090909090909090909090909090909090909090b616000090909090909090909090909090577d000090909090909090909090909090909090909090577d000090909090909090909090909090909090909090909090909090909090909090909090577d00009090909090909090909090909090909090909090909090909090909090909090909090909090909090577d0000566870060000e8a1faffff83c408687006000056ff37e825f9ffff83c40c89ec5d5f5e5bc36a012effb356780200e86bd4ffff83c408e878e90500ebe19090909090909090909090909090909090909090909090",
+      "reason": "Read native/extended victory history and save 400 entries per side"
+    },
+    {
+      "offset": 504832,
+      "before": "5356575589",
+      "after": "e9e9af0800",
+      "reason": "Hook SwapWeather"
+    },
+    {
+      "offset": 504942,
+      "before": "5356575589",
+      "after": "e9a2ad0800",
+      "reason": "Hook RWWeather"
+    },
+    {
+      "offset": 514481,
+      "before": "5356575589",
+      "after": "e9d9890800",
+      "reason": "Hook ValidateWeather"
+    },
+    {
+      "offset": 514667,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 514673,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 514690,
+      "before": "19030000",
+      "after": "bd040000",
+      "reason": "Weather field +319 -> +4bd"
+    },
+    {
+      "offset": 514696,
+      "before": "19030000",
+      "after": "bd040000",
+      "reason": "Weather field +319 -> +4bd"
+    },
+    {
+      "offset": 520424,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 524995,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 525037,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 527929,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 528042,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 528433,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 528499,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 536200,
+      "before": "5356575589",
+      "after": "e9cd340800",
+      "reason": "Hook SetCalUTs"
+    },
+    {
+      "offset": 537298,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537328,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537381,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537427,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537496,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537523,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 537567,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 570091,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 570257,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 608071,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 608772,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 619053,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 619360,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 619366,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 619835,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 619905,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 626099,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 626119,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 626133,
+      "before": "18030000",
+      "after": "bc040000",
+      "reason": "Weather field +318 -> +4bc"
+    },
+    {
+      "offset": 630700,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 630800,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 656728,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 656772,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 674372,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 674544,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 674572,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 677794,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 677858,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 677887,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 677959,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 677979,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680369,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680427,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680499,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680533,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680568,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680603,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680648,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 680999,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681030,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681056,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681080,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681115,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681445,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681470,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681579,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 681637,
+      "before": "38020000",
+      "after": "50030000",
+      "reason": "Victory field/size +238 -> +350"
+    },
+    {
+      "offset": 681644,
+      "before": "38020000",
+      "after": "50030000",
+      "reason": "Victory field/size +238 -> +350"
+    },
+    {
+      "offset": 682554,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 682583,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 682670,
+      "before": "08020000",
+      "after": "20030000",
+      "reason": "Victory field/size +208 -> +320"
+    },
+    {
+      "offset": 682694,
+      "before": "08020000",
+      "after": "20030000",
+      "reason": "Victory field/size +208 -> +320"
+    },
+    {
+      "offset": 682706,
+      "before": "38020000",
+      "after": "50030000",
+      "reason": "Victory field/size +238 -> +350"
+    },
+    {
+      "offset": 682739,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 690506,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 717183,
+      "before": "20020000",
+      "after": "38030000",
+      "reason": "Victory field/size +220 -> +338"
+    },
+    {
+      "offset": 724958,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 725006,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 726210,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 760469,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 760617,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 761006,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 763404,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 763469,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 763559,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 763679,
+      "before": "14020000",
+      "after": "2c030000",
+      "reason": "Weather field +214 -> +32c"
+    },
+    {
+      "offset": 766377,
+      "before": "89ec5d5f5e",
+      "after": "e9c7b20400",
+      "reason": "Apply authored HQ battle plans when returning unit orders"
+    },
+    {
+      "offset": 1073652,
+      "before": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "after": "c12b0b00062d0b003b2d0b009a2d0b00212e0b00e8000000005b81ebb92b0b00c35356575589e5e8e8ffffff2e8bbb827e02000fbf751466837d1800750c5756e82a00000083c408eb1e5668c6040000e88c47f7ff83c40868c604000056ff37e81046f7ff83c40c89ec5d5f5e5bc35356575589e583ec04ff7514e80b47f7ff83c4048945fc3d1a030000740b3dc60400000f85b501000068c6040000ff7518e8cf23f7ff83c4088b7d188b3f89fe31c0b9c6040000fcf3aaff75fcff751456e83d45f7ff83c40c817dfcc60400007477668b8618030000668986bc040000568dbe2f04000081c617030000b904010000fdf3a4fc5e8dbe14020000b91801000031c0f3aa2e8b8361f802008b000fb6802012000083f8060f872f0100002e0fb79483052e0b0081ca000001008996be0400002e0fb79483072e0b0081ca000001008996c20400008b86c20400002b86be0400003d8f0100000f87ee00000089ec5d5f5e5bc35356575589e5e8a3feffff2e8bb3827e02008b362e8bbb89f802008b86be040000890783c7048b86c2040000890789ec5d5f5e5bc35356575589e583ec04e86bfeffffc745fc000000008d45fc500fbf451450e8b1feffff83c4088b75fc2e8bbb827e02008b3fb903000000fcf3a77576668b86b0040000663b87b004000075668d45fc50e84222f7ff83c40489ec5d5f5e5bc35356575589e58b7514bf0300000056e8a143f7ff83c40483c6044f75f1bf9001000056e85843f7ff83c40483c6024f75f181c69201000056e87843f7ff83c40483c60456e86c43f7ff83c40489ec5d5f5e5bc36a012effb35a7e0200e8781ff7ff83c408e88534fdff0f0b707c817c707c8d7cee7c557d6c7d957d467cf37c467cf37c467cf37c6083ec2ce88afdffff2e8bb337d204008b362e8b8352fe04008b008b400c2b464440894424248b7d148d442410506a00e8703ffdff83c4082e8b839dd104000fbf00506a00e8e23ffdff83c408c744241457415741c7442418492e444166c744241c54008d442414680002000050e82bc5fdff83c40885c00f884301000089442420c744242800010000ff4c24280f882101000089e06a1050ff742428e89cc2fdff83c40c83f8100f85070100008a86201200003a042475d18a47743a44240275c88a87810000003a44240475bc8b442424663b4424067cb1663b4424087faa0fb744240a83f80877a0668b44240c663b86260200007c92663b862a0200007d89668b44240e663b86240200000f8c77ffffff663b86280200000f8d6affffff8a44240184c074660fb64c24038a6c24053c0277290fb6962212000039d10f8346ffffff2e8b93be2e05008b126bc930fec83a440a110f852effffffeb302c033c010f8722ffffff34010fb6c069c0380300002e8b93d92d05008b128b54021469c9e803000039ca0f82fcfeffff668b44240a8b55186689028b551c668902668b44240c8b5520668902668b44240e8b5524668902ff742420e856c6fdff83c4040fbf442410506a00e85e3efdff83c40883c42c6189ec5d5f5ee95a4bfbff",
+      "reason": "Position-independent weather and conditional HQ orders"
+    }
+  ]
+}

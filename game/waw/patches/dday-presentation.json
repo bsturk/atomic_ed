@@ -1,0 +1,90 @@
+{
+  "name": "dday-presentation",
+  "source_sha256": "6522caf334bc979d4f20e4d4e231c7a133048035b3593a9a356c03d2283a87ca",
+  "patched_sha256": "8b8c0a242dee0687a457fcafb909c62d8d65ac2271c3105d0219d5367196bf75",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "6dc6d095e66b3b3935ff643fa35be8707fcc3eeb47177f76a4a0f53efedf4981",
+  "undo_sha256": "d6bf9d665ec96d89d2c30d48bb620b1acfeb2bf50e003a4768e8ec0a9d40b5ee",
+  "version": 1,
+  "requires": "dday-scenario-library version 1",
+  "entries": {
+    "InitialPreview": 734514,
+    "SelectRow": 734605,
+    "InitSecondary": 734462,
+    "DrawLabel": 734355,
+    "GetResource": 735961,
+    "LoadIdentity": 736162,
+    "SaveIdentity": 736414,
+    "OpenOrders": 736478,
+    "Count": 737244,
+    "Selected": 737248,
+    "Page": 737252,
+    "Active": 737260,
+    "Records": 742432,
+    "Identifiers": 742176,
+    "RefreshRows": 734202,
+    "Scan": 733722,
+    "NativeRead": 736597,
+    "NativeResource": 736619,
+    "NativeSecondary": 736608,
+    "End": 758816
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 25632,
+  "picture_resources": [
+    251,
+    560,
+    561,
+    730,
+    731,
+    780,
+    781,
+    1100,
+    1101,
+    1102,
+    1103
+  ]
+}

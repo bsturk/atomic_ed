@@ -1,0 +1,147 @@
+{
+  "name": "dday-terrain-rules",
+  "source_sha256": "db42792cec90d4dd7e1b1190040e907ada04062717b65941018bb68a943f8029",
+  "patched_sha256": "5fcdad3599a7ad9c865e83906adce1dc5ed9b021dc87fd915fad681dd516faf5",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "85cf1f0fb104b4fe1596c3536788e3f0bad3a92b638357c44f188befee83a3e9",
+  "undo_sha256": "9ea2a3a863c4b7e86abed54e28cf080458bdf24a2948ecf84e4eaabe88290281",
+  "version": 1,
+  "requires": "dday-game-profiles version 1",
+  "entries": {
+    "InitialPreview": 734797,
+    "SelectRow": 734888,
+    "InitSecondary": 734745,
+    "DrawLabel": 734638,
+    "GetResource": 736350,
+    "LoadIdentity": 736572,
+    "SaveIdentity": 736904,
+    "OpenOrders": 737000,
+    "Count": 743400,
+    "Selected": 743404,
+    "Page": 743408,
+    "Active": 743416,
+    "Records": 748588,
+    "Identifiers": 748332,
+    "RefreshRows": 734485,
+    "Scan": 733997,
+    "NativeRead": 737119,
+    "NativeResource": 737141,
+    "NativeSecondary": 737130,
+    "End": 764972,
+    "LeaderPortrait": 737152,
+    "AdvancedOrders": 738348,
+    "EventsInitialize": 737735,
+    "EventsRestore": 737893,
+    "EventState": 738984,
+    "EventsConditions": 738117,
+    "MoreAirSupport": 733437,
+    "InitialPlaneCategory": 733340,
+    "InitialShipCategory": 733393,
+    "ProfileVictory": 739264,
+    "ProfileGround": 739408,
+    "GameRules": 739968,
+    "ReadGameRules": 739064,
+    "TerrainBaseCost": 740501,
+    "TerrainDefense": 740635,
+    "TerrainBarrage": 740757,
+    "TerrainRules": 741112,
+    "ReadTerrainRules": 740080,
+    "CommitTerrainRules": 740344
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 332998,
+      "target": "MoreAirSupport",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 380561,
+      "target": "InitialPlaneCategory",
+      "before": "e837faffff"
+    },
+    {
+      "address": 380600,
+      "target": "InitialShipCategory",
+      "before": "e82aadffff"
+    },
+    {
+      "address": 336179,
+      "target": "ProfileVictory",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 277010,
+      "target": "ProfileGround",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 178817,
+      "target": "TerrainBaseCost",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 85654,
+      "target": "TerrainDefense",
+      "before": "8b45fc8945d4"
+    },
+    {
+      "address": 54939,
+      "target": "TerrainBarrage",
+      "before": "66837de80d"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 31788,
+  "terrain_rule_bytes": 844
+}

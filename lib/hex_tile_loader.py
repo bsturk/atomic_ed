@@ -1,239 +1,131 @@
-"""
-Hex Tile Loader - Automatic extraction and loading of terrain hex tiles
-
-This module automatically extracts hex tiles from PCWATW.REZ if needed,
-or loads them from cache if already extracted.
-
-Usage in scenario editor:
-    from hex_tile_loader import load_hex_tiles
-
-    hex_tiles = load_hex_tiles()  # Returns dict of terrain_id -> PIL.Image
-    if hex_tiles:
-        # Use the tiles
-        pass
-"""
-
+"""Original D-Day terrain variants, edge blending and directional networks."""
+from functools import lru_cache
 import struct
-import os
-from pathlib import Path
+
 from PIL import Image
+
+from lib.game_art import load_bitmap
+
+
+# SpOff, object 3 + 0x7de9: (column, row) for each network drawing style.
+NETWORK_ORIGINS = ((6, 0), (6, 2), (0, 0), (0, 2), (0, 0), (6, 3),
+                   (6, 1), (0, 1), (0, 3), (0, 1), (6, 4), (0, 2), (6, 2))
+
+
+def network_sprites(record):
+    """Yield PICT 129 (row, column) in DrawSpecials order.
+
+    Four six-bit fields encode stream/river/ridge and dirt/paved/rail links.
+    Directions are W, NW, NE, E, SE, SW. Joined road/rail curves use the
+    pre-drawn long sprites selected by CalcSrcRect/FindLongs.
+    """
+    a, b, c, d = ((record >> shift) & 63 for shift in (8, 14, 20, 26))
+    nets = (a & ~b, b & ~a, c & ~d, d & ~c, 0, c & d, a & b)
+    for feature, mask in enumerate(nets):
+        count = (nets[2] | nets[3]).bit_count() if feature in (2, 3) else mask.bit_count()
+        for direction in range(6):
+            if not mask & (1 << direction):
+                continue
+            style, rotation = feature, direction
+            if feature in (2, 3, 5) and count == 2:
+                if mask & (1 << ((direction + 2) % 6)):
+                    style += 5
+                elif mask & (1 << ((direction + 4) % 6)):
+                    style += 5
+                    rotation += 4
+            col, row = NETWORK_ORIGINS[style]
+            yield row, col + rotation
+            if style in (7, 8, 10):
+                break
 
 
 class HexTileLoader:
-    """Automatic hex tile extraction and loading from game assets"""
-
-    # Tile configuration - CRITICAL VALUES determined by sprite sheet analysis
-    HEX_WIDTH = 32        # Actual hex content width (NOT 34!)
-    HEX_HEIGHT = 36       # Actual hex content height (NOT 38!)
-    HEX_SPACING = 34      # Distance between hex centers (column spacing)
-    HEX_OFFSET_X = 12     # Where first hex content starts in sprite sheet
-    HEX_ROW_SPACING = 38  # Distance between row centers (row spacing)
-    SCAN_WIDTH = 448
-    SCAN_HEIGHT = 570
+    HEX_WIDTH = 32
+    HEX_HEIGHT = 36
+    HEX_SPACING = 34
+    HEX_OFFSET_X = 0
+    HEX_ROW_SPACING = 38
     VARIANTS_PER_ROW = 13
-    NUM_TERRAIN_ROWS = 14
-
-    # Terrain type to sprite sheet row/column mapping
-    # Based on PTR4 terrain format (TERRAIN_FORMAT.md) and color analysis:
-    #   Row 0 = Green/brown grass fields
-    #   Row 5 = Deep blue water (71% blue)
-    #   Row 6 = Tan/yellow beach/sand
-    #   Row 2 = Light green forest
-    #   Row 4 = Light green + red town buildings
-    #
-    # PTR4 terrain type distribution (UTAH.SCN):
-    #   Type 0 = 79% Grass/Field
-    #   Type 1 = 1.3% Water/Ocean
-    #   Type 2 = 1.2% Beach/Sand
-    #   Type 15 = 8.4% Canal
-    TERRAIN_MAPPING = {
-        0: (0, 0),   # Grass/Field - row 0 (green/brown grass)
-        1: (5, 0),   # Water/Ocean - row 5 (deep blue)
-        2: (6, 0),   # Beach/Sand - row 6 (tan/yellow)
-        3: (2, 0),   # Forest - row 2 (light green trees)
-        4: (4, 0),   # Town - row 4 (buildings)
-        5: (13, 0),  # Road - row 13 (paths)
-        6: (3, 0),   # River - row 3 (water features)
-        7: (9, 0),   # Mountains - row 9 (elevated terrain)
-        8: (7, 0),   # Swamp - row 7 (wetlands)
-        9: (10, 0),  # Bridge - row 10 (crossings)
-        10: (11, 0), # Fortification - row 11 (defensive)
-        11: (8, 0),  # Bocage - row 8 (hedgerows)
-        12: (6, 0),  # Cliff - row 6 (steep terrain)
-        13: (14, 0), # Village - row 14 (small buildings)
-        14: (12, 0), # Farm - row 12 (cultivated fields)
-        15: (3, 0),  # Canal - row 3 (waterways)
-        16: (0, 0),  # Clear - row 0 (open terrain)
-    }
+    NUM_TERRAIN_ROWS = 15
+    TERRAIN_MAPPING = {terrain_id: (terrain_id, 0) for terrain_id in range(15)}
 
     def __init__(self):
-        """
-        Initialize the hex tile loader.
-
-        All tiles are extracted in memory from the sprite sheet at runtime.
-        No caching, no pre-extracted files.
-        """
         self.sprite_sheet = None
         self.tiles = {}
+        self.artwork = {}
 
     def _get_sprite_sheet(self):
-        """
-        Load the terrain sprite sheet from disk.
+        return load_bitmap(128)
 
-        The sprite sheet must exist at extracted_images/scan_width_448.png
-        Raises RuntimeError if sprite sheet cannot be loaded.
-        """
-        scan_448_path = 'extracted_images/scan_width_448.png'
-
-        if not os.path.exists(scan_448_path):
-            raise RuntimeError(
-                f"CRITICAL: Hex tile sprite sheet not found at {scan_448_path}\n"
-                f"The terrain hex tile sprite sheet is required for the editor to function.\n"
-                f"Please ensure the file exists before running the editor."
-            )
-
-        try:
-            img = Image.open(scan_448_path)
-            if img.size != (self.SCAN_WIDTH, self.SCAN_HEIGHT):
-                raise RuntimeError(
-                    f"CRITICAL: Sprite sheet has incorrect dimensions {img.size}\n"
-                    f"Expected {self.SCAN_WIDTH}x{self.SCAN_HEIGHT}"
-                )
-            return img
-        except Exception as e:
-            raise RuntimeError(f"CRITICAL: Failed to load sprite sheet: {e}")
+    @staticmethod
+    @lru_cache(maxsize=1024)
+    def _sprite(resource_id, row, col):
+        sheet = load_bitmap(resource_id)
+        x, y = col * 34, row * 38
+        if x < 0 or y < 0 or x + 32 > sheet.width or y + 36 > sheet.height:
+            raise ValueError(f'Tile ({row}, {col}) is outside PICT {resource_id}')
+        return sheet.crop((x, y, x + 32, y + 36)).convert('RGBA')
 
     def _extract_tile_from_sheet(self, row, col):
-        """
-        Extract a single hex tile from the sprite sheet in memory.
+        return self._sprite(128, row, col).copy()
 
-        Handles transparency: makes white background (palette index 0) transparent.
-        Returns RGBA image with proper colors and transparent background.
-        """
-        if self.sprite_sheet is None:
-            raise RuntimeError("Sprite sheet not loaded")
-
-        # Calculate position using correct spacing and offset
-        # Analysis showed: hexes are spaced 34 pixels apart horizontally (center-to-center)
-        # but actual hex content is only 32 pixels wide, starting at x=12
-        # Vertically: rows are spaced 38 pixels apart, but content is only 36 pixels tall
-        x = col * self.HEX_SPACING + self.HEX_OFFSET_X
-        y = row * self.HEX_ROW_SPACING
-
-        # Extract tile from sprite sheet
-        tile = self.sprite_sheet.crop((x, y, x + self.HEX_WIDTH, y + self.HEX_HEIGHT))
-
-        # Handle transparency if source is palette mode
-        if self.sprite_sheet.mode == 'P':
-            # Get the original palette data before conversion
-            original_pixels = list(tile.getdata())
-
-            # Convert to RGBA (preserves palette colors)
-            tile_rgba = tile.convert('RGBA')
-            rgba_pixels = list(tile_rgba.getdata())
-
-            # Make white background (palette index 0) transparent
-            new_pixels = []
-            for i, palette_idx in enumerate(original_pixels):
-                r, g, b, a = rgba_pixels[i]
-                if palette_idx == 0:  # White background in original palette
-                    new_pixels.append((r, g, b, 0))  # Make transparent
-                else:
-                    new_pixels.append((r, g, b, 255))  # Keep opaque
-
-            tile_rgba.putdata(new_pixels)
-            return tile_rgba
-        else:
-            # Non-palette image, just convert to RGBA
-            return tile.convert('RGBA')
-
+    def get_tile_position(self, terrain_id, variant=0):
+        if terrain_id not in self.TERRAIN_MAPPING:
+            raise ValueError(f'Invalid terrain_id: {terrain_id}')
+        col = 0 if variant is None else min(max(0, variant), self.VARIANTS_PER_ROW - 1)
+        return terrain_id, col
 
     def load_tiles(self):
-        """
-        Load all terrain hex tiles by extracting from sprite sheet IN MEMORY.
-
-        No pre-extracted tiles, no caching to disk. Everything happens in memory.
-        Raises RuntimeError if sprite sheet cannot be loaded or tiles cannot be extracted.
-
-        Returns dict mapping terrain_id -> PIL.Image (RGBA with transparency)
-        """
-        # Load sprite sheet (will raise RuntimeError if not available)
         self.sprite_sheet = self._get_sprite_sheet()
-
-        # Extract all terrain tiles in memory
-        self.tiles = {}
-        for terrain_id, (row, col) in self.TERRAIN_MAPPING.items():
-            tile = self._extract_tile_from_sheet(row, col)
-            if tile is None:
-                raise RuntimeError(
-                    f"CRITICAL: Failed to extract terrain tile {terrain_id} "
-                    f"from position row={row}, col={col}"
-                )
-            self.tiles[terrain_id] = tile
-
-        if len(self.tiles) != len(self.TERRAIN_MAPPING):
-            raise RuntimeError(
-                f"CRITICAL: Expected {len(self.TERRAIN_MAPPING)} terrain tiles, "
-                f"but only extracted {len(self.tiles)}"
-            )
-
+        # Fail early if a required overlay asset is missing.
+        load_bitmap(129)
+        load_bitmap(200)
+        self.tiles = {code: self.get_tile_with_variant(code, 0) for code in self.TERRAIN_MAPPING}
         return self.tiles
 
     def get_tile_with_variant(self, terrain_id, variant):
+        if (terrain_id, variant) in self.artwork:
+            return self.artwork[terrain_id, variant].image()
+        row, col = self.get_tile_position(terrain_id, variant)
+        return self._extract_tile_from_sheet(row, col)
+
+    def compose_tile(self, terrain_id, variant, record=0, edges=b'', hilltop=False):
+        """Draw base variant, terrain edge blends, networks, then hill marker."""
+        tile = self.get_tile_with_variant(terrain_id, variant)
+        if edges:
+            mask = struct.unpack_from('<H', edges)[0]
+            for direction in range(6):
+                if mask & (1 << direction):
+                    style = edges[2 + direction]
+                    row = (style >> 4) * 3 + (style & 15)
+                    tile.alpha_composite(self._sprite(200, row, direction))
+        for row, col in network_sprites(record):
+            tile.alpha_composite(self._sprite(129, row, col))
+        if hilltop:
+            tile.alpha_composite(self._sprite(129, 5, 6))
+        return tile
+
+    def compose_map(self, width, height, layers):
+        """Join the original sprites before zooming to avoid raster seams.
+
+        At native resolution, tiles touch on a 32×27 grid with even rows
+        shifted 16 pixels. Their stepped transparency masks fit at that
+        spacing; independently rounding/resizing them breaks the joins.
         """
-        Get a specific terrain tile with specific variant column.
-
-        Args:
-            terrain_id: Terrain type (0-16)
-            variant: Variant column (0-12)
-
-        Returns:
-            PIL.Image (RGBA) of the specific hex tile variant
-
-        Raises:
-            RuntimeError if sprite sheet not loaded or invalid parameters
-        """
-        if self.sprite_sheet is None:
-            self.sprite_sheet = self._get_sprite_sheet()
-
-        # Get base row from terrain mapping (use default column 0)
-        if terrain_id not in self.TERRAIN_MAPPING:
-            raise RuntimeError(f"Invalid terrain_id: {terrain_id}")
-
-        row, _ = self.TERRAIN_MAPPING[terrain_id]
-
-        # Validate variant range (0-12 for 13 columns)
-        if variant < 0 or variant >= self.VARIANTS_PER_ROW:
-            # Cap at valid range instead of raising error
-            variant = min(max(0, variant), self.VARIANTS_PER_ROW - 1)
-
-        # Extract tile at specific row and variant column
-        return self._extract_tile_from_sheet(row, variant)
+        raster = Image.new('RGBA', (width * 32 + 16, (height - 1) * 27 + 36))
+        tiles = {}
+        for (x, y), (terrain, variant) in layers.terrain.items():
+            key = (terrain, variant, layers.records.get((x, y), 0),
+                   layers.edges.get((x, y), b''), (x, y) in layers.hilltops)
+            if key not in tiles:
+                try:
+                    tiles[key] = self.compose_tile(*key)
+                except ValueError:
+                    # Keep valid base terrain visible if an overlay is corrupt.
+                    tiles[key] = self.get_tile_with_variant(terrain, variant)
+            raster.alpha_composite(tiles[key], (x * 32 + 16 * (1 - y % 2), y * 27))
+        return raster
 
 
 def load_hex_tiles():
-    """
-    Convenience function to load hex tiles.
-
-    Extracts all terrain tiles in memory from the sprite sheet.
-    Raises RuntimeError if sprite sheet unavailable or extraction fails.
-
-    Returns:
-        dict mapping terrain_id (0-16) -> PIL.Image (RGBA with transparency)
-    """
-    loader = HexTileLoader()
-    return loader.load_tiles()
-
-
-if __name__ == '__main__':
-    # Test the loader
-    print("Testing hex tile loader...")
-    tiles = load_hex_tiles()
-
-    if tiles:
-        print(f"✓ Successfully loaded {len(tiles)} terrain tiles")
-        for terrain_id in sorted(tiles.keys()):
-            img = tiles[terrain_id]
-            print(f"  Terrain {terrain_id:2d}: {img.size[0]}×{img.size[1]} {img.mode}")
-    else:
-        print("✗ Failed to load tiles")
+    return HexTileLoader().load_tiles()

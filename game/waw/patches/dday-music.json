@@ -1,0 +1,63 @@
+{
+  "name": "dday-music",
+  "source_sha256": "a1a18e9a020c68d44ac10f276ce87e05144d3a8a0583eb4f29668fffa8e2906b",
+  "patched_sha256": "07134f78e03e1cf5767f17d1778d20a615a89323c95147a4aca5cebaf26a1d34",
+  "source_size": 1297646,
+  "patched_size": 1297646,
+  "ips_sha256": "9ff5e8f4d5e0382752028e4f9813731c41621cd71a8d388d3dcba64aee6fcc8b",
+  "undo_sha256": "14ea5be346f88ebaee9ae8a89a23630b71dbf46d049299d467d0178791f2f3e3",
+  "version": 2,
+  "requires": "dday-startup-selection version 1",
+  "entries": {
+    "MusicSync": 770112,
+    "MusicMenu": 771208,
+    "MusicToggle": 771349,
+    "MusicShutdown": 770402,
+    "MusicTick": 770492,
+    "MusicData": 771596,
+    "MusicCursor": 771600,
+    "MusicEnd": 771604,
+    "MusicWait": 771608,
+    "MusicRunning": 771628,
+    "MusicEnabled": 771629,
+    "MusicService": 771620,
+    "MusicAttempted": 771630,
+    "MusicMenuHandle": 771624,
+    "End": 771952,
+    "MusicPhase": 771616
+  },
+  "hooks": [
+    {
+      "address": 5218,
+      "target": "MusicSync",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 269794,
+      "target": "MusicToggle",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 279374,
+      "target": "MusicMenu",
+      "before": "e8eaf00300"
+    },
+    {
+      "address": 376188,
+      "target": "MusicShutdown",
+      "before": "e8de580200"
+    },
+    {
+      "address": 557566,
+      "target": "MusicShutdown",
+      "before": "e85c94ffff"
+    }
+  ],
+  "code_length": 1904,
+  "code_offset": 770048,
+  "music_file": "DATA/MUSIC/V4V.OPL",
+  "settings_file": "DATA/MUSIC/MUSIC.CFG",
+  "tick_rate": 100,
+  "native_timer_rate": 140,
+  "callback_result": 0
+}

@@ -1,0 +1,77 @@
+{
+  "name": "dday-scenario-library",
+  "source_sha256": "36b89f8f9c20fa20ca6474b701dc1c806dcdd387dfbdad96b54132ff6794d29f",
+  "patched_sha256": "6522caf334bc979d4f20e4d4e231c7a133048035b3593a9a356c03d2283a87ca",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "b69600d6c7eea7330de93e0d4665ec9f6b8c7170561ec2fc84e3a4a3832de628",
+  "undo_sha256": "a63ae8549d238f27a51a4b30b101acad642eecc34c10fba8e95dad4c7694f770",
+  "version": 1,
+  "requires": "dday-code-space version 1",
+  "entries": {
+    "InitialPreview": 734514,
+    "SelectRow": 734605,
+    "InitSecondary": 734462,
+    "DrawLabel": 734355,
+    "GetResource": 735772,
+    "LoadIdentity": 735902,
+    "SaveIdentity": 736154,
+    "OpenOrders": 736218,
+    "Count": 736984,
+    "Selected": 736988,
+    "Page": 736992,
+    "Active": 737000,
+    "Records": 742172,
+    "Identifiers": 741916,
+    "RefreshRows": 734202,
+    "Scan": 733722,
+    "NativeRead": 736337,
+    "NativeResource": 736359,
+    "NativeSecondary": 736348,
+    "End": 758556
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 25372
+}

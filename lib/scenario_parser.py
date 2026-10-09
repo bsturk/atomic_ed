@@ -31,9 +31,7 @@ class DdayScenario:
     MAGIC_BYTES = b'\x30\x12\x00\x00'
     HEADER_SIZE = 0x60  # Header is 96 bytes
     
-    # Expected fixed header counts (mostly fixed, but dimensions can vary)
-    # Note: Count 11 (height) and Count 12 (width) vary by scenario
-    # Most scenarios: 100 wide × 125 tall, but COBRA.SCN is 100 wide × 112 tall
+    # Legacy header fields; these are not the dimensions of the playable map.
     FIXED_COUNTS = [
         0x11, 0x05, 0x0a, 0x08, 0x05, 0x08, 0x00,
         0x0a, 0x14, 0x05, 0x7d, 0x64
@@ -76,7 +74,24 @@ class DdayScenario:
         except Exception as e:
             print(f"Error reading file: {e}")
             return
-        
+
+        self._parse_data()
+
+    @classmethod
+    def from_bytes(cls, data, filename):
+        """Parse a staged scenario without creating or changing a file."""
+        scenario = cls.__new__(cls)
+        scenario.filename = Path(filename)
+        scenario.data = bytes(data)
+        scenario._parse_data()
+        return scenario
+
+    def _parse_data(self):
+        self.is_valid = False
+        self.counts = []
+        self.pointers = {}
+        self.sections = {}
+        self.section_order = []
         if len(self.data) < 0x60:
             print(f"File too small: {len(self.data)} bytes")
             return
@@ -97,6 +112,30 @@ class DdayScenario:
         self._parse_sections()
 
         self.is_valid = True
+
+    def save_bytes(self, data, output_file, create_backup=False):
+        """Atomically save a complete staged file; backups are opt-in."""
+        import os
+        import shutil
+        import tempfile
+
+        target = Path(output_file)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=target.parent, prefix=target.name + '.',
+                                             suffix='.tmp', delete=False) as stream:
+                temporary = Path(stream.name)
+                stream.write(data)
+                stream.flush()
+                os.fsync(stream.fileno())
+            if create_backup and target.exists():
+                shutil.copy2(target, str(target) + '.bak')
+            if target.exists():
+                shutil.copymode(target, temporary)
+            os.replace(temporary, target)
+        finally:
+            if temporary is not None and temporary.exists():
+                temporary.unlink()
     
     def _parse_counts(self):
         """Parse the 12 count fields from header"""
@@ -106,23 +145,21 @@ class DdayScenario:
 
     @property
     def map_width(self) -> int:
-        """Map width in hexes (columns/X axis) - Count 11 at offset 0x2c
+        """Playable columns: inclusive right bound in the scenario's map Rect.
 
-        The map is 125 columns × 100 rows (wider than tall).
-        Header count[10]=125 is the column count (width).
-        This matches the PTR4 terrain storage format.
+        InitGameData copies scenario+0x224 (file 0x228) to wholeMapRect,
+        then sets theMapW to right+1. See txt/DDAY_MAP_FORMAT_RESEARCH.md.
         """
-        return self.counts[10] if len(self.counts) > 10 else 125
+        if len(self.data) < 0x230:
+            return 0
+        return struct.unpack_from('<h', self.data, 0x22e)[0] + 1
 
     @property
     def map_height(self) -> int:
-        """Map height in hexes (rows/Y axis) - Count 12 at offset 0x30
-
-        The map is 125 columns × 100 rows.
-        Header count[11]=100 is the row count (height).
-        This matches the PTR4 terrain storage format.
-        """
-        return self.counts[11] if len(self.counts) > 11 else 100
+        """Playable rows: inclusive bottom bound at file offset 0x22c, plus one."""
+        if len(self.data) < 0x230:
+            return 0
+        return struct.unpack_from('<h', self.data, 0x22c)[0] + 1
     
     def _parse_pointers(self):
         """Parse the 8 offset pointers from header"""
@@ -359,7 +396,7 @@ class DdayScenario:
             for name, _, _ in self.section_order:
                 f.write(self.sections[name])
 
-    def patch_in_place(self, patches: list, output_file: str = None, create_backup: bool = True):
+    def patch_in_place(self, patches: list, output_file: str = None, create_backup: bool = False):
         """
         Apply patches to specific file offsets without rewriting entire file.
 

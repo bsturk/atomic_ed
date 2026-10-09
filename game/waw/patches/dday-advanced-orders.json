@@ -1,0 +1,95 @@
+{
+  "name": "dday-advanced-orders",
+  "source_sha256": "4e0464e7f0fab1e49468a07acd47a0d86954e32e7352a6177858caf1a672e579",
+  "patched_sha256": "26023e77482cacbad5d431d537609252a17c0c294822bf85653fc467c577f0c7",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "6c744cdaffce264be58d762aa703c578ab365b286b3979914cbfe358fd26e271",
+  "undo_sha256": "c7b57ee7361f44c21b8034fc5766efa124ec800373c5a4229aba82436d3391f8",
+  "version": 1,
+  "requires": "dday-custom-artwork version 1",
+  "entries": {
+    "InitialPreview": 734538,
+    "SelectRow": 734629,
+    "InitSecondary": 734486,
+    "DrawLabel": 734379,
+    "GetResource": 735985,
+    "LoadIdentity": 736200,
+    "SaveIdentity": 736516,
+    "OpenOrders": 736612,
+    "Count": 739292,
+    "Selected": 739296,
+    "Page": 739300,
+    "Active": 739308,
+    "Records": 744480,
+    "Identifiers": 744224,
+    "RefreshRows": 734226,
+    "Scan": 733746,
+    "NativeRead": 736731,
+    "NativeResource": 736753,
+    "NativeSecondary": 736742,
+    "End": 760864,
+    "LeaderPortrait": 736764,
+    "AdvancedOrders": 737960,
+    "EventsInitialize": 737347,
+    "EventsRestore": 737505,
+    "EventState": 738596,
+    "EventsConditions": 737729
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 27680,
+  "conditions_per_plan": 3,
+  "saved_event_bytes": 80
+}

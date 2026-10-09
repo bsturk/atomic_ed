@@ -1,0 +1,13 @@
+{
+  "name": "dday-code-space",
+  "source_sha256": "9a220a34598a46d3fad3dba0a6724aaa77b827ddedbed908f2c17dd55e791b8b",
+  "patched_sha256": "36b89f8f9c20fa20ca6474b701dc1c806dcdd387dfbdad96b54132ff6794d29f",
+  "source_size": 1244398,
+  "patched_size": 1277166,
+  "ips_sha256": "d2802189ef3056e9676bc1e8ec8aaf22c3cd283139c67cceab2d7e14b8fa359e",
+  "undo_sha256": "860afcf0aa113f5be46691da052a83c7f0a45daf68ac92dd87bf7a7fe872fd5c",
+  "version": 1,
+  "requires": "dday-weather-400 version 4",
+  "added_code_bytes": 32768,
+  "code_offset": 733184
+}

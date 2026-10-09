@@ -1,0 +1,43 @@
+{
+  "name": "dday-air-weather",
+  "source_sha256": "07134f78e03e1cf5767f17d1778d20a615a89323c95147a4aca5cebaf26a1d34",
+  "patched_sha256": "5aaf34f932e3387f9529c885cf4016ca46c19b8db4abf60fa8e3c30323445f69",
+  "source_size": 1297646,
+  "patched_size": 1297646,
+  "ips_sha256": "a4fe1b64a97b821756405e6f64bdef1a49b1564bd419309a83f59b24767a13c8",
+  "undo_sha256": "3e2c16cf9f1403b88474cdb665f55140a967cd53c1ef63c6504ded1f8443df6d",
+  "version": 1,
+  "requires": "dday-music version 2",
+  "edits": [
+    {
+      "address": 8715,
+      "offset": 350303,
+      "before": "8a8013020000",
+      "after": "8a802b030000",
+      "reason": "PerformAirReconMissions storm gate"
+    },
+    {
+      "address": 8775,
+      "offset": 350363,
+      "before": "8a8013020000",
+      "after": "8a802b030000",
+      "reason": "PerformAirReconMissions visibility penalty"
+    },
+    {
+      "address": 493097,
+      "offset": 834685,
+      "before": "8a8813020000",
+      "after": "8a882b030000",
+      "reason": "PerformSupplyDrop delivery penalty"
+    },
+    {
+      "address": 493360,
+      "offset": 834948,
+      "before": "8a8013020000",
+      "after": "8a802b030000",
+      "reason": "PerformAirResupplyMissions storm gate"
+    }
+  ],
+  "cloud_offset": 812,
+  "previous_turn_displacement": 811
+}

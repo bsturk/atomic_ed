@@ -1,0 +1,11 @@
+{
+  "name": "dday-music-v1",
+  "source_sha256": "a1a18e9a020c68d44ac10f276ce87e05144d3a8a0583eb4f29668fffa8e2906b",
+  "patched_sha256": "2a47e8c0d2e51656311ff3e64a78e5dd843a692b671e713291f4fa6cea942eff",
+  "source_size": 1297646,
+  "patched_size": 1297646,
+  "ips_sha256": "803da89bf9ac0449841c8e2d5d366450de29a06280d2eb9ffbd3ea75a9536ca8",
+  "undo_sha256": "c9126e101f0807dcc49fd4293254b95efeaf43932ca4fa9d72694d664b9ec8a9",
+  "version": 1,
+  "reason": "Superseded: incorrect TSM callback status; retained for verified upgrade/undo"
+}

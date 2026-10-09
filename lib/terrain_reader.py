@@ -1,178 +1,184 @@
 #!/usr/bin/env python3
-"""
-Terrain Reader for D-Day Scenarios
-===================================
+"""Read D-Day terrain through the scenario's indexed map and shared hex records.
 
-Simple module to extract real terrain data from scenario files.
-Use this in the scenario editor to display actual terrain instead of generated data.
-
-Format: Terrain is stored at PTR4 section start as 4-bit packed nibbles.
-        Two hexes per byte: low nibble = first hex, high nibble = second hex.
-        Map is 125 hexes wide × 100 hexes tall = 12,500 total hexes.
-        Terrain data is 6,250 bytes (12,500 / 2).
+The file starts with length-prefixed Scenario, Calendar, HexMap and UHexes
+blocks (32-bit little-endian byte lengths). HexMap contains row-major uint16
+indexes into UHexes, whose records are four bytes each. The first record byte
+contains the terrain code in its low nibble and sprite variant in its high
+nibble. See txt/DDAY_MAP_FORMAT_RESEARCH.md for executable evidence.
 """
+
+import struct
+from collections import Counter
+from dataclasses import dataclass, field
 
 from lib.scenario_parser import DdayScenario
-from collections import Counter
 
-# Map dimensions - fixed for all D-Day scenarios
-# Note: This differs from header counts which have height=125, width=100
-# The PTR4 terrain format uses 125 columns × 100 rows based on TERRAIN_FORMAT.md
-PTR4_MAP_WIDTH = 125   # Columns (X axis)
-PTR4_MAP_HEIGHT = 100  # Rows (Y axis)
-PTR4_TOTAL_HEXES = PTR4_MAP_WIDTH * PTR4_MAP_HEIGHT  # 12,500
+
+def _read_block(data, offset):
+    """Return a bounded length-prefixed block and the next block's offset."""
+    if offset + 4 > len(data):
+        raise ValueError('Missing map block length')
+    size = struct.unpack_from('<I', data, offset)[0]
+    start = offset + 4
+    end = start + size
+    if end > len(data):
+        raise ValueError('Truncated map block')
+    return data[start:end], end
 
 
 def extract_terrain_from_scenario(scenario, fallback_scenario_dir=None):
+    """Return {(x, y): (terrain, variant)}, or {} for invalid/missing map data.
+
+    fallback_scenario_dir is retained for caller compatibility. Terrain from
+    another scenario is never substituted: small scenarios have their own maps.
     """
-    Extract terrain data from a D-Day scenario using PTR4 4-bit packed format.
-
-    Args:
-        scenario: DdayScenario object (already loaded)
-        fallback_scenario_dir: Directory to look for fallback scenario if needed
-
-    Returns:
-        dict: (x, y) -> (terrain_type, variant) tuples for all hexes
-              variant is always 0 for PTR4 format (no variant data stored)
-              Returns empty dict if terrain not found and no fallback available
-
-    Format Details (from TERRAIN_FORMAT.md):
-        - Location: PTR4 section start
-        - Encoding: 4-bit packed nibbles (2 hexes per byte)
-          - Low nibble (bits 0-3): terrain type for hex 2N
-          - High nibble (bits 4-7): terrain type for hex 2N+1
-        - Size: 6,250 bytes for 12,500 hexes
-        - Layout: Left-to-right, top-to-bottom
-          - hex_index = y * 125 + x
-        - Map dimensions: 125 wide × 100 tall
-    """
-    terrain = _extract_terrain_from_ptr4(scenario)
-
-    # If no terrain found, try fallback scenarios
-    if not terrain and fallback_scenario_dir:
-        import os
-        fallback_scenarios = ['UTAH.SCN', 'OMAHA.SCN', 'COBRA.SCN', 'CAMPAIGN.SCN']
-        for fallback_name in fallback_scenarios:
-            fallback_path = os.path.join(fallback_scenario_dir, fallback_name)
-            if os.path.exists(fallback_path):
-                fallback = DdayScenario(fallback_path)
-                terrain = _extract_terrain_from_ptr4(fallback)
-                if terrain:
-                    break
-
+    terrain, _source = extract_terrain_with_source(scenario, fallback_scenario_dir)
     return terrain
 
 
-def _extract_terrain_from_ptr4(scenario):
-    """
-    Extract terrain from PTR4 section using 4-bit packed nibble format.
+def extract_terrain_with_source(scenario, fallback_scenario_dir=None):
+    """Extract the scenario's own map and return (terrain, source filename)."""
+    terrain = _extract_terrain_from_map_block(scenario)
+    return terrain, scenario.filename.name if terrain else None
 
-    Args:
-        scenario: DdayScenario object
 
-    Returns:
-        dict: (x, y) -> (terrain_type, variant) tuples
-              variant is 0 (no variant info in PTR4 format)
+def _extract_terrain_from_map_block(scenario):
+    return read_map_layers(scenario).terrain
+
+
+@dataclass
+class MapLayers:
+    terrain: dict = field(default_factory=dict)
+    records: dict = field(default_factory=dict)
+    edges: dict = field(default_factory=dict)
+    hilltops: set = field(default_factory=set)
+    ownership: dict = field(default_factory=dict)
+    places: list = field(default_factory=list)
+
+
+def read_place_names(header):
+    """Scenario's 50 fixed label slots; NameInHex uses count +122a."""
+    count = header[0x122a]
+    if count > 50:
+        raise ValueError('Invalid place-name count')
+    return [dict(x=struct.unpack_from('<h', header, 0xbe0+i*32)[0],
+                 y=struct.unpack_from('<h', header, 0xbe2+i*32)[0],
+                 name=header[0xbe4+i*32:0xbfe+i*32].split(b'\0')[0].decode('cp437'),
+                 size=header[0xbfe+i*32], style=chr(header[0xbff+i*32]))
+            for i in range(count)]
+
+
+def read_map_layers(scenario):
+    """Read base terrain, directional networks, terrain edges and hilltops.
+
+    A missing/invalid edge block leaves the verified base map available. It
+    never causes bytes from a different block to be interpreted as artwork.
     """
+    layers = MapLayers()
     if not scenario.is_valid:
-        return {}
+        return layers
 
-    ptr4_offset = scenario.pointers.get('PTR4', 0)
-    if ptr4_offset == 0:
-        return {}
+    width, height = scenario.map_width, scenario.map_height
+    if width <= 0 or height <= 0:
+        return layers
 
-    terrain_bytes = PTR4_TOTAL_HEXES // 2  # 6,250 bytes
+    try:
+        scenario_data, offset = _read_block(scenario.data, 0)
+        if len(scenario_data) != 0x1230:
+            return layers
+        calendar, offset = _read_block(scenario.data, offset)
+        if len(calendar) != 0x2a:
+            return layers
+        hex_map, offset = _read_block(scenario.data, offset)
+        records, offset = _read_block(scenario.data, offset)
+    except (ValueError, struct.error):
+        return layers
 
-    # Check if PTR4 section has enough data
-    if ptr4_offset + terrain_bytes > len(scenario.data):
-        return {}
+    if len(hex_map) != width * height * 2 or not records or len(records) % 4:
+        return layers
 
-    terrain_data = scenario.data[ptr4_offset:ptr4_offset + terrain_bytes]
+    for index, (record_id,) in enumerate(struct.iter_unpack('<H', hex_map)):
+        record_offset = record_id * 4
+        if record_offset >= len(records):
+            return MapLayers()  # Reject partial or corrupt maps.
+        byte = records[record_offset]
+        # INVADE.EXE's terrVals table maps codes 0..14 directly, and 15 to 14.
+        terrain_type = min(byte & 0x0f, 14)
+        cell = index % width, index // width
+        layers.terrain[cell] = (terrain_type, byte >> 4)
+        layers.records[cell] = struct.unpack_from('<I', records, record_offset)[0]
 
-    # Validate: check that we get reasonable terrain distribution
-    test_types = Counter()
-    for byte in terrain_data[:500]:
-        test_types[byte & 0x0F] += 1
-        test_types[(byte >> 4) & 0x0F] += 1
+    count = struct.unpack_from('<h', scenario_data, 0x2a2)[0]
+    if 0 <= count <= 30:
+        for index in range(count):
+            x = struct.unpack_from('<h', scenario_data, 0x2a4 + 2 * index)[0]
+            y = struct.unpack_from('<h', scenario_data, 0x2e0 + 2 * index)[0]
+            if 0 <= x < width and 0 <= y < height:
+                layers.hilltops.add((x, y))
 
-    # Should have some variety (not all zeros)
-    if len(test_types) < 3:
-        return {}
-
-    # Extract terrain from packed nibbles
-    terrain = {}
-    hex_index = 0
-
-    for byte in terrain_data:
-        # Low nibble = first hex terrain type
-        low = byte & 0x0F
-        x = hex_index % PTR4_MAP_WIDTH
-        y = hex_index // PTR4_MAP_WIDTH
-        terrain[(x, y)] = (low, 0)  # (terrain_type, variant=0)
-        hex_index += 1
-
-        # High nibble = second hex terrain type
-        high = (byte >> 4) & 0x0F
-        x = hex_index % PTR4_MAP_WIDTH
-        y = hex_index // PTR4_MAP_WIDTH
-        terrain[(x, y)] = (high, 0)  # (terrain_type, variant=0)
-        hex_index += 1
-
-    return terrain
+    try:
+        layers.places = read_place_names(scenario_data)
+    except ValueError:
+        pass
+    try:
+        zoc, offset = _read_block(scenario.data, offset)
+        if len(zoc) == width * height * 4:
+            layers.ownership = {(i % width, i // width): (word >> 16) & 1
+                                for i, (word,) in enumerate(struct.iter_unpack('<I', zoc))}
+        edge_map, offset = _read_block(scenario.data, offset)
+        edge_records, offset = _read_block(scenario.data, offset)
+        if len(edge_map) != width * height * 2 or len(edge_records) % 8:
+            return layers
+        edges = {}
+        for index, (record_id,) in enumerate(struct.iter_unpack('<H', edge_map)):
+            if record_id == 0xfde8:  # Game sentinel: no edge artwork.
+                continue
+            start = record_id * 8
+            if start + 8 > len(edge_records):
+                return layers
+            edges[index % width, index // width] = edge_records[start:start + 8]
+        layers.edges = edges
+    except (ValueError, struct.error):
+        pass
+    return layers
 
 
 def extract_terrain_from_file(scenario_path):
-    """
-    Extract terrain directly from scenario file path.
-
-    Args:
-        scenario_path: Path to .SCN file
-
-    Returns:
-        dict: (x, y) -> (terrain_type, variant) mapping
-    """
-    scenario = DdayScenario(scenario_path)
-    return extract_terrain_from_scenario(scenario)
+    """Extract the playable terrain from a .SCN file."""
+    return extract_terrain_from_scenario(DdayScenario(scenario_path))
 
 
-# Terrain type information
-# Based on TERRAIN_FORMAT.md and PTR4 data analysis:
-# - Terrain 0 is 79% of UTAH = Grass/Field (open countryside)
-# - Terrain 1 is 1.3% = Water/Ocean
-# - Terrain 2 is 1.2% = Beach/Sand
-# - Terrain 15 is 8.4% = Canal (waterways)
+# Names from D-Day's Map A terrain key and manual §7, matched to PICT 128
+# rows. INVADE.EXE's terrVals maps codes 0–14 directly to those rows.
 TERRAIN_TYPES = {
-    0: 'Grass/Field',     # 79% - open grassland
-    1: 'Water/Ocean',     # Deep water, impassable
-    2: 'Beach/Sand',      # Coastal landing zones
-    3: 'Forest',          # Dense woodland
-    4: 'Town',            # Urban areas
-    5: 'Road',            # Paved roads
-    6: 'River',           # Rivers and streams
-    7: 'Mountains',       # Mountainous terrain
-    8: 'Swamp',           # Marshland
-    9: 'Bridge',          # Bridge crossings
-    10: 'Fortification',  # Defensive structures
-    11: 'Bocage',         # Norman hedgerows
-    12: 'Cliff',          # Steep cliffs
-    13: 'Village',        # Small villages
-    14: 'Farm',           # Farmland
-    15: 'Canal',          # Canals and waterways
-    16: 'Clear',          # Clear terrain variant
+    0: 'Bocage',
+    1: 'Clear',
+    2: 'Forest',
+    3: 'Swamp',
+    4: 'Town',
+    5: 'Water',
+    6: 'Beach',
+    7: 'Bunker',
+    8: 'Beach Bunker',
+    9: 'Fortress',
+    10: 'City',
+    11: 'Rubble',
+    12: 'Airfield',
+    13: 'Invasion Beach',
+    14: 'Special graphics',  # Not a named terrain in the manual's key.
 }
 
 
+def terrain_name(terrain_id):
+    return TERRAIN_TYPES.get(terrain_id, f'Unknown terrain {terrain_id}')
+
+
 if __name__ == '__main__':
-    # Simple test
     import sys
     if len(sys.argv) > 1:
         terrain = extract_terrain_from_file(sys.argv[1])
-        print(f"Extracted {len(terrain)} hexes from {sys.argv[1]}")
-
-        # Count terrain types (extract just terrain from (terrain, variant) tuples)
-        terrain_only = Counter(t for t, v in terrain.values())
-        print("\nTerrain distribution:")
-        for terrain_type, count in sorted(terrain_only.items()):
-            name = TERRAIN_TYPES.get(terrain_type, 'Unknown')
-            pct = 100 * count / len(terrain)
-            print(f"  {terrain_type:2d} {name:15s}: {count:5,} ({pct:5.1f}%)")
+        print(f'Extracted {len(terrain)} hexes from {sys.argv[1]}')
+        for terrain_type, count in sorted(Counter(t for t, v in terrain.values()).items()):
+            print(f'  {terrain_name(terrain_type)} (code {terrain_type}): '
+                  f'{count:5,} ({100 * count / len(terrain):5.1f}%)')

@@ -15,6 +15,7 @@ from enum import Enum
 class ModificationType(Enum):
     """Types of modifications that can be tracked"""
     UNIT_POSITION = "unit_position"
+    UNIT_NAME = "unit_name"
     UNIT_STATS = "unit_stats"
     UNIT_BEHAVIOR = "unit_behavior"
     UNIT_SIDE = "unit_side"
@@ -329,11 +330,11 @@ def track_reinforcement_entry(tracker: ModificationTracker, entry_offset: int,
 
 
 def track_map_terrain(tracker: ModificationTracker, map_offset: int,
-                     x: int, y: int, map_width: int,
+                     x: int, y: int, map_height: int,
                      original_byte: int, new_byte: int):
     """Track map terrain modification"""
-    # Map data at 0x57E4, row-major layout
-    hex_offset = map_offset + (y * map_width + x)
+    # Map data at 0x57E4 uses column-major layout.
+    hex_offset = map_offset + (x * map_height + y)
     tracker.add_modification(
         hex_offset,
         bytes([original_byte]),

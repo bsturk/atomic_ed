@@ -1,0 +1,170 @@
+{
+  "name": "dday-startup-selection",
+  "source_sha256": "38b70bd385954baf8d308a2ddea029d1ed5ab2c4bd94c5ac5362982e706285b5",
+  "patched_sha256": "a1a18e9a020c68d44ac10f276ce87e05144d3a8a0583eb4f29668fffa8e2906b",
+  "source_size": 1297646,
+  "patched_size": 1297646,
+  "ips_sha256": "27e9ae1e2927cec4bd723bb5ca84dad8d890d6b30842815ccb1725cd11a100c3",
+  "undo_sha256": "c9b754db5b35d8dc9bcb2da76d28516b833230caf5fee3a79645083722a2094f",
+  "version": 1,
+  "requires": "dday-nested-events version 1",
+  "entries": {
+    "InitialPreview": 734829,
+    "SelectRow": 734968,
+    "InitSecondary": 734777,
+    "DrawLabel": 734670,
+    "GetResource": 736430,
+    "LoadIdentity": 736652,
+    "SaveIdentity": 736984,
+    "OpenOrders": 737108,
+    "Count": 746160,
+    "Selected": 746164,
+    "Page": 746168,
+    "Active": 746176,
+    "Records": 751348,
+    "Identifiers": 751092,
+    "RefreshRows": 734517,
+    "Scan": 734029,
+    "NativeRead": 737227,
+    "NativeResource": 737249,
+    "NativeSecondary": 737238,
+    "End": 767732,
+    "LeaderPortrait": 737260,
+    "AdvancedOrders": 738522,
+    "EventsInitialize": 737879,
+    "EventsRestore": 738067,
+    "EventState": 739180,
+    "EventsConditions": 738291,
+    "MoreAirSupport": 733469,
+    "InitialPlaneCategory": 733372,
+    "InitialShipCategory": 733425,
+    "ProfileVictory": 741698,
+    "ProfileGround": 741842,
+    "GameRules": 742400,
+    "ReadGameRules": 741498,
+    "TerrainBaseCost": 742933,
+    "TerrainDefense": 743067,
+    "TerrainBarrage": 743189,
+    "TerrainRules": 743544,
+    "ReadTerrainRules": 742512,
+    "CommitTerrainRules": 742776,
+    "NestedProcess": 740300,
+    "NestedConditions": 739354,
+    "NestedReadRow": 739260,
+    "NestedStart": 740939,
+    "NestedTurn": 740994,
+    "NestedMessage": 741070,
+    "NestedDrawMessage": 741167,
+    "MessageCursor": 741448
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 332998,
+      "target": "MoreAirSupport",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 380561,
+      "target": "InitialPlaneCategory",
+      "before": "e837faffff"
+    },
+    {
+      "address": 380600,
+      "target": "InitialShipCategory",
+      "before": "e82aadffff"
+    },
+    {
+      "address": 336179,
+      "target": "ProfileVictory",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 277010,
+      "target": "ProfileGround",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 178817,
+      "target": "TerrainBaseCost",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 85654,
+      "target": "TerrainDefense",
+      "before": "8b45fc8945d4"
+    },
+    {
+      "address": 54939,
+      "target": "TerrainBarrage",
+      "before": "66837de80d"
+    },
+    {
+      "address": 196889,
+      "target": "NestedStart",
+      "before": "e857a30100"
+    },
+    {
+      "address": 70322,
+      "target": "NestedTurn",
+      "before": "e8c11b0400"
+    },
+    {
+      "address": 128551,
+      "target": "NestedDrawMessage",
+      "before": "e823000000"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 34548,
+  "startup_request": "WAWSTART.TXT"
+}

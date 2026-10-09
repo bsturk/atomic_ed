@@ -1,0 +1,126 @@
+{
+  "name": "dday-game-profiles",
+  "source_sha256": "b5bc1230f810246d70c8a1cbbe1e22fff9d36561347a1081191073cfcd5812ea",
+  "patched_sha256": "db42792cec90d4dd7e1b1190040e907ada04062717b65941018bb68a943f8029",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "ef60a727c763c00114313a1101952b854149b4588b5a5c390bc593793a639ee7",
+  "undo_sha256": "362fbf3a51c3ddc1595c31f7e4571b384312c9a35af7bd6a0b3b88c30ff7eab7",
+  "version": 1,
+  "requires": "dday-support-artwork version 1",
+  "entries": {
+    "InitialPreview": 734750,
+    "SelectRow": 734841,
+    "InitSecondary": 734698,
+    "DrawLabel": 734591,
+    "GetResource": 736269,
+    "LoadIdentity": 736491,
+    "SaveIdentity": 736807,
+    "OpenOrders": 736903,
+    "Count": 740600,
+    "Selected": 740604,
+    "Page": 740608,
+    "Active": 740616,
+    "Records": 745788,
+    "Identifiers": 745532,
+    "RefreshRows": 734438,
+    "Scan": 733958,
+    "NativeRead": 737022,
+    "NativeResource": 737044,
+    "NativeSecondary": 737033,
+    "End": 762172,
+    "LeaderPortrait": 737055,
+    "AdvancedOrders": 738251,
+    "EventsInitialize": 737638,
+    "EventsRestore": 737796,
+    "EventState": 738888,
+    "EventsConditions": 738020,
+    "MoreAirSupport": 733413,
+    "InitialPlaneCategory": 733316,
+    "InitialShipCategory": 733369,
+    "ProfileVictory": 739168,
+    "ProfileGround": 739312,
+    "GameRules": 739872,
+    "ReadGameRules": 738968
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 332998,
+      "target": "MoreAirSupport",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 380561,
+      "target": "InitialPlaneCategory",
+      "before": "e837faffff"
+    },
+    {
+      "address": 380600,
+      "target": "InitialShipCategory",
+      "before": "e82aadffff"
+    },
+    {
+      "address": 336179,
+      "target": "ProfileVictory",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 277010,
+      "target": "ProfileGround",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 28988,
+  "profile_bytes": 64
+}

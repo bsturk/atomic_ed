@@ -1,0 +1,87 @@
+{
+  "name": "dday-custom-artwork",
+  "source_sha256": "8b8c0a242dee0687a457fcafb909c62d8d65ac2271c3105d0219d5367196bf75",
+  "patched_sha256": "4e0464e7f0fab1e49468a07acd47a0d86954e32e7352a6177858caf1a672e579",
+  "source_size": 1277166,
+  "patched_size": 1277166,
+  "ips_sha256": "66949b81c4fcf8a8b49e5e6c2a8cf0929b661bc99791dc886d5244282b064a9d",
+  "undo_sha256": "fa3c6bf44a7c4b87f2313bebb54f9b3a89258e9e6f989267380ba643e46c4d01",
+  "version": 1,
+  "requires": "dday-presentation version 1",
+  "entries": {
+    "InitialPreview": 734518,
+    "SelectRow": 734609,
+    "InitSecondary": 734466,
+    "DrawLabel": 734359,
+    "GetResource": 735965,
+    "LoadIdentity": 736180,
+    "SaveIdentity": 736432,
+    "OpenOrders": 736496,
+    "Count": 737672,
+    "Selected": 737676,
+    "Page": 737680,
+    "Active": 737688,
+    "Records": 742860,
+    "Identifiers": 742604,
+    "RefreshRows": 734206,
+    "Scan": 733726,
+    "NativeRead": 736615,
+    "NativeResource": 736637,
+    "NativeSecondary": 736626,
+    "End": 759244,
+    "LeaderPortrait": 736648
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 26060,
+  "leader_picture_range": [
+    12000,
+    12255
+  ]
+}

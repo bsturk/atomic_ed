@@ -1,0 +1,172 @@
+{
+  "name": "dday-nested-events",
+  "source_sha256": "5fcdad3599a7ad9c865e83906adce1dc5ed9b021dc87fd915fad681dd516faf5",
+  "patched_sha256": "38b70bd385954baf8d308a2ddea029d1ed5ab2c4bd94c5ac5362982e706285b5",
+  "source_size": 1277166,
+  "patched_size": 1297646,
+  "ips_sha256": "67bda0ae98e68431c653bc978b586320e5237653d882b4ed4827971db3846398",
+  "undo_sha256": "d400242babca71411c3f33b4edac4e665e0ff8caca56f92cab7acbdce366e017",
+  "version": 1,
+  "requires": "dday-terrain-rules version 1",
+  "entries": {
+    "InitialPreview": 734829,
+    "SelectRow": 734920,
+    "InitSecondary": 734777,
+    "DrawLabel": 734670,
+    "GetResource": 736382,
+    "LoadIdentity": 736604,
+    "SaveIdentity": 736936,
+    "OpenOrders": 737060,
+    "Count": 745784,
+    "Selected": 745788,
+    "Page": 745792,
+    "Active": 745800,
+    "Records": 750972,
+    "Identifiers": 750716,
+    "RefreshRows": 734517,
+    "Scan": 734029,
+    "NativeRead": 737179,
+    "NativeResource": 737201,
+    "NativeSecondary": 737190,
+    "End": 767356,
+    "LeaderPortrait": 737212,
+    "AdvancedOrders": 738474,
+    "EventsInitialize": 737831,
+    "EventsRestore": 738019,
+    "EventState": 739132,
+    "EventsConditions": 738243,
+    "MoreAirSupport": 733469,
+    "InitialPlaneCategory": 733372,
+    "InitialShipCategory": 733425,
+    "ProfileVictory": 741650,
+    "ProfileGround": 741794,
+    "GameRules": 742352,
+    "ReadGameRules": 741450,
+    "TerrainBaseCost": 742885,
+    "TerrainDefense": 743019,
+    "TerrainBarrage": 743141,
+    "TerrainRules": 743496,
+    "ReadTerrainRules": 742464,
+    "CommitTerrainRules": 742728,
+    "NestedProcess": 740252,
+    "NestedConditions": 739306,
+    "NestedReadRow": 739212,
+    "NestedStart": 740891,
+    "NestedTurn": 740946,
+    "NestedMessage": 741022,
+    "NestedDrawMessage": 741119,
+    "MessageCursor": 741400
+  },
+  "hooks": [
+    {
+      "address": 159570,
+      "target": "InitialPreview",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 250913,
+      "target": "SelectRow",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 257654,
+      "target": "InitSecondary",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 542831,
+      "target": "GetResource",
+      "before": "5356c8080000"
+    },
+    {
+      "address": 257286,
+      "target": "DrawLabel",
+      "before": "e8f661feff"
+    },
+    {
+      "address": 154104,
+      "target": "LoadIdentity",
+      "before": "e888330000"
+    },
+    {
+      "address": 157413,
+      "target": "SaveIdentity",
+      "before": "e8ef020600"
+    },
+    {
+      "address": 732815,
+      "target": "OpenOrders",
+      "before": "e82bc5fdff"
+    },
+    {
+      "address": 192052,
+      "target": "LeaderPortrait",
+      "before": "e8b063ffff"
+    },
+    {
+      "address": 332998,
+      "target": "MoreAirSupport",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 380561,
+      "target": "InitialPlaneCategory",
+      "before": "e837faffff"
+    },
+    {
+      "address": 380600,
+      "target": "InitialShipCategory",
+      "before": "e82aadffff"
+    },
+    {
+      "address": 336179,
+      "target": "ProfileVictory",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 277010,
+      "target": "ProfileGround",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 178817,
+      "target": "TerrainBaseCost",
+      "before": "5356575589e5"
+    },
+    {
+      "address": 85654,
+      "target": "TerrainDefense",
+      "before": "8b45fc8945d4"
+    },
+    {
+      "address": 54939,
+      "target": "TerrainBarrage",
+      "before": "66837de80d"
+    },
+    {
+      "address": 196889,
+      "target": "NestedStart",
+      "before": "e857a30100"
+    },
+    {
+      "address": 70322,
+      "target": "NestedTurn",
+      "before": "e8c11b0400"
+    },
+    {
+      "address": 128551,
+      "target": "NestedDrawMessage",
+      "before": "e823000000"
+    },
+    {
+      "address": 424789,
+      "target": "AdvancedOrders",
+      "before": "e9c7b20400"
+    }
+  ],
+  "capacity": 256,
+  "code_length": 34172,
+  "added_code_bytes": 53248,
+  "event_row_bytes": 320,
+  "condition_tokens": 32
+}
