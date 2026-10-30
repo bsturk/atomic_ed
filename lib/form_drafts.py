@@ -39,6 +39,12 @@ def field_variable(widget):
     return variable
 
 
+class DraftValidationError(ValueError):
+    def __init__(self, form, context, error):
+        super().__init__(f'{form.label}: {error}')
+        self.form, self.context = form, context
+
+
 class FormDraft:
     def __init__(self, owner, label, fields, changed, prepare):
         self.owner, self.label, self.fields = owner, label, fields

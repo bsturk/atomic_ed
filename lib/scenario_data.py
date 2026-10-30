@@ -387,8 +387,9 @@ def set_start_date(data, start_date):
             arrival = struct.unpack_from('<i', unit, 8)[0]
             if arrival != -1:
                 struct.pack_into('<i', unit, 8, arrival+delta)
+            # Aircraft store full strength here rather than a destruction time.
             destroyed = struct.unpack_from('<i', unit, 0x40)[0]
-            if destroyed > 0:
+            if destroyed > 0 and unit[0x76] != 6:
                 struct.pack_into('<i', unit, 0x40, destroyed+delta)
     store_weather(roster, sequence)
     refresh_calendar(roster)

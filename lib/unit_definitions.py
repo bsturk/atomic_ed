@@ -312,7 +312,7 @@ def edit_definition(data, side, index, values, *, return_index=False):
     if old_cls not in (5, 6) and (cls != old_cls or nationality != before['nationality'] or descriptor != before['type'] or stacking != before['stacking_size']):
         refresh_command_spans(roster, side)
     from lib.scenario_rules import synchronize_occupancy
-    result = synchronize_occupancy(roster.to_bytes())
+    result = synchronize_occupancy(roster.to_bytes(), before=data)
     return (result, index) if return_index else result
 
 

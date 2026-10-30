@@ -132,13 +132,21 @@ class ModificationTracker:
             # No overlap, just add
             self.modifications[offset] = new_mod
         else:
-            # Remove overlapping modifications and create merged one
-            for old_offset, _ in overlapping:
+            start = min(offset, *(old_offset for old_offset, _ in overlapping))
+            end = max(end_offset, *(old_offset + mod.size for old_offset, mod in overlapping))
+            original = bytearray(end-start)
+            changed = bytearray(end-start)
+            original[offset-start:end_offset-start] = new_mod.original_bytes
+            for old_offset, mod in overlapping:
+                span = slice(old_offset-start, old_offset-start+mod.size)
+                # Existing patches retain the earliest baseline, even when the
+                # incoming original bytes describe an already edited document.
+                original[span] = mod.original_bytes
+                changed[span] = mod.new_bytes
                 del self.modifications[old_offset]
-
-            # For simplicity, just add the new modification
-            # (more complex merging could be implemented if needed)
-            self.modifications[offset] = new_mod
+            changed[offset-start:end_offset-start] = new_mod.new_bytes
+            self.modifications[start] = Modification(
+                new_mod.mod_type, start, bytes(original), bytes(changed), new_mod.description)
 
     def remove_modification(self, offset: int) -> bool:
         """Remove a modification at the given offset"""

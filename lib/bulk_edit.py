@@ -81,27 +81,8 @@ def _check_transport(roster, side, selected):
             raise ValueError('Move the transport and all its mounted passengers together; they belong to different formations.')
 
 
-def _stack_sizes(roster):
-    sizes = {}
-    current = struct.unpack_from('<i', roster.blocks['calendar'], 12)[0]
-    width, height = dimensions(roster)
-    for side in (0, 1):
-        for record in roster.records[side][:roster.count(0x240, side)]:
-            arrival = struct.unpack_from('<i', record, 8)[0]
-            x, y = struct.unpack_from('<2h', record, 0x58)
-            if arrival == -1 or arrival >= current or not (0 <= x < width and 0 <= y < height):
-                continue
-            weight = (4 if roster.header[0x122b] == 1 else 3) if record[0x76] == 7 else record[0x7e]
-            sizes[x, y] = sizes.get((x, y), 0)+weight
-    return sizes
-
-
-def _finish(before, roster):
-    old = _stack_sizes(UnitRoster(before))
-    for cell, size in _stack_sizes(roster).items():
-        if size > 15 and size > old.get(cell, 0):
-            raise ValueError(f'Stacking at {cell} would exceed the 15-point storage limit ({size}).')
-    return synchronize_occupancy(roster.to_bytes())
+def _finish(before, roster, moved=None):
+    return synchronize_occupancy(roster.to_bytes(), before=before, moved=moved)
 
 
 def formation_members(roster, side, hq, descendants=True):
@@ -247,7 +228,7 @@ def shift_map(data, dx, dy, width=None, height=None, terrain=1, variant=0, owner
             replacements[cell] = changed
     result = roster.to_bytes()
     result = _write_hex_records(result, _read_terrain_map(result), replacements)
-    result = _finish(data, UnitRoster(result))
+    result = _finish(data, UnitRoster(result), lambda cell: translate_cell(cell, (0, 0), (dx, dy)))
     return set_battle_plans(result, plans) if plans else result
 
 

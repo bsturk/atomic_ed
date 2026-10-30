@@ -35,6 +35,7 @@ LIMITATIONS = [
     'Objective names, positions, side point values and flags are translated; victory tiers use D-Day executable score ratios and native casualty scoring weights.',
     'Scripted AI, garrisons, replacement schedules, leaders and saved orders are reset; HQ staff automation starts disabled.',
     'Scenario-specific D-Day variants are disabled. Air/naval units use D-Day support rules and stay off map.',
+    'V4V records no squadron sizes; each squadron takes its D-Day template\'s full strength, all ready, and each ship counts one vessel.',
     'V4V decorative terrain edges and hilltop markers are not translated; directional slope masks are retained.',
 ]
 
@@ -316,6 +317,13 @@ def convert_scenario(path):
                 unit[0x81] = unit[0x84] = hq_index[assigned]
             unit[0x89:0x8e] = old[0x4f:0x54]
             unit[0x8e:0x90] = old[0x54:0x56]
+            if cls in (5, 6):
+                # V4V support records have no ship or squadron strength and no
+                # D-Day role byte. Adopt the template's, with all aircraft ready.
+                unit[0x7d] = native[0x7d]
+                unit[0x80] = 1 if cls == 5 else max(1, integer(native, 0x40))
+                if cls == 6:
+                    struct.pack_into('<i', unit, 0x40, unit[0x80])
             unit[0x90:0x92] = b'\xff\0'
             unit[0x92:] = name.ljust(26, b'\0')
             auxiliary = roster._auxiliary(unit)
@@ -326,6 +334,11 @@ def convert_scenario(path):
                 aux = bytearray(aux_template) if len(aux_template) == stride else bytearray(stride)
                 if kind in ('riders', 'tanks'):
                     aux[:] = bytes(stride)
+                elif kind == 'arty' and cls == 6:
+                    # Squadron bombardment ratings scale with aircraft ready.
+                    for offset in (0, 4, 8, 12):
+                        strength = integer(aux, offset)
+                        struct.pack_into('<i', aux, offset, strength * unit[0x80] // max(1, native[0x80]))
                 elif kind == 'hqs':
                     level = (3 if descriptor in (43, 70, 92) else 2 if descriptor in (17, 18, 83)
                              else 1 if descriptor in (19, 20, 88) else 0)
@@ -365,8 +378,11 @@ def convert_scenario(path):
         b[f'reps{side}'] = bytes(short(b['calendar'], 24)*9)
 
     b['ai_counts'] = bytes(12)
-    for key in ('bgstate', 'bgshx', 'bgshy', 'bgdhx', 'bgdhy'):
+    # Native empty battlegroup slots have goal (-1, -1).
+    for key in ('bgstate', 'bgshx', 'bgshy'):
         b[key] = bytes(800)
+    for key in ('bgdhx', 'bgdhy'):
+        b[key] = b'\xff' * 800
     b['supply'] = source.blocks[8]
     # Each V4V stock record starts with count + 20 Xs + 20 Ys. Select the
     # first side pair; additional stock groups remain documented in the source.

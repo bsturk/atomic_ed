@@ -41,8 +41,9 @@ def convert_file(source, target, *, dry_run=False, dos=False):
         target.parent.mkdir(parents=True, exist_ok=True)
         if dos:
             document = ScenarioDocument.from_dict(report['document'])
+            # Batch conversions never replace another export's startup screens.
             export_for_dos(data, target, terrain, counters=counters,
-                           title=report['title'], document=document)
+                           title=report['title'], document=document, reset_startup=False)
         else:
             save_scenario_assets(data, target, terrain, report.get('runtime_slot', 'BRADLEY.SCN'),
                                  counters=counters, title=report['title'], conversion=report)

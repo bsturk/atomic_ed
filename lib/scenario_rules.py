@@ -15,11 +15,29 @@ EPOCH = date(1900, 1, 1)
 LOSS_CLASSES = ('Infantry', 'Armor', 'Engineer', 'Anti-tank', 'Artillery', 'Ships', 'Aircraft', 'HQ', 'Anti-aircraft')
 
 
-def synchronize_occupancy(data):
+def _stack_sizes(roster):
+    sizes = {}
+    current = struct.unpack_from('<i', roster.blocks['calendar'], 12)[0]
+    width, height = short(roster.header, 0x22a)+1, short(roster.header, 0x228)+1
+    for side in (0, 1):
+        for record in roster.records[side][:roster.count(0x240, side)]:
+            arrival = struct.unpack_from('<i', record, 8)[0]
+            x, y = struct.unpack_from('<2h', record, 0x58)
+            if arrival == -1 or arrival >= current or not (0 <= x < width and 0 <= y < height):
+                continue
+            weight = (4 if roster.header[0x122b] == 1 else 3) if record[0x76] == 7 else record[0x7e]
+            sizes[x, y] = sizes.get((x, y), 0)+weight
+    return sizes
+
+
+def synchronize_occupancy(data, *, before=None, moved=None):
     """InitUnitMap needs saved stacking and ownership to load placed units.
 
     Preserve other ZOC bits. Only the occupancy nibble and occupied ownership
     derive from the OOB; an empty hex keeps its territorial owner.
+    Edits supply their previous data to reject new or increased oversized
+    stacks. Existing oversized source stacks may stay unchanged or shrink.
+    Whole-map shifts supply moved, mapping each previous hex to its new hex.
     """
     roster = UnitRoster(data)
     width, height = short(roster.header, 0x22a)+1, short(roster.header, 0x228)+1
@@ -40,6 +58,13 @@ def synchronize_occupancy(data):
                 raise ValueError(f'Opposing units cannot occupy the same hex ({x}, {y})')
             weight = (4 if roster.header[0x122b] == 1 else 3) if record[0x76] == 7 else record[0x7e]
             stacks[x, y] = side, size + weight
+    if before is not None:
+        old = _stack_sizes(UnitRoster(before))
+        if moved is not None:
+            old = {moved(cell): size for cell, size in old.items()}
+        for cell, (_, size) in stacks.items():
+            if size > 15 and size > old.get(cell, 0):
+                raise ValueError(f'Stacking at {cell} would exceed the 15-point storage limit ({size}).')
     block = roster.blocks['zoc']
     if len(block) != width*height*4:
         raise ValueError('Invalid ownership map')
@@ -294,8 +319,10 @@ def new_scenario(width=30, height=24, terrain=1, start_date='1944-06-12', turns=
     b['victory'] = bytes(1088)
     b['vicloc'] = bytearray()
     b['ai_counts'] = bytes(12)
-    for key in ('bgstate', 'bgshx', 'bgshy', 'bgdhx', 'bgdhy'):
+    for key in ('bgstate', 'bgshx', 'bgshy'):
         b[key] = bytes(800)
+    for key in ('bgdhx', 'bgdhy'):
+        b[key] = b'\xff' * 800
     for key in ('planeclass', 'planecounts', 'shipclass'):
         b[key] = bytes(len(b[key]))
     b['hqheads'] = b'\xff' * 16

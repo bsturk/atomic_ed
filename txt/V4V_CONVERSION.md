@@ -57,7 +57,8 @@ major victory and 125% for minor victory. Objective values, casualty weights
 and those ratios are editable in Scenario Settings.
 
 Weapon and HQ details use matching D-Day templates. Conversion Notes identifies
-the template choices. Check important formations in **Unit Definition** and
+the template choices. V4V does not record squadron sizes, so each squadron
+starts with its D-Day template's full strength, all aircraft ready. Check important formations in **Unit Definition** and
 **HQ Organization** when adapting a battle.
 
 Battle Plans, saved orders, leaders, garrisons and replacement schedules start

@@ -18,7 +18,7 @@
 /patching/*
 !/patching/*.py
 
-# Maintained patch, library-generation, and sound-setup commands only.
+# Maintained tools and source regression tests.
 !/tools/
 /tools/*
 !/tools/patch_dday.py
@@ -32,6 +32,8 @@
 !/tools/build_music_library.py
 !/tools/fix_sound_config.py
 !/tools/sound_config_editor.py
+!/tools/test_authoring_regressions.py
+!/tools/test_modification_tracker.py
 
 # Keep patches and the DOS selector; never include game data or executables.
 !/game/

@@ -234,6 +234,9 @@ def _units(source, roster, report):
             unit[0x85:0x89] = bytes(4)
             if cls in (5, 6):
                 struct.pack_into('<4h', unit, 0x58, -1, -1, -1, -1)
+                if cls == 6:
+                    # D-Day full strength is ready plus under-repair aircraft.
+                    struct.pack_into('<i', unit, 0x40, unit[0x80]+unit[0x81])
             else:
                 for field in (0x80, 0x81, 0x84):
                     if unit[field] not in hq_map:
@@ -453,8 +456,11 @@ def convert_scenario(path):
     # These arrays are runtime allocation state: init_for_ai resets them in
     # every engine. Source bytes remain available through WawScenario.blocks.
     b['ai_counts'] = bytearray(12)
-    for key in ('bgstate', 'bgshx', 'bgshy', 'bgdhx', 'bgdhy'):
+    # Native empty battlegroup slots have goal (-1, -1).
+    for key in ('bgstate', 'bgshx', 'bgshy'):
         b[key] = bytearray(800)
+    for key in ('bgdhx', 'bgdhy'):
+        b[key] = bytearray(b'\xff' * 800)
     b['victory'] = bytearray(1088)
     from lib.scenario_data import refresh_calendar
     refresh_calendar(roster)

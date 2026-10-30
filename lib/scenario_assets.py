@@ -39,8 +39,28 @@ def scenario_title(path):
     return GAME_SCENARIOS.get(path.name.upper(), path.stem)
 
 
-def export_for_dos(data, target, assignments, *, counters, title=None, presentation=None, document=None):
-    """Write the SCN, matching REZ and AI orders for manual installation."""
+def startup_path(target):
+    return Path(target).parent/'DATA'/'PCWATW.REZ'
+
+
+def has_startup_art(presentation):
+    return any(key.startswith('splash_') for key in (presentation or {}))
+
+
+def custom_startup_exists(target):
+    """True when an earlier export left non-stock startup screens beside target."""
+    from lib.presentation_artwork import startup_resources
+    startup = startup_path(target)
+    return startup.exists() and startup.read_bytes() != startup_resources({})
+
+
+def export_for_dos(data, target, assignments, *, counters, title=None, presentation=None, document=None,
+                   reset_startup=True):
+    """Write the SCN, matching REZ and AI orders for manual installation.
+
+    Startup screens are global. Without splash art, an existing DATA/PCWATW.REZ
+    returns to the stock screens only when reset_startup is true.
+    """
     from lib.battle_plans import export_plans
     from lib.game_resources import game_path
     from lib.terrain_artwork import build_terrain_resources
@@ -79,8 +99,8 @@ def export_for_dos(data, target, assignments, *, counters, title=None, presentat
     target.parent.mkdir(parents=True, exist_ok=True)
     resource_target = target.with_suffix('.REZ')
     extra = {resource_target: resources, target.with_suffix('.AI'): export_plans(data)}
-    startup = target.parent/'DATA'/'PCWATW.REZ'
-    if startup.exists() or any(key.startswith('splash_') for key in (presentation or {})):
+    startup = startup_path(target)
+    if has_startup_art(presentation) or (startup.exists() and reset_startup):
         from lib.presentation_artwork import startup_resources
         startup.parent.mkdir(parents=True, exist_ok=True)
         extra[startup] = startup_resources(presentation or {})

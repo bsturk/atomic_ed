@@ -59,7 +59,8 @@ from lib.terrain_catalog import terrain_catalog, artwork_catalog, ART_SOURCES
 from lib.terrain_artwork import (TerrainStamp, load_artwork, automatic_artwork_slot,
                                  validate_slot, artwork_path)
 from lib.scenario_assets import (save_scenario_assets, runtime_slot_for, GAME_SCENARIOS,
-                                 scenario_title, export_for_dos, engine_slot, conversion_report)
+                                 scenario_title, export_for_dos, engine_slot, conversion_report,
+                                 has_startup_art, custom_startup_exists, startup_path)
 from lib.scenario_import import source_game, convert_scenario
 from lib.counter_artwork import load_counters, counter_path, allocate_counter
 from lib.presentation_artwork import load_presentation, presentation_path, validate_artwork, slot_for
@@ -72,7 +73,7 @@ from lib.modification_tracker import ModificationTracker, ModificationType
 from lib.game_profiles import ScenarioDocument, GameProfile, load_document
 from lib.edit_history import DocumentState, EditHistory
 from lib.history_dialog import HistoryWindow
-from lib.form_drafts import FormDraft, field_variable, ask_save_changes
+from lib.form_drafts import FormDraft, DraftValidationError, field_variable, ask_save_changes
 
 
 def format_unit_value(value):
@@ -91,48 +92,6 @@ class EnhancedUnitParser:
     def parse_units_from_scenario(scenario):
         """Read the game's two order-of-battle blocks, including reinforcements."""
         return read_units(scenario)
-
-    @staticmethod
-    def parse_coordinates_from_ptr5(data):
-        """Parse coordinate/numeric data from PTR5 with interpretation"""
-        coords = []
-
-        if not data:
-            return coords
-
-        # Parse as 16-bit values
-        for i in range(0, min(len(data), 512), 2):
-            if i + 2 <= len(data):
-                value = struct.unpack('<H', data[i:i+2])[0]
-
-                # Skip runs of zeros
-                if value == 0:
-                    continue
-
-                # Interpret possible coordinate ranges
-                # D-Day maps are typically grid-based, values might be:
-                # - Grid coordinates (0-255 range)
-                # - Pixel coordinates (larger values)
-                # - Strength values (0-100 range)
-
-                interpretation = "unknown"
-                if 0 < value <= 100:
-                    interpretation = "strength/percentage"
-                elif 100 < value <= 500:
-                    interpretation = "grid coordinate"
-                elif 500 < value <= 10000:
-                    interpretation = "pixel coordinate"
-                else:
-                    interpretation = "large value/offset"
-
-                coords.append({
-                    'offset': i,
-                    'value': value,
-                    'hex': f'{value:04x}',
-                    'interpretation': interpretation
-                })
-
-        return coords
 
 
 class MapViewer(ttk.Frame):
@@ -1430,7 +1389,6 @@ class ImprovedScenarioEditor:
         self.scenario_file = None
         self.modified = False
         self.units = []
-        self.coords = []
         self.mod_tracker = ModificationTracker()  # Track modifications for patch-in-place saving
         self.saved_data = b''
         self.history = EditHistory()
@@ -2112,21 +2070,47 @@ class ImprovedScenarioEditor:
             elif hasattr(panel, 'range_draft') and form is panel.range_draft:
                 panel.load_range(context)
 
-    def _apply_form_drafts(self):
-        """Validate all drafts before staging any of them, using freshly parsed offsets."""
-        pending = [(form, context, values, changes) for form in self._draft_forms()
-                   for context, (values, changes) in form.pending().items()]
+    def _pending_form_drafts(self):
+        return [(form, context, values, changes) for form in self._draft_forms()
+                for context, (values, changes) in form.pending().items()]
+
+    def _prepare_form_drafts(self, before, pending):
+        """Build a candidate without changing forms, document data or history."""
         if not pending:
-            return True
-        before = self._staged_data(include_briefings=False)
+            return before
         data = before
         try:
             for form, context, values, changes in pending:
                 data = form.prepare(data, context, values, changes)
-            data = synchronize_occupancy(data)
         except (ValueError, IndexError, KeyError, struct.error) as exc:
-            self._focus_draft(form, context)
-            messagebox.showerror('Cannot Apply Pending Edits', f'{form.label}: {exc}', parent=self.root)
+            raise DraftValidationError(form, context, exc) from exc
+        try:
+            return synchronize_occupancy(data, before=before)
+        except (ValueError, IndexError, KeyError, struct.error) as exc:
+            form, context = self._occupancy_culprit(before, pending)
+            raise DraftValidationError(form, context, exc) from exc
+
+    @staticmethod
+    def _occupancy_culprit(before, pending):
+        """Attribute a combined stacking error to the first draft that fails alone."""
+        for form, context, values, changes in pending:
+            try:
+                synchronize_occupancy(form.prepare(before, context, values, changes), before=before)
+            except (ValueError, IndexError, KeyError, struct.error):
+                return form, context
+        return pending[-1][:2]
+
+    def _apply_form_drafts(self):
+        """Validate all drafts before staging any of them, using freshly parsed offsets."""
+        pending = self._pending_form_drafts()
+        if not pending:
+            return True
+        before = self._staged_data(include_briefings=False)
+        try:
+            data = self._prepare_form_drafts(before, pending)
+        except DraftValidationError as exc:
+            self._focus_draft(exc.form, exc.context)
+            messagebox.showerror('Cannot Apply Pending Edits', str(exc), parent=self.root)
             self._update_modified_state()
             return False
         current = self.unit_props_editor.current_unit
@@ -2367,10 +2351,6 @@ class ImprovedScenarioEditor:
         # Parse the fixed-size records in both order-of-battle blocks.
         self.units = EnhancedUnitParser.parse_units_from_scenario(self.scenario)
 
-        # Parse coordinates from PTR5
-        ptr5_data = self.scenario.sections.get('PTR5', b'')
-        self.coords = EnhancedUnitParser.parse_coordinates_from_ptr5(ptr5_data)
-
         # Load mission text
         self._load_mission_text()
 
@@ -2508,10 +2488,11 @@ class ImprovedScenarioEditor:
         """Track OB and shared HQ patches so Apply also survives saving/reload."""
         if any(key in ('x', 'y', 'arrival_time') for _, _, key in patches):
             from lib.terrain_reader import _read_block
-            candidate = bytearray(self._staged_data(include_briefings=False))
+            before = self._staged_data(include_briefings=False)
+            candidate = bytearray(before)
             for offset, value, _ in patches:
                 candidate[offset:offset+len(value)] = value
-            synchronized = synchronize_occupancy(bytes(candidate))
+            synchronized = synchronize_occupancy(bytes(candidate), before=before)
             offset = 0
             for _ in range(4):
                 _, offset = _read_block(candidate, offset)
@@ -2661,7 +2642,7 @@ class ImprovedScenarioEditor:
             data = bytearray(before)
             for offset, value, _ in patches:
                 data[offset:offset + len(value)] = value
-            data = synchronize_occupancy(bytes(data))
+            data = synchronize_occupancy(bytes(data), before=before)
         except (ValueError, struct.error) as exc:
             messagebox.showerror('Cannot Place Unit', str(exc))
             return
@@ -2728,10 +2709,12 @@ class ImprovedScenarioEditor:
             self.unit_props_editor.apply_button.config(state='disabled')
             self.unit_props_editor.feedback.config(text='Use Restore Unit to return this unit to the scenario.')
 
-    def _staged_data(self, include_briefings=True):
+    def _staged_data(self, include_briefings=True, *, include_drafts=False):
         data = bytearray(self.scenario.data)
         for offset, value in self.mod_tracker.get_patches():
             data[offset:offset + len(value)] = value
+        if include_drafts:
+            data = bytearray(self._prepare_form_drafts(bytes(data), self._pending_form_drafts()))
         if include_briefings:
             for offset, value, _ in prepare_briefing_changes(data, self._briefing_texts()):
                 data[offset:offset + len(value)] = value
@@ -3099,7 +3082,7 @@ class ImprovedScenarioEditor:
                 struct.pack_into('<h', src, 0x56, counter)
             added = roster.add(side, template['side_index'], name, source=source)
             refresh_command_spans(roster, side)
-            data = synchronize_occupancy(roster.to_bytes())
+            data = synchronize_occupancy(roster.to_bytes(), before=before)
         except (ValueError, IndexError, struct.error) as exc:
             messagebox.showerror('Cannot Add Unit', str(exc))
             return False
@@ -3133,7 +3116,7 @@ class ImprovedScenarioEditor:
             else:
                 roster.remove(side, unit['side_index'])
             refresh_command_spans(roster, side)
-            data = synchronize_occupancy(roster.to_bytes())
+            data = synchronize_occupancy(roster.to_bytes(), before=before)
         except (ValueError, IndexError, struct.error) as exc:
             messagebox.showerror('Cannot Change Unit Roster', str(exc))
             return
@@ -3284,6 +3267,14 @@ class ImprovedScenarioEditor:
             if foreign:
                 messagebox.showerror('Export for DOS', 'Choose a separate export filename. The original source scenario must remain in its own game format.')
                 return
+        reset_startup = True
+        if not has_startup_art(self.presentation_artwork) and custom_startup_exists(filename):
+            reset_startup = messagebox.askyesno(
+                'Export for DOS',
+                'The export folder’s DATA/PCWATW.REZ has custom startup screens, and this scenario has none.\n\n'
+                'Replace them with the stock D-Day screens? Choose No to keep them.', parent=self.root)
+        startup_written = has_startup_art(self.presentation_artwork) or (
+            reset_startup and startup_path(filename).exists())
         try:
             data = self._staged_data()
             from lib.battle_plans import advanced_plan, battle_plans
@@ -3295,6 +3286,7 @@ class ImprovedScenarioEditor:
             scenario, resources = export_for_dos(data, filename, self.terrain_artwork,
                                                 counters=self.counter_artwork,
                                                 presentation=self.presentation_artwork, document=self.document,
+                                                reset_startup=reset_startup,
                                                 title=(self.conversion['title'] if self.conversion else
                                                        Path(filename).stem if self.is_new else scenario_title(self.scenario_file)))
         except (OSError, ValueError) as exc:
@@ -3302,8 +3294,8 @@ class ImprovedScenarioEditor:
             return
         messagebox.showinfo('Export for DOS',
             f'Exported {scenario.name}, {resources.name}, and {scenario.with_suffix(".AI").name}.\n\n'
-            + ('Also exported DATA/PCWATW.REZ for the custom startup screens. Copy it to the game’s DATA folder; it applies to all scenarios.\n\n'
-               if (Path(filename).parent/'DATA'/'PCWATW.REZ').exists() else '') +
+            + ('Also exported DATA/PCWATW.REZ for the startup screens. Copy it to the game’s DATA folder; it applies to all scenarios.\n\n'
+               if startup_written else '') +
             'With the scenario-library engine, copy all three files together into SCENARIO, '
             'keeping their names. Select the scenario in the game’s Scenarios panel.\n\n' +
             ('Nested conditions and event actions require the current INVADE-PATCHED.EXE '
@@ -3373,7 +3365,11 @@ class ImprovedScenarioEditor:
             return
 
         try:
-            notes = authoring_warnings(self._staged_data())
+            notes = authoring_warnings(self._staged_data(include_drafts=True))
+        except DraftValidationError as exc:
+            self._focus_draft(exc.form, exc.context)
+            messagebox.showerror('Validation', str(exc))
+            return
         except ValueError as exc:
             messagebox.showerror('Validation', str(exc))
             return

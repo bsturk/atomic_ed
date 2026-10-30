@@ -10,8 +10,8 @@ Status: Reverse engineered from 7 D-Day scenario files
 Version: 1.0
 
 Usage:
-    from dday_scenario_parser import DdayScenario
-    
+    from lib.scenario_parser import DdayScenario
+
     scenario = DdayScenario('UTAH.SCN')
     scenario.display_header()
     scenario.display_data_sections()
@@ -31,7 +31,8 @@ class DdayScenario:
     MAGIC_BYTES = b'\x30\x12\x00\x00'
     HEADER_SIZE = 0x60  # Header is 96 bytes
     
-    # Legacy header fields; these are not the dimensions of the playable map.
+    # Values shared by the native scenarios. File 0x08-0x28 are the editable
+    # casualty scoring weights; none of these are the playable map dimensions.
     FIXED_COUNTS = [
         0x11, 0x05, 0x0a, 0x08, 0x05, 0x08, 0x00,
         0x0a, 0x14, 0x05, 0x7d, 0x64
@@ -43,13 +44,15 @@ class DdayScenario:
         0x20, 0x24, 0x28, 0x2c, 0x30
     ]
     
+    # Serialized runtime values, not file offsets; some exceed the file size.
+    # See txt/DDAY_MAP_FORMAT_RESEARCH.md. Retained for older analysis tools.
     POINTER_OFFSETS = {
         'PTR1': 0x40,
         'PTR2': 0x44,
-        'PTR3': 0x48,  # Unit roster
-        'PTR4': 0x4c,  # Unit positioning
-        'PTR5': 0x50,  # Numeric data
-        'PTR6': 0x54,  # Specialized data
+        'PTR3': 0x48,
+        'PTR4': 0x4c,
+        'PTR5': 0x50,
+        'PTR6': 0x54,
         'PTR7': 0x58,
         'PTR8': 0x5c,
     }
@@ -190,32 +193,17 @@ class DdayScenario:
             self.section_order.append((name, start, end))
     
     def validate(self) -> bool:
-        """Validate scenario file integrity"""
+        """Validate the length-prefixed block layout that LoadGame reads."""
         if not self.is_valid:
             return False
-
-        # Check counts match expected
-        if self.counts != self.FIXED_COUNTS:
-            print("Warning: Counts don't match expected values")
+        from lib.unit_roster import UnitRoster
+        try:
+            UnitRoster(self.data)
+        except (ValueError, struct.error) as exc:
+            print(f"Warning: {exc}")
             return False
-
-        # Check pointer ordering (file order, not header order!)
-        # Expected file order: PTR5 -> PTR6 -> PTR3 -> PTR4
-        if len(self.section_order) >= 2:
-            for i in range(len(self.section_order) - 1):
-                if self.section_order[i][1] >= self.section_order[i + 1][1]:
-                    print(f"Warning: Section ordering violated between {self.section_order[i][0]} and {self.section_order[i+1][0]}")
-                    return False
-
-        # Check pointers within bounds
-        file_size = len(self.data)
-        for name, ptr in self.pointers.items():
-            if ptr > 0 and ptr >= file_size:
-                print(f"Warning: {name} = 0x{ptr:06x} exceeds file size {file_size}")
-                return False
-
         return True
-    
+
     def display_header(self):
         """Display parsed header information"""
         if not self.is_valid:
@@ -233,23 +221,15 @@ class DdayScenario:
         print(f"Magic Number: 0x{magic:04x} {'✓' if magic == self.MAGIC_NUMBER else '✗'}")
         print()
         
-        # Counts
-        print("Header Counts (Fixed across all scenarios):")
+        print(f"Map: {self.map_width} x {self.map_height} hexes (Scenario rectangle at 0x228)")
+        print()
+
+        # Header values; casualty weights are editable per scenario.
+        from lib.scenario_rules import LOSS_CLASSES
+        print("Header Values (✓ = native default):")
         print("-" * 60)
-        count_labels = [
-            "Count 1  (terrain/unit types?)",
-            "Count 2  (players/sides?)",
-            "Count 3  (unknown)",
-            "Count 4  (unit classes?)",
-            "Count 5  (player types?)",
-            "Count 6  (unit classes?)",
-            "Count 7  (reserved)",
-            "Count 8  (unknown)",
-            "Count 9  (objectives?)",
-            "Count 10 (unknown)",
-            "Count 11 (MAP WIDTH in hexes - columns/X axis)",
-            "Count 12 (MAP HEIGHT in hexes - rows/Y axis)",
-        ]
+        count_labels = (["Unknown"] + [f"Casualty weight: {name}" for name in LOSS_CLASSES]
+                        + ["Unknown (not the map width)", "Unknown (not the map height)"])
         
         for i, (count, label) in enumerate(zip(self.counts, count_labels)):
             expected = self.FIXED_COUNTS[i]
@@ -259,7 +239,7 @@ class DdayScenario:
         print()
         
         # Pointers
-        print("Offset Pointers (Vary per scenario):")
+        print("Header Pointer Values (runtime values, not file offsets):")
         print("-" * 60)
         for name, offset in self.POINTER_OFFSETS.items():
             ptr = self.pointers.get(name, 0)
@@ -271,38 +251,31 @@ class DdayScenario:
         print()
     
     def display_data_sections(self):
-        """Display data section information"""
+        """Display the length-prefixed blocks in file order."""
         if not self.is_valid:
             print("Invalid scenario file")
             return
+        from lib.unit_roster import UnitRoster
+        try:
+            roster = UnitRoster(self.data)
+        except (ValueError, struct.error) as exc:
+            print(f"Invalid block layout: {exc}")
+            return
 
-        print("Data Sections (in file order):")
+        print("Data Blocks (in file order):")
         print("-" * 60)
-
-        # Display sections in file order
-        for name, start, end in self.section_order:
-            size = end - start
-
-            # Add descriptive labels
-            labels = {
-                'PTR3': 'Unit Roster',
-                'PTR4': 'Unit Positioning + Text',
-                'PTR5': 'Numeric/Coordinate Data',
-                'PTR6': 'Specialized/AI Data'
-            }
-            label = labels.get(name, 'Unknown')
-
-            print(f"  {name} ({label:25s}): 0x{start:06x} - 0x{end:06x} ({size:,} bytes)")
-
-            # Show first 32 bytes
-            if start < len(self.data):
-                sample = self.data[start:min(start+32, end)]
-                hex_str = ' '.join(f'{b:02x}' for b in sample)
-                ascii_str = ''.join(chr(b) if 32 <= b < 127 else '.' for b in sample)
-                print(f"      Hex:   {hex_str}")
-                print(f"      ASCII: {ascii_str}")
+        offset = 0
+        for name, multiple in roster._layout():
+            size = len(roster.blocks[name])
+            prefix = 4 if multiple else 0
+            print(f"  {name:12s}: 0x{offset:06x} - 0x{offset + prefix + size:06x} ({size:,} bytes)")
+            offset += prefix + size
+        orders = sum(len(value) for value in roster.orders.values())
+        print(f"  {'orders':12s}: {len(roster.orders)} saved routes ({orders:,} bytes)")
+        if roster.trailer:
+            print(f"  {'trailer':12s}: {len(roster.trailer):,} bytes")
         print()
-    
+
     def find_strings(self, min_length: int = 4) -> List[Tuple[int, str]]:
         """Find ASCII strings in the file"""
         strings = []
@@ -376,25 +349,10 @@ class DdayScenario:
         print()
 
     def write(self, filename: str):
-        """Write scenario to file
-
-        CRITICAL: The file structure includes data before the first pointer!
-        Also critical: Section order varies by file! Use actual parsed order.
-        """
+        """Write the complete scenario bytes to a file."""
         if not self.is_valid:
             raise ValueError("Cannot write invalid scenario")
-
-        with open(filename, 'wb') as f:
-            # Find the offset of the first section
-            first_section_offset = min(start for _, start, _ in self.section_order)
-
-            # Write everything from start of file up to first section
-            # This includes header (96 bytes) + any additional data structures
-            f.write(self.data[0:first_section_offset])
-
-            # Write data sections in ACTUAL file order (not assumed order!)
-            for name, _, _ in self.section_order:
-                f.write(self.sections[name])
+        self.save_bytes(self.data, filename)
 
     def patch_in_place(self, patches: list, output_file: str = None, create_backup: bool = False):
         """
@@ -474,8 +432,9 @@ class DdayScenario:
 
 def main():
     """Command-line interface"""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     if len(sys.argv) < 2:
-        print("Usage: dday_scenario_parser.py <scenario.scn>")
+        print("Usage: scenario_parser.py <scenario.scn>")
         sys.exit(1)
     
     filename = sys.argv[1]
